@@ -364,6 +364,7 @@
     <Compile Include="Invoice\ViewStickBill.cs" />
     <Compile Include="IwbDefinition.cs" />
     <Compile Include="PackageInfo\ViewPackageApply.cs" />
+    <Compile Include="ProductInfo\ProductProperty.cs" />
     <Compile Include="ProductInfo\RmProduct.cs" />
     <Compile Include="ProductStoreInfo\InventoryCheck.cs" />
     <Compile Include="ProductStoreInfo\ViewEnterOutProductStore.cs" />
