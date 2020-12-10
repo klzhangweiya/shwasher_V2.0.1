@@ -1,0 +1,171 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesNotificationInfoShortMsgMg; //The menu item will be active for this page.
+    ViewBag.Title = "短消息管理";
+    
+
+}
+@section css
+{
+    <link rel="stylesheet" href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker-wr.css" />
+    <link href="~/Content/Plugins/kindeditor/themes/default/default.css" rel="stylesheet" />
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <input type="hidden" id="IsLock" value="N" />
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu })
+    <table id="table"
+           data-url="/api/services/app/ShortMsgDetail/GetAllByUser"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="false">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="isRead" data-formatter="IsReadFormatter">是否已读</th>
+                <th data-align="center" data-field="content">消息</th>
+                <th data-align="center" data-field="sendUserID">发送人</th>
+                <th data-align="center" data-field="sendTime">发送时间</th>
+                <th data-align="center" data-formatter="ActionFormatter"></th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("通知"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                                    {
+                                                                                        new InputViewModel("id", hide: true),
+                                                                                        new InputViewModel("sendUserID",InputTypes.List, displayName: "发信人"),
+                                                                                        new InputViewModel("sendTime", displayName: "发送时间"),
+                                                                                        new InputViewModel("content",InputTypes.Textarea, displayName: "内容")
+                                                                                    };
+                        
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;" onclick="$('#modal').modal('hide')">取消</button>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="~/Content/Plugins/kindeditor/kindeditor-all.js"></script>
+    <script src="~/Content/Plugins/kindeditor/lang/zh-CN.js"></script>
+    <script type="text/javascript">
+      
+
+       
+      
+        $(function () {
+            //show完毕前执行
+
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            //funs["btnUpdate"] = function () { BtnUpdate({ readonly: "standardName" }); };
+        
+            
+           
+            funs["btnUpdate"] = function() {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+
+                    BtnUpdate({ readonly: "sendUserID,content,sendTime", data: { sendUserID: rows[0].sendUserID, sendTime: rows[0].sendTime, content: rows[0].content} });
+                   
+                }
+            };
+
+            funs["btnSetRead"] = function() {
+                var rows = config.table.bootstrapTable("getSelections");
+                var ids = '';
+                rows.forEach(function(v, i) {
+                    ids += v.id + ',';
+                });
+                SaveAjax({
+                    url: window.appUrl + 'ShortMsgDetail/SetRead',
+                    data: { Id: ids },
+                    isAlert: false,
+                    isValidate: false,
+                    success: function(res) {
+                        RefreshTable();
+                    }
+                });
+            }
+            funs["btnDelete"] = function () {
+
+                abp.message.confirm(abp.localization.localize("DeleteConfirmMsg"), abp.localization.localize("DeleteConfirmTitle"),function() {
+                    var rows = config.table.bootstrapTable("getSelections");
+                    var ids = '';
+                    rows.forEach(function(v, i) {
+                        ids += v.id + ',';
+                    });
+                    SaveAjax({
+                        url: window.appUrl + 'ShortMsgDetail/BatchDelete',
+                        data: { Id: ids },
+                        isAlert: false,
+                        isValidate: false,
+                        success: function(res) {
+                            RefreshTable();
+                        }
+                    });
+                });
+             
+
+            }
+        });
+        function IsReadFormatter(v, r) {
+            if (r.isRead==="Y") {
+                return '<span class="label label-primary">已读</span>';
+            }
+           
+            return '<span class="label label-info">未读</span>';
+        }
+        function ActionFormatter(v, r) {
+            if (r.isRead==="N") {
+                return '<span class="table-action" onclick="ChangeStatus(' +
+                    r.id +
+                    ')"><i class="iconfont icon-right"></i>已读</span>';
+            }
+            return '';
+        }
+        function ChangeStatus(id) {
+            SaveAjax({
+                url: window.appUrl + "ShortMsgDetail/ChangeIsRead",
+                data: { Id: id },
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    if (res) {
+                        RefreshTable();
+                    }
+                }
+            });
+        }
+    </script>
+
+
+}

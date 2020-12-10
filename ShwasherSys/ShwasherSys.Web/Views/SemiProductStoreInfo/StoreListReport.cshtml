@@ -1,0 +1,148 @@
+﻿@using IwbZero.Setting
+@using NPOI.SS.Formula.Functions
+@using ShwasherSys.CustomerInfo
+@using ShwasherSys.Models.OrderInfo
+@using ShwasherSys.Order.Dto
+@using ShwasherSys.OrderSendInfo
+@using ShwasherSys.OrderSendInfo.Dto
+@using ShwasherSys.StoreQuery.Dto
+
+@{
+    Layout = null;
+    ViewBag.Title = "半成品库存清单列表";
+
+    List<SemiProductStoreCount> queryRecords = ViewBag.QueryRecord;
+    //queryRecords = queryRecords.GetRange(0,100);
+    int year = DateTime.Now.Year;
+    int month = DateTime.Now.Month;
+    int day = DateTime.Now.Day;
+    string trDateTitle = year + "年" + month + "月";
+    string trDateTitle2 = year + "年" + month + "月"+day+"日";
+}
+<html>
+<head>
+    <title>半成品库存清单列表</title>
+    <link href="~/Content/Css/PrintPage.css" rel="stylesheet" media="all" />
+    <link href="~/Content/Plugins/PrintPreView/print-preview.css" rel="stylesheet" />
+    @*<link href="~/Content/Plugins/jquery-print-preview/src/css/print-preview.css" rel="stylesheet" media="screen" />
+        <script src="https://cdn.bootcss.com/jquery-tools/1.2.7/jquery.tools.min.js"></script>
+        <script src="~/Content/Plugins/jquery-print-preview/src/jquery.print-preview.js"></script>*@
+
+    @*<script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>*@
+</head>
+
+<body style="font-size: 10px;">
+
+    <header style="height: 40px;">
+        <div style="position: absolute;left: calc(50% - 100px)">
+            <input type="button" value="打印" class="btn" id="printBtn" />
+            <input type="button" value="导出excel" class="btn" onclick='ExportExcel("printContent", "半成品库存清单列表", "exportCss");' />
+        </div>
+        <hr class="hr01" />
+    </header>
+
+    <div id="printContent">
+        <div id="exportCss">
+            <style>
+                .tb_header {
+                    margin: auto;
+                    width: 100%;
+                    height: 40px;
+                    text-align: center;
+                    border: 0px solid #000000;
+                    font-size: .9rem;
+                    background: #8caae7;
+                }
+
+                #table {
+                    width: 85%;
+                    border: 0;
+                    margin: auto;
+                    border-collapse: collapse;
+                    border-spacing: 0;
+                }
+
+                    #table tr:nth-of-type(2n) {
+                        background: rgba(198, 219, 255, .8);
+                    }
+
+                    #table tr:nth-of-type(2) td {
+                        background: rgba(198, 219, 255, 1);
+                        font-weight: bold;
+                        color: rgba(0, 64, 128, 1);
+                    }
+
+                    #table td {
+                        padding: 0;
+                        border: 1.1px solid #000;
+                        text-align: center;
+                        font-size: .8rem;
+                    }
+            </style>
+        </div>
+        <table id="table">
+            <tr>
+                <td colspan="13">
+                    <div class="tb_header">
+                        <span style="font-size: 1.1rem;">@trDateTitle &nbsp;库存</span><br />
+                        <span>打印日期:  @trDateTitle2</span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 3%">序号</td>
+                <td style="width: 10%">产品编号</td>
+                <td style="width: 10%">名称</td>
+                <td style="width: 10%">表色</td>
+                <td style="width: 10%">硬度</td>
+                <td style="width: 10%">材质</td>
+                <td style="width: 10%">规格</td>
+                @*<td style="width: 4%">描述</td>*@
+                <td>当月入库</td>
+                <td>当月出库</td>
+                <td>当前库存</td>
+                @*<td>冻结库存</td>*@
+                <td>上月结算</td>
+                <td>单位</td>
+            </tr>
+            @{
+            int index = 1;
+            foreach (var record in queryRecords)
+            {
+                <tr>
+                    <td>@index</td>
+                    <td>@record.SemiProductNo</td>
+                    <td>@record.SemiProductName</td>
+                    <td>@record.SurfaceColor</td>
+                    <td>@record.Rigidity</td>
+                    <td>@record.Material</td>
+                    <td>@record.Model</td>
+                    @*<td>@record.ProductDesc</td>*@
+                    <td>@record.AllEnterQuantity</td>
+                    <td>@record.AllOutQuantity</td>
+                    <td>@record.AllQuantity</td>
+                    @*<td>@record.AllFreezeQuantity</td>*@
+                    <td>@record.AllPreMonthQuantity</td>
+                    <td>公斤</td>
+                </tr>
+                index++;
+            }
+            }
+        </table>
+    </div>
+    <script src="~/Content/Scripts/MyScript/ExportExcel.js"></script>
+    <script src="~/Content/Scripts/Jquery/jquery-3.3.1.min.js"></script>
+    @*<script src="~/Content/Plugins/printThis/printThis.js"></script>*@
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+
+    <script>
+        $(function () {
+
+            $("#printBtn").printPreview({
+                modalWidth:1250,
+                printBody: "#printContent"
+            });
+        })
+    </script>
+</body>
+</html>

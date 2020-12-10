@@ -1,0 +1,592 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "不合格产品处理";
+    string activeMenu = PermissionNames.PagesProductInspectDisqualifiedProductMg; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    string storeHouse1 = ViewBag.StoreHouse1, storeHouse2 = ViewBag.StoreHouse2;
+    List<SelectListItem> productType = new List<SelectListItem>()
+    {
+        new SelectListItem(){Value = ProductTypeDefinition.Semi+"",Text = @"半成品"},
+        new SelectListItem(){Value = ProductTypeDefinition.Finish+"",Text = @"成品"},
+    }, inspectType = new List<SelectListItem>()
+    {
+        new SelectListItem(){Value = DisProductStateDefinition.NormalReturn+"",Text = @"正常退货"},
+        new SelectListItem(){Value = DisProductStateDefinition.Downgrade+"",Text = @"检验降级"},
+        new SelectListItem(){Value = DisProductStateDefinition.Scrapped+"",Text = @"检验报废"},
+        new SelectListItem(){Value = DisProductStateDefinition.AntiPlating+"",Text = @"返工反镀"},
+        new SelectListItem(){Value = DisProductStateDefinition.OutPurchaseReturnGood+"",Text = @"外购退货"},
+        new SelectListItem(){Value = DisProductStateDefinition.SpecialPurchase+"",Text = @"特采"},
+    }, handleType = ViewBag.HandleType;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("disqualifiedNo","编号"),
+        new SearchItem("productOrderNo","流转单号"),
+        new SearchItem("productName","产品名称"),
+       // new SearchItem("productType","产品类型",FiledType.I).SetSearchItem(productType),
+        new SearchItem("handleType","处理类型",FiledType.I).SetSearchItem(handleType),
+    });
+
+    var table = new TableViewModel("/api/services/app/DisqualifiedProduct/GetAll", activeMenu, searchForm)
+    .SetFields(new List<FieldItem>()
+    {
+        new FieldItem("disqualifiedNo", "编号"),
+        new FieldItem("productOrderNo", "流转单号"),
+        new FieldItem("productNo", "产品编码"),
+        new FieldItem("productName", "产品名称"),
+        new FieldItem("productType", "产品类型","ProductTypeFormatter"),
+        new FieldItem("quantityWeight", "产品数量（Kg）"),
+        new FieldItem("kgWeight", "千件重"),
+        new FieldItem("quantityPcs", "产品数量（千件）"),
+        new FieldItem("handleType", "处理类型","HandleTypeFormatter"),
+        new FieldItem("checkUser", "检验人员"),
+        new FieldItem("checkDate", "检验时间","DateTimeFormatter"),
+        new FieldItem("handleUser", "最后处理人"),
+        new FieldItem("handleDate", "最后处理时间","DateTimeFormatter"),
+        //new FieldItem("", "操作","ActionFormatter"),
+            });
+}
+@section css{
+
+}
+
+@Html.Partial("New/Table/_Table", table)
+
+@section modal{
+    <!--Main Modal-->
+    @{
+        var modal = new ModalViewModel("产品降级", "", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            new Input("storeHouseId","仓库",other:"onchange=StoreHouseChange()").SetOuterBefore("<div class=\"col-sm-6\">").SetSelectOptions(""),
+            new Input("storeLocationNo", "库位编号").SetSearchIcon("query_storeHouseLocation_modal","modal"),
+            new Input("quantity", "入库数量",@class:"number",other:"min=0.001"),
+            new Input("productName","产品名称").SetOuterBefore("<div class=\"p1\">").SetSearchIcon("query_Product_modal",".p1"),
+            new InputHide("productNo").SetOuterAfter("</div>"),
+            new Input("productName","产品名称").SetOuterBefore("<div class=\"p2\">").SetSearchIcon("query_semiProduct_modal",".p2"),
+            new InputHide("productNo").SetOuterAfter("</div></div>"),
+            new Input("custom-name-1","客户名称",@class:"custom-name").SetNotRequired().SetOuterBefore("<div class=\"col-sm-6\"><div class=\"customer-1\">").SetSearchIcon("query_customer_modal",".customer-1"),
+            new InputHide("custom-id-1",@class:"custom-id",name:"customerNos").SetNotRequired().SetOuterAfter("</div>"),
+            new Input("custom-name-2","客户名称",@class:"custom-name").SetNotRequired().SetOuterBefore("<div class=\"customer-2\">").SetSearchIcon("query_customer_modal",".customer-2"),
+            new InputHide("custom-id-2",@class:"custom-id",name:"customerNos").SetNotRequired().SetOuterAfter("</div>"),
+            new Input("custom-name-3","客户名称",@class:"custom-name").SetNotRequired().SetOuterBefore("<div class=\"customer-3\">").SetSearchIcon("query_customer_modal",".customer-3"),
+            new InputHide("custom-id-3",@class:"custom-id",name:"customerNos").SetNotRequired().SetOuterAfter("</div></div>"),
+        }),sizeClass:"lg",width:1000);
+        var modal2 = new ModalViewModel("产品检验情况","",new ModalBodyViewModel(new List<Input>
+        {
+            new InputHide("id"),
+            new InputHide("productType"),
+            new Input("inspectType", "检验选项",other:"onchange=InspectTypeChange(this)").SetSelectOptions(inspectType),
+            new Input("surveyReason", "调查情况",@class:"type type1").SetSelectOptions(new List<SelectListItem>(){
+                new SelectListItem(){Text = @"人工原因",Value = "人工原因"},
+                new SelectListItem(){Text = @"生产原因",Value = "生产原因"},
+                new SelectListItem(){Text = @"外协原因",Value = "外协原因"},
+                new SelectListItem(){Text = @"存放原因",Value = "存放原因"},
+                new SelectListItem(){Text = @"其他原因",Value = "其他原因"},
+            },true),
+            new InputTextarea("surveyDetail", "调查原因",@class:"type type1"),
+            new InputTextarea("solution", "解决办法",@class:"type type1"),
+            new Input("storeHouseId","仓库",@class:"type type2",other:"onchange=StoreHouseChange2(this)").SetSelectOptions(storeHouse2),//成品仓库
+            new Input("storeHouseId2","仓库",@class:"type type3",other:"onchange=StoreHouseChange2(this)").SetSelectOptions(storeHouse1),//半成品仓库
+            new Input("storeLocationNo", "库位编号",@class:"type type2 type3").SetSearchIcon("query_storeHouseLocation_modal","return_modal"),
+            new InputTextarea("SpecialPurchaseRemark", "特采备注",@class:"type type3"),
+
+        }),"return_modal");
+        
+    }
+    @Html.Partial("New/Modals/_Modal", modal)
+    @Html.Partial("New/Modals/_Modal", modal2)
+    @Html.Partial("Modals/Query/_Customer", ".custom-id,.custom-name")
+    @Html.Partial("Modals/Query/_StoreHouseLocation", "storeHouseId,storeLocationNo")
+    @Html.Partial("Modals/Query/_Product", "productNo,productName")
+    @Html.Partial("Modals/Query/_SemiProduct", "productNo,productName")
+}
+   
+@section scripts
+{
+    <script type="text/javascript">
+        var $table, productOrderNos = [];
+        $(function() {
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnCheckDowngrade"] = function(url) {
+                var row = config.table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.handleType !== @(DisProductStateDefinition.NoHandle)) {
+                        abp.message.warn("该记录已处理，不能操作。");
+                        return;
+                    }
+                    $('#return_modal #inspectType option[value="@(DisProductStateDefinition.NormalReturn)"]')
+                        .prop("disabled", true);
+                    $('#return_modal #inspectType option[value="@(DisProductStateDefinition.OutPurchaseReturnGood)"]')
+                        .prop("disabled", true);
+                    $('#return_modal #inspectType option[value="@(DisProductStateDefinition.SpecialPurchase)"]')
+                        .prop("disabled", true);
+                    if (row.productType === @ProductTypeDefinition.Finish) {
+                        $('#return_modal #inspectType option[value="@(DisProductStateDefinition.NormalReturn)"]')
+                            .prop("disabled", false);
+                    }
+                    if (row.productType === @ProductTypeDefinition.Semi) {
+                        $('#return_modal #inspectType option[value="@(DisProductStateDefinition.OutPurchaseReturnGood)"]')
+                            .prop("disabled", false);
+                        $('#return_modal #inspectType option[value="@(DisProductStateDefinition.SpecialPurchase)"]')
+                            .prop("disabled", false);
+                    }
+                    $('#return_modal .type').removeClass('required').closest('.form-group-sm').hide();
+                    OpenModal({
+                        modal: $('#return_modal'),
+                        data: row,
+                        disabled: "storeLocationNo",
+                        save: function() {
+                            SaveAjax({ url: url, modal: $('#return_modal'), isValidate: true });
+                        }
+                    });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+            funs["btnScrap"] = function(url) {
+                var row = config.table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.handleType !== @(DisProductStateDefinition.NoHandle)) {
+                        abp.message.warn("该记录已处理，不能操作。");
+                        return;
+                    }
+                    abp.message.confirm("确认产品需要报废？",
+                        "产品报废",
+                        function() {
+                            ReturnOrder(url, row);
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+            funs["btnUnScrapped"] = function(url) {
+                var row = config.table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.handleType !== @(DisProductStateDefinition.Scrapped)) {
+                        abp.message.warn("该记录未被确认报废，不能操作。");
+                        return;
+                    }
+                    abp.message.confirm("确认产品不需要报废？",
+                        "拒绝产品报废",
+                        function() {
+                            SaveAjax({ url: url, data: { Id: row.id }, isValidate: false });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+            //降级使用
+            funs["btnUseDowngrade"] = function(url) {
+                var row = config.table.bootstrapTable("getSelections")[0];
+
+                if (row) {
+                    if (row.handleType === @(DisProductStateDefinition.NoHandle)) {
+                        abp.message.warn("该记录未被检验处理，不能降级。");
+                        return;
+                    } else if (row.handleType === @(DisProductStateDefinition.DowngradeHandled) ||
+                        row.handleType === @(DisProductStateDefinition.ScrappedHandled)) {
+                        abp.message.warn("该记录已处理，不能降级。");
+                        return;
+                    } else if (row.handleType !== @(DisProductStateDefinition.Downgrade) &&
+                        row.handleType !== @(DisProductStateDefinition.ScrappedDowngrade)) {
+                        abp.message.warn("该记录未被确认降级，不能降级。");
+                        return;
+                    }
+                    UseDowngrade(row);
+                    OpenModal({
+                        url: url,
+                        modal: $('#modal'),
+                        disabled: "storeLocationNo,productName,custom-name-1,custom-name-2,custom-name-3",
+                        save: function() {
+                            var customerNos = [];
+                            $('.custom-id').each(function() {
+                                if ($(this).val()) {
+                                    customerNos.push($(this).val());
+                                }
+                            });
+                            var storeHouseId = $('#storeHouseId').val();
+                            var storeLocationNo = $('#storeLocationNo').val();
+                            var storeHouseType = $('#storeHouseId option:selected').data('type');
+                            var productNo = $('.p' + storeHouseType + " #productNo").val();
+                            console.log("---", storeHouseType, productNo);
+                            var quantity = $('#quantity').val();
+                            if (!storeHouseId) {
+                                abp.message.warn("请选择一个仓库...");
+                                return;
+                            }
+                            if (!storeLocationNo) {
+                                abp.message.warn("请选择一个库位...");
+                                return;
+                            }
+                            //console.log({
+                            //    Id: row.id,
+                            //    CustomerNos: customerNos,
+                            //    StoreHouseId: storeHouseId,
+                            //    StoreLocationNo: storeLocationNo,
+                            //    StoreHouseType:storeHouseType,
+                            //    ProductNo:productNo,
+                            //    ProductOrderNos:productOrderNos
+                            //});
+                            //return;
+                            SaveAjax({
+                                url: url,
+                                isValidate: false,
+                                data: {
+                                    Id: row.id,
+                                    CustomerNos: customerNos,
+                                    StoreHouseId: storeHouseId,
+                                    StoreLocationNo: storeLocationNo,
+                                    StoreHouseType: storeHouseType,
+                                    ProductNo: productNo,
+                                    ProductOrderNos: productOrderNos,
+                                    Quantity:quantity
+                                },
+                                success: function() {
+                                    $('#modal').modal('hide');
+                                    RefreshTable();
+                                }
+                            });
+                        }
+                    });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+            funs["btnConfirmScrapped"] = function(url) {
+                var row = config.table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.handleType === @(DisProductStateDefinition.NoHandle)) {
+                        abp.message.warn("该记录未被检验处理，不能报废。");
+                        return;
+                    } else if (row.handleType === @(DisProductStateDefinition.DowngradeHandled) ||
+                        row.handleType === @(DisProductStateDefinition.ScrappedHandled)) {
+                        abp.message.warn("该记录未已处理，不能报废。");
+                        return;
+                    } else if (row.handleType !== @(DisProductStateDefinition.Scrapped)) {
+                        abp.message.warn("该记录未被确认报废，不能报废。");
+                        return;
+                    }
+                    abp.message.confirm("确认报废产品，产品存入报废仓库？",
+                        "报废产品",
+                        function() {
+                            SaveAjax({ url: url, data: { Id: row.id }, isValidate: false });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+            funs["btnAntiPlating"] = function(url) {
+                var row = config.table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.handleType !== @(DisProductStateDefinition.NoHandle)) {
+                        abp.message.warn("该记录已处理，不能操作。");
+                        return;
+                    }
+                    abp.message.confirm("确认反镀产品？",
+                        "确认反镀",
+                        function() {
+                            SaveAjax({ url: url, data: { Id: row.id }, isValidate: false });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+            $("#Tool1").append(
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType1" checked value=""/><label for="radioType1">全部</label></div>' +
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType2" value="@(ProductTypeDefinition.Finish)"/><label for="radioType2">退货成品</label></div>' +
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType3" value="@(ProductTypeDefinition.Semi)"/><label for="radioType3">不合格半成品</label></div>');
+
+            $(".tool-radio input[type='radio']").on('click',
+                function() {
+                    document.getElementById("SearchForm").reset();
+                    GetSearchList();
+                    RefreshTable();
+                });
+        });
+
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            var radioType = $('input[name="radioType"]:checked').val();
+            if (radioType) {
+                window._searchList.push({ KeyWords: radioType, KeyField: "productType", FieldType: "1", ExpType: "0" });
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    window._searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+
+        function ReturnOrder(url, row) {
+            if (row.productType === @ProductTypeDefinition.Finish) {
+                OpenModal({
+                    modal: $('#return_modal'),
+                    data: row,
+                    save: function() {
+                        SaveAjax({ url: url, modal: $('#return_modal'), isValidate: true });
+                    }
+                });
+            } else {
+                SaveAjax({ url: url, data: { Id: row.id }, isValidate: false });
+            }
+
+        }
+    </script>
+
+    <script>
+        var $DowngradeBox = $('#Downgrade_box'), productTypeGlobal;
+
+        function UseDowngrade(row) {
+            var storeHouseStr = '<option value="">请选择仓库</option>';
+            queryParams.storeHouseId = 0;
+            $DowngradeBox.remove();
+            productTypeGlobal = row.productType;
+            if (row.handleType === @(DisProductStateDefinition.NormalReturn)) {
+                $('#modal .custom-id').closest('.form-group-sm').hide();
+            } else {
+                $('#modal .custom-id').closest('.form-group-sm').show();
+            }
+            if (row.productType === @(ProductTypeDefinition.Semi)) {
+                storeHouseStr += $('#hid-storeHouse1').html();
+                $('.p1').hide();
+                $('.p2').hide();
+
+            } else if (row.productType === @(ProductTypeDefinition.Finish)) {
+                storeHouseStr += '<optgroup label="成品仓库">';
+                storeHouseStr += $('#hid-storeHouse2').html();
+                storeHouseStr += '</optgroup>';
+                storeHouseStr += '<optgroup label="半成品仓库">';
+                storeHouseStr += $('#hid-storeHouse1').html();
+                storeHouseStr += '</optgroup>';
+                $('.p1').show();
+                $('.p2').hide();
+                $DowngradeBox = $(
+                    '<div id="Downgrade_box" ><button class="btn btn-info" type="button" style="width: 100%" onclick="QueryCurrentProduct(\'' +
+                    row.productOrderNo +
+                    '\')">查询关联产品，勾选降级</button><div class="table-box iwb-bootstrap-table" style="display:none"><table id="table-downgrade"  data-method="post" data-side-pagination="server"  data-cache="false" data-pagination="true" data-page-number="1" data-page-list="[10,25,50]" data-pagination-detail-h-align="right" data-pagination-h-align="left" data-click-to-select="true" data-single-select="false"><thead><tr>' +
+                    '<th data-field="state" data-checkbox="true"></th>' +
+                    '<th data-align="center" data-field="productOrderNo" data-sortable="true">排产单号</th>' +
+                    '<th data-align="center" data-field="productNo" data-sortable="true">产品编号</th>' +
+                    '<th data-align="center" data-field="productName" data-sortable="true">产品名称</th>' +
+                    '<th data-align="center" data-field="partNo" data-sortable="true">零件号</th>' +
+                    '<th data-align="center" data-field="model">规格</th>' +
+                    '<th data-align="center" data-field="material">材质</th>' +
+                    '<th data-align="center" data-field="surfaceColor">表色</th>' +
+                    '<th data-align="center" data-field="rigidity">硬度</th>' +
+                    //'<th data-align="center" data-field="">数量</th>' +
+                    '</tr></thead></table></div></div>');
+                $('#modal .modal-body').append($DowngradeBox);
+
+            }
+            $('#storeHouseId').html(storeHouseStr).select2();
+        }
+
+        var storeHouseTypeGlobal;
+
+        function StoreHouseChange() {
+            queryParams.storeHouseId = $('#modal #storeHouseId').val();
+            $("#storeLocationNo").val('');
+            var storeHouseType = $('#modal #storeHouseId option:selected').data('type');
+            storeHouseTypeGlobal = storeHouseType;
+
+            var r = config.table.bootstrapTable("getSelections")[0];
+
+            if (r.productType === @(ProductTypeDefinition.Semi)) {
+
+                $('#modal .p1,#modal .p2').hide().find("#productNo").val('');
+            } else {
+                if (storeHouseTypeGlobal === 2) {
+                    $('#modal .p1,#modal .p2').hide().find("#productNo").val('');
+
+                    $('#modal .p2').show();
+                }
+                if (storeHouseTypeGlobal === 1) {
+                    $('#modal .p1,#modal .p2').hide().find("#productNo").val('');
+                }
+            }
+            $('#modal .p1,#modal .p2').find("#productName").val('').prop('disabled', true);
+            //if (productTypeGlobal === 2) {
+            //    $('#modal .p1,#modal .p2').hide().find("#productNo").val('');
+
+            //} else if (storeHouseTypeGlobal !== storeHouseType) {
+            //    $('#modal .p1,#modal .p2').find("#productNo").val('');
+            //    $('#modal .p1,#modal .p2').find("#productName").val('').prop('disabled', true);
+            //} else {
+            //    if (storeHouseType === 1) {//成品仓库
+            //        //$('#modal .p1').show();
+            //        $('#modal .p1').hide();
+            //        $('#modal .p2').hide();
+            //    } else if (storeHouseType ===2) {//半成品仓库
+            //        $('#modal .p2').show();
+            //        $('#modal .p1').hide();
+            //    }
+            //    $('#modal .p1,#modal .p2').find("#productName").val('').prop('disabled', true);
+            //}
+        }
+
+        function InspectTypeChange(that) {
+            var type = $(that).val();
+            var productType = $("#return_modal #productType").val();
+            $('#return_modal .type').removeClass('required').closest('.form-group-sm').hide();
+            if (type === "@(DisProductStateDefinition.NormalReturn)") {
+                $('#return_modal .type2').addClass('required').closest('.form-group-sm').show();
+            }
+            else if (productType === "@(ProductTypeDefinition.Finish)" &&
+                (type === "@(DisProductStateDefinition.Downgrade)" || type === "@(DisProductStateDefinition.Scrapped)")
+            )
+            {
+                $('#return_modal .type1').addClass('required').closest('.form-group-sm').show();
+            }
+            else if (productType === "@(ProductTypeDefinition.Semi)" &&
+                (type === "@(DisProductStateDefinition.SpecialPurchase)")
+            ) {
+              
+                $('#return_modal .type3').addClass('required').closest('.form-group-sm').show();
+            }
+        }
+
+        function StoreHouseChange2(that) {
+            queryParams.storeHouseId = $(that).val();
+            $("#return_modal #storeLocationNo").val('');
+        }
+
+        function QueryCurrentProduct(orderNo) {
+            function downgradeCheck(row) {
+                if ($.inArray(id, productOrderNos) === -1) {
+                    productOrderNos[productOrderNos.length] = row.productOrderNo;
+                }
+            }
+
+            function downgradeUnCheck(row) {
+                var index = $.inArray(row.productOrderNo, productOrderNos);
+                if (index !== -1) {
+                    productOrderNos.splice(index, 1);
+                    downgradeUnCheck(row);
+                }
+            }
+
+            function downgradeQueryParams(params) {
+                var sorting = '';
+                if (params.sort) {
+                    sorting = params.sort;
+                    if (params.order) {
+                        sorting += ' ' + params.order;
+                    }
+                }
+                return {
+                    MaxResultCount: params.limit,
+                    SkipCount: params.offset,
+                    Sorting: sorting,
+                    ProductOrderNo: orderNo
+                }
+            }
+
+            function downgradeResponseHandler(res) {
+                var data = ResponseHandler(res);
+                $.each(data.rows,
+                    function(i, row) {
+                        //注意这里的row.id 中的id指的是列表的主键，替换成你使用的就行了比如 studentId等
+                        row.state = $.inArray(row.productOrderNo, productOrderNos) !== -1;
+                    });
+                return data;
+            }
+
+            $('#table-downgrade').closest('.table-box').show();
+            $('#table-downgrade').bootstrapTable("destroy");
+            LoadTable({
+                table: $('#table-downgrade'),
+                url: abp.appUrl + 'DisqualifiedProduct/QueryRelatedProductionOrderPage?productOrderNo=' + orderNo,
+                queryParams: downgradeQueryParams,
+                responseHandler: downgradeResponseHandler,
+                onCheck: downgradeCheck,
+                onUncheck: downgradeUnCheck,
+                onCheckAll: function(r1) {
+                    $.each(r1,
+                        function(i, v) {
+                            downgradeCheck(v);
+                        });
+                },
+                onUncheckAll: function(r1) {
+                    $.each(r1,
+                        function(i, v) {
+                            downgradeUnCheck(v);
+                        });
+                },
+                onLoadSuccess: function(data) {
+                    OnLoadSuccess(data, $('#table-downgrade'));
+                    var topHeight = $(window).height() - $('#modal').find('.modal-dialog').height() - 50;
+                    if (topHeight < 30) {
+                        topHeight = 30;
+                    }
+                    $('#modal').find('.modal-dialog').animate({ 'marginTop': topHeight / 2 + "px" });
+                }
+            });
+        }
+    </script>
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function ProductTypeFormatter(v) {
+            var name = $('#hid-productType option[value="' + v + '"]').text();
+            switch (v) {
+            case 2:
+                return '<span class="label label-success">' + name + '</span>';
+            case 1:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-success">' + name + '</span>';
+            }
+        }
+
+        function HandleTypeFormatter(v) {
+            var name = $('#hid-handleType option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-info">' + name + '</span>';
+            case 2:
+                return '<span class="label label-warning">' + name + '</span>';
+            case 3:
+                return '<span class="label label-danger">' + name + '</span>';
+            case 4:
+                return '<span class="label label-primary">' + name + '</span>';
+            case 8:
+                return '<span class="label label-iwb">' + name + '</span>';
+            default:
+                return '<span class="label label-success">' + name + '</span>';
+            }
+        }
+
+        function TypeFormatter(v) {
+            var name = $('#hid-type option[value="' + v + '"]').text();
+            switch (v) {
+            case 0:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-storeHouse1">
+        @Html.Raw(storeHouse1)
+    </select>
+    <select id="hid-storeHouse2">
+        @Html.Raw(storeHouse2)
+    </select>
+
+    @Html.DropDownList("hid-productType", productType)
+    @Html.DropDownList("hid-handleType", handleType)
+</section>

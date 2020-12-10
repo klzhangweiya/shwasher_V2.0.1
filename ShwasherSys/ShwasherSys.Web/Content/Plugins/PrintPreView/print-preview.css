@@ -1,0 +1,78 @@
+
+#print-modal {
+    background: #FFF;
+    position: absolute;
+    left: calc(50% - 400px);
+    margin: 10px auto;
+    padding: 0 70px;
+    width: 794px;
+    -moz-box-shadow: 0 0 20px #000;
+    -webkit-box-shadow: 0 0 10px #000;
+    box-shadow: 0 0 20px #000;
+}
+
+#print-modal-content {
+    margin: 70px 0 10px;
+    border: none;
+    /*height: 100%;
+    overflow: hidden;*/
+    width: 100%;
+}
+
+#print-modal-controls {
+    border: 1px solid #583d9c;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    top: 25px;
+    left: calc(50% - 300px);
+    position: fixed;
+    margin: 0 auto;
+    padding: 5px 0;
+    color: #fff;
+    text-align: center;
+}
+
+#print-modal-controls a {
+    width:300px;
+    height: 32px;
+    line-height: 32px;
+    font-size: 14px; 
+    display: block;
+    padding: 0;
+    float: left;
+    color: #fff;
+    background: #583d9c;
+    text-decoration: none;
+}
+    #print-modal-controls a:hover {
+        background: #683d9c;
+    }
+    #print-modal-controls a.print {
+        border-right: 1px solid #fff;
+    }
+    #print-modal-controls a.close {
+        border-left: 1px solid #fff;
+    }
+/*#print-modal-controls a:hover {
+    opacity: 0.75;
+}
+
+#print-modal-controls a.print {
+    background: url(images/icon-print.png) no-repeat 50% 50%;
+}
+#print-modal-controls a.close {
+    background: url(images/icon-close.png) no-repeat 50% 50%;
+}*/
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: #583d9c;
+    background-color: rgba(88, 61, 156,.4);
+    z-index: 1040;
+    opacity: .3;
+    cursor: wait;
+}

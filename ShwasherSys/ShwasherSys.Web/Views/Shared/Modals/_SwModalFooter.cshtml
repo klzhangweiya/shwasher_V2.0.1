@@ -1,0 +1,14 @@
+﻿@model ShwasherSys.Models.Modal.ModelFooterModel
+@{
+    var footStyle = Model.FootStyle==""? "text-align: center;": Model.FootStyle;
+}
+<div class="modal-footer" style="@footStyle">
+    @if (!Model.IsCancel)
+    { 
+        <button type="button" class="btn btn-success save-btn waves-effect" style="min-width: 100px; background-color: #678ceb;border: 1px solid #678ceb;" onclick="@Model.SubmitEvent">@Model.SubmitName</button>
+    }else{
+        <button type="button" class="btn btn-default waves-effect" data-dismiss="modal" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;" onclick="$('#@Model.ModalId').modal('hide')">@Model.CancelName</button>
+        <button type="button" class="btn btn-success save-btn waves-effect" style="min-width:100px;background-color: #678ceb;border: 1px solid #678ceb;" onclick="@Model.SubmitEvent">@Model.SubmitName</button>
+    }
+</div>
+

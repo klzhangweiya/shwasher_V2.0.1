@@ -1,0 +1,16 @@
+﻿.jstree-default .jstree-wholerow-clicked {
+    background: #7b68ee;
+}
+
+.jstree-default .jstree-wholerow-hovered {
+    background: #f5f5f5;
+}
+
+.jstree-default > .jstree-wholerow-ul .jstree-clicked {
+    color: #eee;
+}
+
+.jstree-default > .jstree-wholerow-ul .jstree-hovered,
+.jstree-default > .jstree-wholerow-ul .jstree-hovered.jstree-clicked {
+    color: #583d9c;
+}

@@ -1,0 +1,77 @@
+﻿.bootstrap-table .table thead > tr > th {
+    opacity: 0.7;
+    background: #EBEEF7;
+    height: 40px;
+    border-radius: 4px;
+    border: none;
+}
+
+.fixed-table-container tbody td .th-inner, .fixed-table-container thead th .th-inner {
+    font-size: 14px;
+    color: #333333;
+    letter-spacing: 0;
+    line-height: 14px;
+    padding: 13px 8px;
+}
+.table > tbody > tr > td {
+    font-size: 14px;
+    color: #666666;
+    letter-spacing: 0;
+    line-height: 20px;
+    border: none;
+}
+.bootstrap-table .table:not(.table-condensed) > tbody > tr > td {
+    padding: 10px 8px 5px;
+}
+.table-striped > tbody > tr:nth-of-type(2n) {
+    background-color: #EBEEF7;
+    background-color: rgb(235, 238, 247,.5);
+}
+
+.table-striped > tbody > tr:nth-of-type(2n+1) {
+    background-color: #f9f9f9;
+}
+.bootstrap-table .table-hover > tbody > tr:hover {
+    background-color: #D1DCF9;
+}
+.fixed-table-container tbody .selected td,
+.fixed-table-container tbody .selected td:hover {
+    background-color: transparent;
+}
+.fixed-table-pagination > .pagination-detail .dropdown-toggle.btn-primary {
+    color: #3c3c3c;
+    background: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    border-radius: 2px;
+}
+.fixed-table-pagination > .pagination-detail .open > .dropdown-toggle.btn-primary:focus, .open > .dropdown-toggle.btn-primary:hover {
+    color: #3c3c3c;
+    background: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    border-radius: 2px;
+}
+.fixed-table-pagination > .pagination-detail .dropdown-menu > .active > a, .dropdown-menu > .active > a:focus, .dropdown-menu > .active > a:hover {
+    color: #fff;
+    text-decoration: none;
+    background-color: #678CEB;
+    outline: 0;
+}
+.fixed-table-pagination > .pagination-detail .dropdown-menu > li > a:hover {
+    background-color: #D1DCF9;
+    color: #333;
+}
+.fixed-table-pagination > .pagination .pagination > li > a {
+    font-size: 14px;
+    text-align: center;
+    margin: 0 3px;
+    border-radius: 2px;
+    color: #333333;
+}
+    .fixed-table-pagination > .pagination .pagination > li > a:hover {
+        background: #D1DCF9;
+    }
+.fixed-table-pagination > .pagination .pagination > li.active > a {
+    color: #FFFFFF;
+    background: #678CEB;
+    border: 1px solid #678CEB;
+}

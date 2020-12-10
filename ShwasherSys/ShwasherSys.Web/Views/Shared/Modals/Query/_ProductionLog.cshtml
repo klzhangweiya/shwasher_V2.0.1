@@ -1,0 +1,39 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "productionOrderNo,semiProductNo,semiProductName,actualQuantity,storeHouseId,currentSemiStoreHouseNo,canUseQuantity",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems=new List<QueryItem>()
+    {
+        //new QueryItem("id","排产单编号",true,FiledType.I,ExpType.Equal),
+        new QueryItem("productOrderNo","排产单编号",true,FiledType.S,ExpType.Equal).SetHidden(),
+        new QueryItem("productionNo","日志编号"),
+        new QueryItem("employeeNo","工号"),
+        new QueryItem("employeeName","姓名"),
+        new QueryItem("carNo","车号"),
+        new QueryItem("quantityWeight","总重量(kg)"),
+        new QueryItem("kgWeight","千件重"),
+        new QueryItem("quantityPcs","总件数(千件)"),
+        new QueryItem("creationTime","创建时间")
+    };
+
+     
+    QueryModalModel qmModel = new QueryModalModel("生产日志", "/api/services/app/Query/QueryProductionLog", queryItems, originFiled, targetFiled, modalId: "query_productionLog_modal",modalWidth:1300).SetDefaultValueFunction("ProductionLogDefaultValue");;
+}
+
+@Html.Partial("Modals/Query/_QueryModal",qmModel)
+
+@using (Html.BeginScripts())
+{
+    <script>
+        
+        function ProductionLogDefaultValue() {
+            $("#query_productionLog_modal #Q-KeyWords-1").val(queryParams.no?queryParams.no:"");
+            //$("#query_semiProduct_modal #Q-KeyWords-2").val(queryParams.material?queryParams.material:"");
+        }
+    </script>
+}
+

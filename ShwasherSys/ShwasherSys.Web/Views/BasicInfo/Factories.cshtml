@@ -1,0 +1,133 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesBasicInfoFactories; //The menu item will be active for this page.
+    ViewBag.Title = "办公场所信息维护";
+    // List<SelectListItem> classification = ViewBag.Classification;
+    var regionInfo = ViewBag.RegionInfo;
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu })
+    <table id="table"
+           data-url="/api/services/app/Factories/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">编号</th>
+                <th data-align="center" data-field="factoryName">办公场所名称</th>
+                <th data-align="center" data-field="linkMan">联系人</th>
+                <th data-align="center" data-field="telephone">电话</th>
+                <th data-align="center" data-field="remark">说明</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("办公场所"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                    {
+                                                                        new InputViewModel("id", displayName: "编号"),
+                                                                        new InputViewModel("factoryName", displayName: "办公场所名称"),
+                                                                        new InputViewModel("shortNames", displayName: "缩写名称"),
+                                                                        new InputViewModel("address", displayName: "地址").SetNotRequired(),
+                                                                        new InputViewModel("zip", displayName: "邮编").SetNotRequired(),
+                                                                        new InputViewModel("factoryURL", displayName: "网址").SetNotRequired(),
+                                                                        new InputViewModel("linkMan", displayName: "联系人").SetNotRequired(),
+                                                                        new InputViewModel("telephone", displayName: "电话"),
+                                                                        new InputViewModel("regionID",InputTypes.List, displayName: "所在地区"),
+                                                                        new InputViewModel("remark",InputTypes.Textarea, "说明").SetNotRequired(),
+
+                                                                    };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/select2/js/select2tree.js"></script>
+    @*<script src="~/Content/Plugins/kindeditor/kindeditor-all.js"></script>
+        <script src="~/Content/Plugins/kindeditor/lang/zh-CN.js"></script>*@
+    <script type="text/javascript">
+
+        $(function () {
+            //show完毕前执行
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            //funs["btnUpdate"] = function () { BtnUpdate({ readonly: "id" }); };
+
+        });
+        function BtnCreate(url) {
+            console.log("Create");
+            abp.ajax({
+                contentType: 'application/x-www-form-urlencoded',
+                url: "/api/services/app/Regions/GetRegionSelectStrs",
+                success: function(res) {
+                    $("#regionID").empty().html(res);
+                    //var url = $($this).data("url") + "";
+                    OpenModal({
+                        modaltitle: window.opCreate,
+                        //data: { ParentNo: "0" },
+                        url: url,
+                        select2tree: "regionID"
+                    });
+                }
+            });
+        }
+
+        function BtnUpdate(url) {
+            console.log("Update");
+            var row = $("#table").bootstrapTable("getSelections")[0];
+            if (row) {
+                abp.ajax({
+                    contentType: 'application/x-www-form-urlencoded',
+                    url: "/api/services/app/Regions/GetRegionSelectStrs",
+                    success: function(res) {
+                        $("#regionID").empty().html(res);
+                        //var url = $($this).data("url") + "";
+                        OpenModal({
+                            modaltitle: window.opUpdate,
+                            data: row,
+                            url: url,
+                            readonly: "id",
+                            select2tree: "regionID"
+                        });
+                    }
+                });
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+
+        }
+    </script>
+
+}

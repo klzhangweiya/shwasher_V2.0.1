@@ -1,0 +1,570 @@
+﻿@using Abp.Authorization
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductionInfoProductionOrderMg; //The menu item will be active for this page.
+    ViewBag.Title = "排产包装库存信息查询";
+    List<SelectListItem> productionType = new List<SelectListItem>
+{
+new SelectListItem{Text = @"车间生产",Value = "0"},
+new SelectListItem{Text = @"外购单",Value = "1"},
+},
+        storeHouses = ViewBag.StoreHouses,
+        applyStatus = ViewBag.ApplyStatus,
+        productionOrderStatus = ViewBag.ProductionOrderStatus,
+        packageApplyStatus = ViewBag.PackageApplyStatus;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("productionOrderNo","排产单号"),
+new SearchItem("semiProductNo","半成品编码").SetSearchIcon("query_semiProduct_modal"),
+new SearchItem("partNo","零件号"),
+new SearchItem("model","规格"),
+    new SearchItem("semiProductName","半成品名称"),
+new SearchItem("material","材质"),
+
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/viewer/viewer.min.css" rel="stylesheet" />
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .tool-radio {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .tool-radio [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+            padding-left: 25px;
+            font-size: 1.5rem;
+            color: #dad9db;
+        }
+
+        .tool-radio [type="radio"]:not(:checked) + label::before, [type="radio"]:not(:checked) + label::after {
+            border: 2px solid #fff;
+        }
+    </style>
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = "", searchForm })
+    <!-- Nav tabs -->
+    <ul id="tab-list" class="nav nav-tabs" role="tablist">
+        @if (IsGranted(PermissionNames.PagesProductionInfoProductionOrderMgQuery))
+        {
+            <li class=""><a href="#production" data-toggle="tab" data-table="production-table">车间加工信息</a></li>
+            <li class=""><a href="#stock" data-toggle="tab" data-table="stock-table">采购单信息</a></li>
+        }
+        @if (IsGranted(PermissionNames.PagesProductionInfoOutProductionOrderMgQuery))
+        {
+            <li class=""><a href="#out" data-toggle="tab" data-table="out-table">外协信息</a></li>
+        }
+        @if (IsGranted(PermissionNames.PagesSemiProductStoreInfoCurrentSemiStoreHouseMgQuery))
+        {
+            <li class=""><a href="#store" data-toggle="tab" data-table="store-table">半成品库存信息</a></li>
+        }
+        @if (IsGranted(PermissionNames.PagesPackInfoPackInfoMgQuery)||IsGranted(PermissionNames.PagesPackInfoPackageApplyInfoQuery))
+        {
+            <li class=""><a href="#semi-package" data-toggle="tab" data-table="semi-package-table">半成品包装信息</a></li>
+            <li class=""><a href="#package" data-toggle="tab" data-table="package-table">成品包装信息</a></li>
+        }
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane" id="production">
+            <table id="production-table"
+                   data-url="/api/services/app/ProductionOrders/GetAll"
+                   data-striped="true" data-id-field="id" data-unique-id="id"
+                   data-method="post"
+                   data-side-pagination="server"
+                   data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                   data-cache="false"
+                   data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                   data-query-params="QueryParams"
+                   data-response-handler="ResponseHandler"
+                   data-click-to-select="true"
+                   data-single-select="true">
+                <thead>
+                    <tr class="row" >
+                        <th data-field="state" data-checkbox="true"></th>
+                        <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                        <th data-align="center" data-field="partNo">零件号</th>
+                        <th data-align="center" data-field="semiProductName">名称</th>
+                        <th data-align="center" data-field="model">规格</th>
+                        <th data-align="center" data-field="quantity">排产数量(千件)</th>
+                        <th data-align="center" data-field="timeCreated">创建时间</th>
+                        <th data-align="center" data-field="productionOrderStatus" data-formatter="ProductionOrderStatusFormatter">生产状态</th>
+                        <th data-align="center" data-field="remark">备注</th>
+                        <th data-align="center" data-field="material">材质</th>
+                        <th data-align="center" data-field="surfaceColor">表色</th>
+                        <th data-align="center" data-field="rigidity">硬度</th>
+                        @*<th data-align="center" data-field="stoveNo">炉号</th>
+                    <th data-align="center" data-field="carNo">车号</th>*@
+                        <th data-align="center" data-field="kgWeight">千件重</th>
+                        <th data-align="center" data-field="planProduceDate" data-formatter="PlanDateFormatter">计划完成时间</th>
+                        <th data-align="center" data-field="enterDate" data-formatter="DateFormatter">入库时间</th>
+                        <th data-align="center" data-field="semiProductNo" data-formatter="SemiProductNoFormatter">半成品编码</th>
+                        <th data-align="center" data-formatter="ActionProductFormatter">操作</th>
+
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="stock">
+            <table id="stock-table"
+                   data-url="/api/services/app/ProductionOrders/GetAll"
+                   data-striped="true" data-id-field="id" data-unique-id="id"
+                   data-method="post"
+                   data-side-pagination="server"
+                   data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                   data-cache="false"
+                   data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                   data-query-params="QueryParams"
+                   data-response-handler="ResponseHandler"
+                   data-click-to-select="true"
+                   data-single-select="true">
+                <thead>
+                    <tr class="row" >
+                        <th data-field="state" data-checkbox="true"></th>
+                        <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                        <th data-align="center" data-field="partNo">零件号</th>
+                        <th data-align="center" data-field="semiProductName">名称</th>
+                        <th data-align="center" data-field="model">规格</th>
+                        <th data-align="center" data-field="quantity">排产数量(千件)</th>
+                        <th data-align="center" data-field="timeCreated">创建时间</th>
+                        <th data-align="center" data-field="productionOrderStatus" data-formatter="ProductionOrderStatusFormatter">生产状态</th>
+                        <th data-align="center" data-field="remark">备注</th>
+                        <th data-align="center" data-field="material">材质</th>
+                        <th data-align="center" data-field="surfaceColor">表色</th>
+                        <th data-align="center" data-field="rigidity">硬度</th>
+                        @*<th data-align="center" data-field="stoveNo">炉号</th>
+                    <th data-align="center" data-field="carNo">车号</th>*@
+                        <th data-align="center" data-field="kgWeight">千件重</th>
+                        <th data-align="center" data-field="planProduceDate" data-formatter="PlanDateFormatter">计划完成时间</th>
+                        <th data-align="center" data-field="enterDate" data-formatter="DateFormatter">入库时间</th>
+                        <th data-align="center" data-field="semiProductNo" data-formatter="SemiProductNoFormatter">半成品编码</th>
+                        <th data-align="center" data-formatter="ActionProductFormatter">操作</th>
+
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="out">
+            <table id="out-table"
+                   data-url="/api/services/app/ProductionOrders/GetAll"
+                   data-striped="true" data-id-field="id" data-unique-id="id"
+                   data-method="post"
+                   data-side-pagination="server"
+                   data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                   data-cache="false"
+                   data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                   data-query-params="QueryParams"
+                   data-response-handler="ResponseHandler"
+                   data-click-to-select="true"
+                   data-single-select="true">
+                <thead>
+                    <tr class="row">
+
+                        <th data-field="state" data-checkbox="true"></th>
+                        <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                        <th data-align="center" data-field="partNo">零件号</th>
+                        <th data-align="center" data-field="semiProductName">名称</th>
+                        <th data-align="center" data-field="model">规格</th>
+                        <th data-align="center" data-field="outsourcingFactoryName">外协厂商</th>
+                        <th data-align="center" data-field="quantity">排产数量(公斤)</th>
+                        <th data-align="center" data-field="processingType" data-formatter="ProcessingTypeFormatter">加工类型</th>
+                        <th data-align="center" data-field="remark">备注</th>
+                        <th data-align="center" data-field="planProduceDate" data-formatter="PlanDateFormatter">计划完成时间</th>
+                        <th data-align="center" data-field="surfaceColor">表色</th>
+                        <th data-align="center" data-field="rigidity">硬度</th>
+                        <th data-align="center" data-field="material">材质</th>
+                        <th data-align="center" data-field="productionOrderStatus" data-formatter="ProductionOrderStatusFormatter">状态</th>
+                        <th data-align="center" data-field="kgWeight">千件重</th>
+                        <th data-align="center" data-field="enterDate" data-formatter="DateFormatter">入库时间</th>
+                        <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                        <th data-align="center" data-formatter="ActionProductFormatter">操作</th>
+
+
+
+                    </tr>
+                </thead>
+            </table>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="store">
+            <table id="store-table"
+                   data-url="/api/services/app/CurrentSemiStoreHouses/GetViewAll"
+                   data-striped="true" data-id-field="id" data-unique-id="id"
+                   data-method="post"
+                   data-side-pagination="server"
+                   data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                   data-cache="false"
+                   data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                   data-query-params="QueryParams"
+                   data-response-handler="ResponseHandler"
+                   data-click-to-select="true"
+                   data-single-select="true">
+                <thead>
+                    <tr class="row" >
+                        <th data-field="state" data-checkbox="true"></th>
+                        <th data-align="center" data-field="semiProductName">半成品名称</th>
+                        <th data-align="center" data-field="productionOrderNo">排产单编号</th>
+                        <th data-align="center" data-field="model">规格</th>
+                        <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                        <th data-align="center" data-field="canUserQuantity" data-formatter="CanUserQuantityFormatter">可用数量</th>
+                        <th data-align="center" data-field="actualQuantity">当前库存数量(kg)</th>
+                        <th data-align="center" data-field="freezeQuantity">被冻结数量</th>
+                        <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatter">仓库</th>
+                        <th data-align="center" data-field="storeLocationNo">库位</th>
+                        <th data-align="center" data-field="surfaceColor">表色</th>
+                        <th data-align="center" data-field="rigidity">硬度</th>
+                        <th data-align="center" data-field="material">材质</th>
+                        <th data-align="center" data-field="partNo">零件号</th>
+                        <th data-align="center" data-field="kgWeight" >千件重</th>
+                    </tr>
+                </thead>
+            </table>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="semi-package">
+            <table id="semi-package-table"
+                   data-url="/api/services/app/PackInfoApply/GetAll" data-id-field="id" data-unique-id="id"
+                   data-striped="true" data-click-to-select="true" data-single-select="true"
+                   data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                   data-cache="false" data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]"
+                   data-pagination-h-align="left" data-pagination-detail-h-align="right"
+                   data-query-params="QueryParams" data-response-handler="ResponseHandler">
+                <thead>
+                <tr class="row" >
+                    <th data-field="state" data-checkbox="true"></th>
+                    <th data-align="center" data-field="productionOrderNo">流转单编号</th>
+                    <th data-align="center" data-field="" data-formatter="PackageProductNoFormatter">包装前产品编码</th>
+                    <th data-align="center" data-field="applyQuantity">申请包装数量</th>
+                    <th data-align="center" data-field="remainApplyQuantity">待包装数量</th>
+                    <th data-align="center" data-field="surfaceColor">表色</th>
+                    <th data-align="center" data-field="productName">产品名称</th>
+                    <th data-align="center" data-field="model">规格</th>
+                    <th data-align="center" data-field="material">材质</th>
+                    <th data-align="center" data-field="rigidity">硬度</th>
+                    <th data-align="center" data-field="partNo">零件号</th>
+                    <th data-align="center" data-field="processingNum" data-formatter="ProcessingNumFormatter">待处理明细</th>
+                    <th data-align="center" data-field="applyDate" data-formatter="DateFormatter">申请时间</th>
+                    <th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">申请状态</th>
+                </tr>
+                </thead>
+            </table>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="package">
+            <table id="package-table"
+                   data-url="/api/services/app/PackInfoApply/GetAll" data-id-field="id" data-unique-id="id"
+                   data-striped="true" data-click-to-select="true" data-single-select="true"
+                   data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                   data-cache="false" data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]"
+                   data-pagination-h-align="left" data-pagination-detail-h-align="right"
+                   data-query-params="QueryParams" data-response-handler="ResponseHandler">
+                <thead>
+                <tr class="row" >
+                    <th data-field="state" data-checkbox="true"></th>
+                    <th data-align="center" data-field="productionOrderNo">流转单编号</th>
+                    <th data-align="center" data-field="" data-formatter="PackageProductNoFormatter">包装前产品编码</th>
+                    <th data-align="center" data-field="applyQuantity">申请包装数量</th>
+                    <th data-align="center" data-field="remainApplyQuantity">待包装数量</th>
+                    <th data-align="center" data-field="surfaceColor">表色</th>
+                    <th data-align="center" data-field="productName">产品名称</th>
+                    <th data-align="center" data-field="model">规格</th>
+                    <th data-align="center" data-field="material">材质</th>
+                    <th data-align="center" data-field="rigidity">硬度</th>
+                    <th data-align="center" data-field="partNo">零件号</th>
+                    <th data-align="center" data-field="processingNum" data-formatter="ProcessingNumFormatter">待处理明细</th>
+                    <th data-align="center" data-field="applyDate" data-formatter="DateFormatter">申请时间</th>
+                    <th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">申请状态</th>
+                </tr>
+                </thead>
+            </table>
+
+        </div>
+    </div>
+    
+</div>
+
+@section modal{
+    @Html.Partial("Modals/Query/_SemiEnterStore", "")
+    @Html.Partial("Modals/Query/_SemiProduct", "semiProductNo|KeyWords-2")
+
+}
+@section scripts
+{
+    @*<script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="~/Content/Plugins/viewer/viewer.min.js"></script>
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>*@
+    <script type="text/javascript">
+        var $table;
+        $(function () {
+            $('#tab-list li a[data-toggle="tab"]').on('show.bs.tab',function(e) {
+                var $that = e.target; // newly activated tab
+                Load($that);
+            });
+            $('#tab-list li').eq(0).find('a').tab('show');
+        });
+
+        function Load(that) {
+            var $that = $(that);
+            $table = $('#' + $that.data("table"));
+            if (!$that.data("load")) {
+                console.log("Load");
+                LoadTable({
+                    table: $table,
+                    onLoadSuccess: function (data) {
+                        OnLoadSuccess(data, $table);
+                    },
+                    onPostBody: function (data) {
+                        OnPostBody(data, $table);
+                    }
+                });
+                $that.data("load", true);
+            } else {
+                console.log("Refresh");
+                GetSearchList();
+                RefreshTable($table);
+            }
+           
+        }
+
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({ KeyWords: keyWords, KeyField: keyField, FieldType: fieldType, ExpType: expType });
+                }
+            }
+            var tableId = $table.attr('id');
+            switch (tableId) {
+                case 'production-table':
+                    window._searchList.push({ KeyWords: "1", KeyField: "ProcessingLevel", FieldType: "0", ExpType: "0" });
+                    window._searchList.push({ KeyWords: "0",KeyField: "ProductionType",FieldType: "0",ExpType: "0"});
+                    break;
+                case 'stock-table':
+                    window._searchList.push({ KeyWords: "1", KeyField: "ProcessingLevel", FieldType: "0", ExpType: "0" });
+                    window._searchList.push({ KeyWords: "1",KeyField: "ProductionType",FieldType: "0",ExpType: "0"});
+                    break;
+                case 'out-table':
+                    window._searchList.push({ KeyWords: "2", KeyField: "ProcessingLevel", FieldType: "0", ExpType: "0" });
+                    break;
+                case 'semi-package-table':
+                    window._searchList.push({ KeyWords: "1", KeyField: "PackType", FieldType: "1", ExpType: "0" });
+                    break;
+                case 'package-table':
+                    window._searchList.push({ KeyWords: "2", KeyField: "PackType", FieldType: "1", ExpType: "0" });
+                    break;
+                default:
+                    break;
+            }
+          
+        }
+        function BtnSearch(isCheck) {
+            clearTimeout(t);
+            if (window._isSearching) {
+                return;
+            }
+            window._isSearching = true;
+            if (!isCheck&&_searchList.length <= 0) {
+                console.log("Search-Multi-None");
+                return;
+            }
+            GetSearchList();
+            var isValidated = FormValidate({ form: $("#SearchForm") });
+            if (isValidated) {
+                
+                RefreshTable($table);
+                console.log($table,"Search");
+            } else {
+                console.log("Search_Validate_Failed");
+            }
+    
+        }
+
+
+    </script>
+    <script>
+        function f_ShowStoreDetail(id) {
+            queryParams.no=id;
+            ShowQueryModal('query_semiEnterStore_modal');
+        }
+    </script>
+    <script>
+        function SemiProductNoFormatter(v, r) {
+            return '<span class="table-action" onclick="f_ShowImage(this,\'' + r.semiProductNo + '\')">' + v + '</span>';
+        }
+
+        function PlanDateFormatter(v, r, i, f) {
+            var value = DateFormatter(v, r, i, f);
+            var date = new Date(new Date(new Date().getTime() + 3 * 1000 * 60 * 60 * 24)).format('yyyy-MM-dd');
+            if (r.productionOrderStatus < 4 && date >= value) {
+                return '<span style="color:red">' + value + '</span>';
+            }
+            return value;
+        }
+
+        function ProductionOrderStatusFormatter(v, r) {
+            var name = $("#hide-ProductionOrderStatus option[value='" + v + "']").text();
+            var str = '';
+            switch (v) {
+            case 1:
+                str += '<span class="label label-info">' + name + '</span>';
+                break;
+            case 2:
+                str += '<span class="label label-iwb">' + name + '</span>';
+                break;
+            case 3:
+                str += '<span class="label label-danger">' + name + '</span>';
+                break;
+            case 4:
+                str += '<span class="label label-success">' + name + '</span>';
+                if (r.isChecked) {
+                    str += '<span class="label label-success" style="margin-left:5px"> 已检验 </span>';
+                } else {
+                    str += '<span class="label label-warning" style="margin-left:5px"> 待检验 </span>';
+                }
+                break;
+            default:
+                str += '<span class="label label-warning">' + name + '</span>';
+                break;
+            }
+            if (r.hasExported) {
+                str += '<span class="label label-success" style="margin-left:5px"> 已导出 </span>';
+            }
+            return str;
+
+        }
+        function ActionProductFormatter(v, r) {
+            var icon = '<i class="iconfont icon-right"></i>',
+                storeDetail =
+                    '<span class="table-action" onclick="f_ShowStoreDetail(\'{0}\' )">{1}入库明细</span>'.format(r.productionOrderNo, icon);
+            var str = '';
+            switch (r.productionOrderStatus) {
+            case 4:
+                str += storeDetail;
+                break;
+            default:
+                str += '<span class="table-action" >还未入库</span>';
+                break;
+            }
+            return str;
+        }
+
+        function ProcessingNumFormatter(v, r) {
+            if (v === 0) {
+                return '';
+            } else {
+                return '<span class="label label-danger">待处理:' + v + '</span>';
+            }
+
+        }
+        function ApplyStatusPackageFormatter(v, r) {
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            var name = $("#hide-packageApplyStatus option[value='" + v + "']").text();
+            if (v === "1") {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === "2") {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === "3") {
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+
+        function PackageProductNoFormatter(v, r) {
+            var tableId = $table.attr('id');
+            if (tableId === 'semi-package-table') {
+                return '<span class="label label-info">' + r.semiProductNo + '</span>';
+            } else if (tableId === 'package-table') {
+                return '<span class="label label-danger">' + r.productNo + '</span>';
+            }
+            return '';
+        }
+
+        function CanUserQuantityFormatter(v, r) {
+            var count = r.actualQuantity - r.freezeQuantity;
+            var str = '<span class="label label-warning">' + count + '</span>';
+            if (count > 0) {
+                str = '<span class="label label-info">' + count + '</span>';
+            } else if (count < 0) {
+                str = '<span class="label label-danger">' + count + '</span>';
+            }
+            return str;
+        }
+        function ApplyStatusFormatter(v, r) {
+            var name = $("#hide-ApplyStatus option[value='" + v + "']").text();
+            if (v === "5") {
+                return '<span class="label label-info">' + name + '</span>';
+            }
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            switch (v) {
+            case "1":
+                return '<span class="label label-info">' + name + '</span>';
+            case "2":
+                return '<span class="label label-iwb">' + name + '</span>';
+            case "21":
+                return '<span class="label label-success">' + name + '</span>';
+            case "3":
+            case "4":
+                return '<span class="label label-warning">' + name + '</span>';
+            case "22":
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-default">' + name + '</span>';
+            }
+
+        }
+        function StoreHouseIdFormatter(v) {
+            var name = $("#hide-StoreHouses option[value='" + v + "']").text();
+            return '<span class="label label-primary">' + name + '</span>';
+        }
+
+        function QuantityFormatter(v, r) {
+            if (r.actualQuantity === 0) {
+                return '<span class="label label-default">' + v + '</span>';
+            }
+            if (r.actualQuantity > r.quantity) {
+                return '<span class="label label-success">' + v + '</span>';
+            } else if (r.actualQuantity === r.quantity) {
+                return '<span class="label label-info">' + v + '</span>';
+            } else {
+                return '<span class="label label-danger">' + v + '</span>';
+            }
+
+        }
+
+        function ProcessingTypeFormatter(v, r) {
+            if (v === "2") {
+                return '<span class="label label-info">表面处理</span>';
+            } else if (v === "3") {
+                return '<span class="label label-danger">热处理</span>';
+            }
+            return "";
+        }
+    </script>
+    
+}
+
+<section style="display: none">
+ 
+    @Html.DropDownList("hide-packageApplyStatus", packageApplyStatus)
+    @Html.DropDownList("hide-ProductionOrderStatus", productionOrderStatus)
+    
+    @Html.DropDownList("hide-StoreHouses", storeHouses)
+    @Html.DropDownList("hide-ApplyStatus", applyStatus)
+</section>

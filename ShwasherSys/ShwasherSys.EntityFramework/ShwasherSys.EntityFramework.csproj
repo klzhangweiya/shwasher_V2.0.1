@@ -1,0 +1,679 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F6EA5DB5-3B57-4D7B-9D35-5A4D928AFC13}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ShwasherSys</RootNamespace>
+    <AssemblyName>ShwasherSys.EntityFramework</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Abp, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Abp.4.1.0\lib\netstandard2.0\Abp.dll</HintPath>
+    </Reference>
+    <Reference Include="Abp.EntityFramework, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Abp.EntityFramework.4.1.0\lib\net461\Abp.EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Abp.EntityFramework.Common, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Abp.EntityFramework.Common.4.1.0\lib\netstandard2.0\Abp.EntityFramework.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Abp.Web, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Abp.Web.4.1.0\lib\net461\Abp.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="Abp.Web.Api, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Abp.Web.Api.4.1.0\lib\net461\Abp.Web.Api.dll</HintPath>
+    </Reference>
+    <Reference Include="Abp.Web.Common, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Abp.Web.Common.4.1.0\lib\netstandard2.0\Abp.Web.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Abp.Web.Mvc, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Abp.Web.Mvc.4.1.0\lib\net461\Abp.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Castle.Core.4.3.1\lib\net45\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Facilities.Logging, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Castle.LoggingFacility.4.1.1\lib\net45\Castle.Facilities.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Windsor, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Castle.Windsor.4.1.1\lib\net45\Castle.Windsor.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.DynamicFilters, Version=3.0.1.0, Culture=neutral, PublicKeyToken=59b66d028979105b, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.DynamicFilters.3.0.1\lib\net40\EntityFramework.DynamicFilters.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="IwbZero.EntityFramework.SqlServer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\IwbZero.EntityFramework.SqlServer.1.0.0\lib\net461\IwbZero.EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations, Version=2018.3.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\JetBrains.Annotations.2018.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Identity.Core.2.2.2\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Caching.Abstractions.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Memory, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Caching.Memory.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Caching.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.2.2.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Options.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Primitives.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Owin.4.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Owin.Host.SystemWeb.4.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Owin.Security.4.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.OAuth, Version=4.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Owin.Security.OAuth.4.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Threading.Tasks, Version=1.0.12.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Threading.Tasks.Extensions, Version=1.0.12.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.Extensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Threading.Tasks.Extensions.Desktop, Version=1.0.168.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.Extensions.Desktop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx, Version=4.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.AsyncEx.4.0.1\lib\net45\Nito.AsyncEx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Concurrent, Version=4.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.AsyncEx.4.0.1\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Context, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.AsyncEx.Context.1.1.0\lib\net46\Nito.AsyncEx.Context.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Coordination, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.AsyncEx.Coordination.1.0.2\lib\net46\Nito.AsyncEx.Coordination.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Enlightenment, Version=4.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.AsyncEx.4.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Tasks, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.AsyncEx.Tasks.1.1.0\lib\net46\Nito.AsyncEx.Tasks.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.Collections.Deque, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.Collections.Deque.1.0.4\lib\netstandard2.0\Nito.Collections.Deque.dll</HintPath>
+    </Reference>
+    <Reference Include="Nito.Disposables, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nito.Disposables.2.0.0\lib\netstandard2.0\Nito.Disposables.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Buffers.4.5.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.ComponentModel.Annotations.4.5.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.ConfigurationManager, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Configuration.ConfigurationManager.4.5.0\lib\net461\System.Configuration.ConfigurationManager.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Common">
+      <HintPath>..\..\packages\System.Data.Common.4.3.0\lib\net451\System.Data.Common.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data.Odbc, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Data.Odbc.4.5.0\lib\net461\System.Data.Odbc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Linq.Dynamic.Core, Version=1.0.10.0, Culture=neutral, PublicKeyToken=0f07ec44de6ac832, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Linq.Dynamic.Core.1.0.10\lib\net46\System.Linq.Dynamic.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Memory.4.5.2\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Client.5.2.7\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Runtime.Serialization.Formatters">
+      <HintPath>..\..\packages\System.Runtime.Serialization.Formatters.4.3.0\lib\net46\System.Runtime.Serialization.Formatters.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Primitives">
+      <HintPath>..\..\packages\System.Runtime.Serialization.Primitives.4.3.0\lib\net46\System.Runtime.Serialization.Primitives.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.AccessControl, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Security.AccessControl.4.5.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Claims">
+      <HintPath>..\..\packages\System.Security.Claims.4.3.0\lib\net46\System.Security.Claims.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Permissions, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Security.Permissions.4.5.0\lib\net461\System.Security.Permissions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.1.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Security.Principal.Windows.4.5.1\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Core.5.2.7\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.7\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Mvc.5.2.7\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Razor.3.2.7\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.XmlDocument">
+      <HintPath>..\..\packages\System.Xml.XmlDocument.4.3.0\lib\net46\System.Xml.XmlDocument.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.XPath">
+      <HintPath>..\..\packages\System.Xml.XPath.4.3.0\lib\net46\System.Xml.XPath.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.XPath.XmlDocument, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Xml.XPath.XmlDocument.4.3.0\lib\net46\System.Xml.XPath.XmlDocument.dll</HintPath>
+    </Reference>
+    <Reference Include="TimeZoneConverter, Version=2.5.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\TimeZoneConverter.2.5.1\lib\net45\TimeZoneConverter.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EntityFramework\DbContext.cs" />
+    <Compile Include="EntityFramework\ISqlExecuter.cs" />
+    <Compile Include="EntityFramework\Repositories\RepositoryBase.cs" />
+    <Compile Include="EntityFramework\SqlExecuter.cs" />
+    <Compile Include="Migrations\202001060839527_Init.cs" />
+    <Compile Include="Migrations\202001060839527_Init.Designer.cs">
+      <DependentUpon>202001060839527_Init.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001060847512_Update0106.cs" />
+    <Compile Include="Migrations\202001060847512_Update0106.Designer.cs">
+      <DependentUpon>202001060847512_Update0106.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001070722010_Update0107.cs" />
+    <Compile Include="Migrations\202001070722010_Update0107.Designer.cs">
+      <DependentUpon>202001070722010_Update0107.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001080159184_Update0108.cs" />
+    <Compile Include="Migrations\202001080159184_Update0108.Designer.cs">
+      <DependentUpon>202001080159184_Update0108.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001080328476_updateVersion0108.cs" />
+    <Compile Include="Migrations\202001080328476_updateVersion0108.Designer.cs">
+      <DependentUpon>202001080328476_updateVersion0108.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001080526359_updateVersion0108-2.cs" />
+    <Compile Include="Migrations\202001080526359_updateVersion0108-2.Designer.cs">
+      <DependentUpon>202001080526359_updateVersion0108-2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001090144267_uv01-09.cs" />
+    <Compile Include="Migrations\202001090144267_uv01-09.Designer.cs">
+      <DependentUpon>202001090144267_uv01-09.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001090224473_uv0109-02.cs" />
+    <Compile Include="Migrations\202001090224473_uv0109-02.Designer.cs">
+      <DependentUpon>202001090224473_uv0109-02.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001090244507_Update0109.cs" />
+    <Compile Include="Migrations\202001090244507_Update0109.Designer.cs">
+      <DependentUpon>202001090244507_Update0109.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001090852302_uv0109-03.cs" />
+    <Compile Include="Migrations\202001090852302_uv0109-03.Designer.cs">
+      <DependentUpon>202001090852302_uv0109-03.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001100129143_uv0110.cs" />
+    <Compile Include="Migrations\202001100129143_uv0110.Designer.cs">
+      <DependentUpon>202001100129143_uv0110.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001130056061_uv0113.cs" />
+    <Compile Include="Migrations\202001130056061_uv0113.Designer.cs">
+      <DependentUpon>202001130056061_uv0113.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001130529081_uv0113-1.cs" />
+    <Compile Include="Migrations\202001130529081_uv0113-1.Designer.cs">
+      <DependentUpon>202001130529081_uv0113-1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001130531315_uv0113-2.cs" />
+    <Compile Include="Migrations\202001130531315_uv0113-2.Designer.cs">
+      <DependentUpon>202001130531315_uv0113-2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001140305500_Update0114.cs" />
+    <Compile Include="Migrations\202001140305500_Update0114.Designer.cs">
+      <DependentUpon>202001140305500_Update0114.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001140305588_uv0114-1.cs" />
+    <Compile Include="Migrations\202001140305588_uv0114-1.Designer.cs">
+      <DependentUpon>202001140305588_uv0114-1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001140406099_uv0114-2.cs" />
+    <Compile Include="Migrations\202001140406099_uv0114-2.Designer.cs">
+      <DependentUpon>202001140406099_uv0114-2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001140724236_uv0114-3.cs" />
+    <Compile Include="Migrations\202001140724236_uv0114-3.Designer.cs">
+      <DependentUpon>202001140724236_uv0114-3.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001150701208_Update0115.cs" />
+    <Compile Include="Migrations\202001150701208_Update0115.Designer.cs">
+      <DependentUpon>202001150701208_Update0115.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001160135106_check0116.cs" />
+    <Compile Include="Migrations\202001160135106_check0116.Designer.cs">
+      <DependentUpon>202001160135106_check0116.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001170255027_uv0117-1.cs" />
+    <Compile Include="Migrations\202001170255027_uv0117-1.Designer.cs">
+      <DependentUpon>202001170255027_uv0117-1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001170454354_Update0117.cs" />
+    <Compile Include="Migrations\202001170454354_Update0117.Designer.cs">
+      <DependentUpon>202001170454354_Update0117.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002020323316_uv0202.cs" />
+    <Compile Include="Migrations\202002020323316_uv0202.Designer.cs">
+      <DependentUpon>202002020323316_uv0202.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002021257086_uv0202-1.cs" />
+    <Compile Include="Migrations\202002021257086_uv0202-1.Designer.cs">
+      <DependentUpon>202002021257086_uv0202-1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002151215506_uv0215.cs" />
+    <Compile Include="Migrations\202002151215506_uv0215.Designer.cs">
+      <DependentUpon>202002151215506_uv0215.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002161413363_uv0216.cs" />
+    <Compile Include="Migrations\202002161413363_uv0216.Designer.cs">
+      <DependentUpon>202002161413363_uv0216.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002191235128_Update0219.cs" />
+    <Compile Include="Migrations\202002191235128_Update0219.Designer.cs">
+      <DependentUpon>202002191235128_Update0219.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002201420216_Update0220.cs" />
+    <Compile Include="Migrations\202002201420216_Update0220.Designer.cs">
+      <DependentUpon>202002201420216_Update0220.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002240443180_Update200224.cs" />
+    <Compile Include="Migrations\202002240443180_Update200224.Designer.cs">
+      <DependentUpon>202002240443180_Update200224.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002270847561_Update200227.cs" />
+    <Compile Include="Migrations\202002270847561_Update200227.Designer.cs">
+      <DependentUpon>202002270847561_Update200227.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002280449376_Update200228.cs" />
+    <Compile Include="Migrations\202002280449376_Update200228.Designer.cs">
+      <DependentUpon>202002280449376_Update200228.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002281229238_Update200228001.cs" />
+    <Compile Include="Migrations\202002281229238_Update200228001.Designer.cs">
+      <DependentUpon>202002281229238_Update200228001.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002281306111_Update200228002.cs" />
+    <Compile Include="Migrations\202002281306111_Update200228002.Designer.cs">
+      <DependentUpon>202002281306111_Update200228002.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002281323180_Update200228003.cs" />
+    <Compile Include="Migrations\202002281323180_Update200228003.Designer.cs">
+      <DependentUpon>202002281323180_Update200228003.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002281441049_Update200228004.cs" />
+    <Compile Include="Migrations\202002281441049_Update200228004.Designer.cs">
+      <DependentUpon>202002281441049_Update200228004.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002281542394_Update200228005.cs" />
+    <Compile Include="Migrations\202002281542394_Update200228005.Designer.cs">
+      <DependentUpon>202002281542394_Update200228005.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002290545592_Update200229.cs" />
+    <Compile Include="Migrations\202002290545592_Update200229.Designer.cs">
+      <DependentUpon>202002290545592_Update200229.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202002290707440_Update200229001.cs" />
+    <Compile Include="Migrations\202002290707440_Update200229001.Designer.cs">
+      <DependentUpon>202002290707440_Update200229001.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202003010547390_Update200301.cs" />
+    <Compile Include="Migrations\202003010547390_Update200301.Designer.cs">
+      <DependentUpon>202003010547390_Update200301.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202003030729476_Update200303.cs" />
+    <Compile Include="Migrations\202003030729476_Update200303.Designer.cs">
+      <DependentUpon>202003030729476_Update200303.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202003211241017_Update200321.cs" />
+    <Compile Include="Migrations\202003211241017_Update200321.Designer.cs">
+      <DependentUpon>202003211241017_Update200321.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202003211303455_Update200321001.cs" />
+    <Compile Include="Migrations\202003211303455_Update200321001.Designer.cs">
+      <DependentUpon>202003211303455_Update200321001.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202004140701490_check2020414.cs" />
+    <Compile Include="Migrations\202004140701490_check2020414.Designer.cs">
+      <DependentUpon>202004140701490_check2020414.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202006100515403_updateOrderItems.cs" />
+    <Compile Include="Migrations\202006100515403_updateOrderItems.Designer.cs">
+      <DependentUpon>202006100515403_updateOrderItems.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202006280836425_updateOrderInsertLock.cs" />
+    <Compile Include="Migrations\202006280836425_updateOrderInsertLock.Designer.cs">
+      <DependentUpon>202006280836425_updateOrderInsertLock.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202006300144579_updateStatement.cs" />
+    <Compile Include="Migrations\202006300144579_updateStatement.Designer.cs">
+      <DependentUpon>202006300144579_updateStatement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202007020944488_check07021.cs" />
+    <Compile Include="Migrations\202007020944488_check07021.Designer.cs">
+      <DependentUpon>202007020944488_check07021.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202007301412051_check0730.cs" />
+    <Compile Include="Migrations\202007301412051_check0730.Designer.cs">
+      <DependentUpon>202007301412051_check0730.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202008032332231_update-MoldInfo.cs" />
+    <Compile Include="Migrations\202008032332231_update-MoldInfo.Designer.cs">
+      <DependentUpon>202008032332231_update-MoldInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202009250251306_check0925.cs" />
+    <Compile Include="Migrations\202009250251306_check0925.Designer.cs">
+      <DependentUpon>202009250251306_check0925.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Migrations\SeedData\DefaultAppGuidsCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultFunctionsCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultRoleAndUserCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultDataCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultStoreLocationCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultTemplateCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultSettingsCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultStatesCreator.cs" />
+    <Compile Include="Migrations\SeedData\DefaultTruncateTableSql.cs" />
+    <Compile Include="Migrations\SeedData\InitialHostDbBuilder.cs" />
+    <Compile Include="ShwasherDataModule.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IwbZero.Yue\IwbZero.Yue.csproj">
+      <Project>{b15019b6-dfdb-4fdd-b017-f3a8d9971852}</Project>
+      <Name>IwbZero.Yue</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ShwasherSys.Core\ShwasherSys.Core.csproj">
+      <Project>{3B9F4DF4-386D-4BB0-BA45-6221CEC1EC7A}</Project>
+      <Name>ShwasherSys.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\202001060839527_Init.resx">
+      <DependentUpon>202001060839527_Init.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001060847512_Update0106.resx">
+      <DependentUpon>202001060847512_Update0106.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001070722010_Update0107.resx">
+      <DependentUpon>202001070722010_Update0107.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001080159184_Update0108.resx">
+      <DependentUpon>202001080159184_Update0108.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001080328476_updateVersion0108.resx">
+      <DependentUpon>202001080328476_updateVersion0108.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001080526359_updateVersion0108-2.resx">
+      <DependentUpon>202001080526359_updateVersion0108-2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001090144267_uv01-09.resx">
+      <DependentUpon>202001090144267_uv01-09.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001090224473_uv0109-02.resx">
+      <DependentUpon>202001090224473_uv0109-02.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001090244507_Update0109.resx">
+      <DependentUpon>202001090244507_Update0109.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001090852302_uv0109-03.resx">
+      <DependentUpon>202001090852302_uv0109-03.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001100129143_uv0110.resx">
+      <DependentUpon>202001100129143_uv0110.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001130056061_uv0113.resx">
+      <DependentUpon>202001130056061_uv0113.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001130529081_uv0113-1.resx">
+      <DependentUpon>202001130529081_uv0113-1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001130531315_uv0113-2.resx">
+      <DependentUpon>202001130531315_uv0113-2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001140305500_Update0114.resx">
+      <DependentUpon>202001140305500_Update0114.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001140305588_uv0114-1.resx">
+      <DependentUpon>202001140305588_uv0114-1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001140406099_uv0114-2.resx">
+      <DependentUpon>202001140406099_uv0114-2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001140724236_uv0114-3.resx">
+      <DependentUpon>202001140724236_uv0114-3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001150701208_Update0115.resx">
+      <DependentUpon>202001150701208_Update0115.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001160135106_check0116.resx">
+      <DependentUpon>202001160135106_check0116.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001170255027_uv0117-1.resx">
+      <DependentUpon>202001170255027_uv0117-1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001170454354_Update0117.resx">
+      <DependentUpon>202001170454354_Update0117.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002020323316_uv0202.resx">
+      <DependentUpon>202002020323316_uv0202.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002021257086_uv0202-1.resx">
+      <DependentUpon>202002021257086_uv0202-1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002151215506_uv0215.resx">
+      <DependentUpon>202002151215506_uv0215.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002161413363_uv0216.resx">
+      <DependentUpon>202002161413363_uv0216.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002191235128_Update0219.resx">
+      <DependentUpon>202002191235128_Update0219.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002201420216_Update0220.resx">
+      <DependentUpon>202002201420216_Update0220.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002240443180_Update200224.resx">
+      <DependentUpon>202002240443180_Update200224.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002270847561_Update200227.resx">
+      <DependentUpon>202002270847561_Update200227.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002280449376_Update200228.resx">
+      <DependentUpon>202002280449376_Update200228.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002281229238_Update200228001.resx">
+      <DependentUpon>202002281229238_Update200228001.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002281306111_Update200228002.resx">
+      <DependentUpon>202002281306111_Update200228002.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002281323180_Update200228003.resx">
+      <DependentUpon>202002281323180_Update200228003.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002281441049_Update200228004.resx">
+      <DependentUpon>202002281441049_Update200228004.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002281542394_Update200228005.resx">
+      <DependentUpon>202002281542394_Update200228005.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002290545592_Update200229.resx">
+      <DependentUpon>202002290545592_Update200229.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202002290707440_Update200229001.resx">
+      <DependentUpon>202002290707440_Update200229001.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202003010547390_Update200301.resx">
+      <DependentUpon>202003010547390_Update200301.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202003030729476_Update200303.resx">
+      <DependentUpon>202003030729476_Update200303.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202003211241017_Update200321.resx">
+      <DependentUpon>202003211241017_Update200321.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202003211303455_Update200321001.resx">
+      <DependentUpon>202003211303455_Update200321001.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202004140701490_check2020414.resx">
+      <DependentUpon>202004140701490_check2020414.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202006100515403_updateOrderItems.resx">
+      <DependentUpon>202006100515403_updateOrderItems.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202006280836425_updateOrderInsertLock.resx">
+      <DependentUpon>202006280836425_updateOrderInsertLock.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202006300144579_updateStatement.resx">
+      <DependentUpon>202006300144579_updateStatement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202007020944488_check07021.resx">
+      <DependentUpon>202007020944488_check07021.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202007301412051_check0730.resx">
+      <DependentUpon>202007301412051_check0730.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202008032332231_update-MoldInfo.resx">
+      <DependentUpon>202008032332231_update-MoldInfo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202009250251306_check0925.resx">
+      <DependentUpon>202009250251306_check0925.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Import Project="..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

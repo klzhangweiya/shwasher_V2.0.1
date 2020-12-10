@@ -1,0 +1,112 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesCustomerInfoCustomers; //The menu item will be active for this page.
+    ViewBag.Title = "客户基础信息维护";
+    List<SelectListItem> saleTypeItems = ViewBag.SaleType;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+        new SearchItem("id", "客户编号"),
+        new SearchItem("customerName", "客户名称"),
+        new SearchItem("saleType", "销售类型",FiledType.Inull,ExpType.Equal).SetSearchItem(saleTypeItems),
+
+    });
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/Customers/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">客户编号</th>
+                <th data-align="center" data-field="customerName">客户名称</th>
+                <th data-align="center" data-field="fax">传真电话</th>
+                <th data-align="center" data-field="linkMan">联系人</th>
+                <th data-align="center" data-field="telephone">联系电话</th>
+                <th data-align="center" data-field="saleType" data-formatter="SaleTypeFormatter">客户类型</th>
+                <th data-align="center" data-formatter="ActionsFormatter"></th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("客户"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                            {
+                                                                                new InputViewModel("id", displayName: "客户编号"),
+                                                                                new InputViewModel("customerName", displayName: "客户名称"),
+                                                                                new InputViewModel("saleType",InputTypes.List,displayName: "客户类型").SetSelectOptions(saleTypeItems),
+                                                                                new InputViewModel("linkMan", displayName: "联系人").SetNotRequired(),
+                                                                                new InputViewModel("telephone", displayName: " 电话").SetNotRequired(),
+                                                                                new InputViewModel("fax", displayName: "传真").SetNotRequired(),
+                                                                                new InputViewModel("zip", displayName: "邮编").SetNotRequired(),
+                                                                                new InputViewModel("email",displayName: "电子邮件").SetNotRequired(),
+                                                                                new InputViewModel("webSite", displayName: "网址").SetNotRequired(),
+                                                                                new InputViewModel("address",  displayName: "地址").SetNotRequired(),
+
+                                                                            };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+
+        $(function () {
+            //show完毕前执行
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "id" }); };
+
+        });
+        function ActionsFormatter(v, r) {
+            var str = '<span class="table-action" onclick="ShowDetail(\'' +
+            r.id +
+                '\')"><i class="iconfont icon-right"></i>客户详情</span>';
+
+            return str;
+        }
+        function ShowDetail(id) {
+            window.location.href = "CustomerDetail/" + id;
+        }
+
+        function SaleTypeFormatter(v, r) {
+            console.log(v);
+            var saleType = $('#modal #saleType option[value="' + v + '"]').html();
+            //console.log( $('#modal #saleType option[value="' + v + '"]'));
+            return  '<span class="table-action")>'+saleType+'</span>';
+        }
+    </script>
+
+}

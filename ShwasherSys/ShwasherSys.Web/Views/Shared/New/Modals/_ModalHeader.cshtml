@@ -1,0 +1,16 @@
+﻿@model ShwasherSys.Views.Shared.New.Modals.ModalHeaderViewModel
+@{
+    string op = Model.Operation ?? L("OpCreate");
+}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span aria-hidden="true">&times;</span></button>
+    <h4 class="modal-title">
+        @if (op != "")
+        {
+
+            <span class="modal-title-span">@op</span>
+        }
+        <span>@Html.Raw(Model.Title)</span>
+    </h4>
+</div>

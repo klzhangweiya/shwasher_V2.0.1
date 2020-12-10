@@ -1,0 +1,23 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "no,name",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems = new List<QueryItem>()
+{
+
+new QueryItem("no", "模具编码",true),
+    new QueryItem("name", "模具名称",true),
+    new QueryItem("model", "模具规格",true),
+    new QueryItem("material", "模具材质"),
+};
+
+
+    QueryModalModel qmModel = new QueryModalModel("模具信息", "/api/services/app/Query/QueryMold", queryItems, originFiled, targetFiled, modalId: "query_mold_modal");
+}
+@Html.Partial("Modals/Query/_QueryModal", qmModel)
+
+
+

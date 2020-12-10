@@ -1,0 +1,305 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesBasicInfoExpress; //The menu item will be active for this page.
+    ViewBag.Title = "快递公司信息管理";
+    // List<SelectListItem> classification = ViewBag.Classification;
+    //var regionInfo = ViewBag.RegionInfo;
+    var loProviders = ViewBag.Providers;
+}
+@section styles
+{
+    <style>
+        .form-group-sm > div {
+            margin-bottom: 1rem;
+        }
+        .MapperItem {
+            border: 1px solid rebeccapurple;
+            border-radius: 4px;
+            padding: 3px 10px;
+            margin-top: 3px;
+        }
+        .MapperItem:after, .MapperItem:before {
+            display: table;
+            content: " ";
+        }
+            .MapperItem:after {
+                clear: both;
+            }
+        label.error {
+            bottom: 4px;
+            right: -45px;
+        }
+        [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+            padding-left: 25px;
+            font-size: 1.5rem;
+            color: #dad9db;
+        }
+
+        [type="radio"]:not(:checked) + label::before, [type="radio"]:not(:checked) + label::after {
+            border: 2px solid  rgb(0,155,244);
+        }
+    </style>
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu })
+    <table id="table"
+           data-url="/api/services/app/Express/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="expressName" data-sortable="true">快递名称</th>
+                <th data-align="center" data-field="code" data-sortable="true">编码</th>
+                <th data-align="center" data-field="sort" data-sortable="true">排序</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                
+                    <div class="modal-header" style="cursor: move;">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span aria-hidden="true">×</span></button>
+                        <h4 class="modal-title">
+                            <span class="modal-title-span">添加</span>
+                            <span>快递公司信息</span>
+                        </h4>
+                    </div>
+
+                    <div class="modal-body container-fluid" style="padding-top: 15px;padding-bottom: 0;">
+                        <form class="pr-3 pl-3 form-horizontal " id="form">
+                            <input id="id" name="id" type="hidden">
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="id">快递编码</label>
+                                <div class="col-md-10">
+                                    <input class="form-control required" id="code" name="code" type="text" required="" placeholder="请输入快递代码..." value="" style="">
+                                </div>
+
+                            </div>
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="expressName">公司名称</label>
+                                <div class="col-md-10">
+                                    <input class="form-control required" id="expressName" name="expressName" type="text" required="" placeholder="请输入公司名称..." value="" style="">
+                                </div>
+
+                            </div>
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="sort">查询排序</label>
+                                <div class="col-md-10">
+                                    <input class="form-control number required" id="sort" name="sort" type="text"  min="1" placeholder="请输入..." value="" style="">
+                                </div>
+
+                            </div>
+                            <div class="form-group-sm" style="margin-right: 15px;text-align: right"><button type="button" class="btn btn-sm btn-info" style="width:20%; background-color: #583d9c;border-color: #583d9c;" onclick="AddServiceProvider()">增加服务商映射</button></div>
+
+                       
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="text-align: center;">
+                        <button type="button" class="btn btn-default waves-effect" data-dismiss="modal" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;">取消</button>
+                        <button type="button" class="btn btn-success save-btn waves-effect" style="min-width:100px;background-color: #678ceb;border: 1px solid #678ceb;">保存</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/select2/js/select2tree.js"></script>
+    @*<script src="~/Content/Plugins/kindeditor/kindeditor-all.js"></script>
+        <script src="~/Content/Plugins/kindeditor/lang/zh-CN.js"></script>*@
+    <script type="text/javascript">
+        //var exId = "";
+        var allProvider = [];
+        $(function() {
+            //show完毕前执行
+            @{
+                foreach (var p in loProviders)
+                {
+                    <text>
+                        allProvider.push({ Id: "@p.Id", ProviderName: "@p.ProviderName" });
+                    </text>
+                }
+            }
+
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnUpdate"] = function(url) { BtnUpdate(url); };
+            funs["btnCreate"] = function(url) { BtnCreate(url); };
+
+
+        });
+
+        function BtnCreate(url) {
+            console.log("Create");
+            $(".MapperItem").remove();
+            activeCount = 0;
+            OpenModal({
+                modaltitle: window.opCreate,
+                url: url,
+                save: function() {
+                    SaveAjax({
+                        url: url,
+                        data: getFormData(),
+                        success: function(res) {
+                            $("#modal").modal("hide");
+                            RefreshTable($("#table"));
+                        }
+                    });
+                }
+            });
+        }
+
+        function BtnUpdate(url) {
+            var row = $("#table").bootstrapTable("getSelections")[0];
+            if (row) {
+                $(".MapperItem").remove();
+                activeCount = 0;
+                SaveAjax({
+                    url: window.appUrl + 'Express/GetExpressDtoById',
+                    data: {id:row.id},
+                    isValidate: false,
+                    isAlert: false,
+                    success: function(res) {
+                        console.log(res);
+                        OpenModal({
+                            modaltitle: window.opUpdate,
+                            data: row,
+                            url: url,
+                            readonly: "code",
+                            save: function() {
+                                SaveAjax({
+                                    url: url,
+                                    data: getFormData(),
+                                    success: function(res) {
+                                        $("#modal").modal("hide");
+                                        RefreshTable($("#table"));
+                                    }
+                                });
+                            }
+                        });
+                        var rs = res.expressProviderMapper;
+                        rs.forEach(function(v, i) {
+                            AddServiceProvider();
+                            $('.MapperItem:eq(' + i + ') [name="providerId"]').val(v.providerId).select2();
+                            $('.MapperItem:eq(' + i + ') [name="mapperCode"]').val(v.mapperCode);
+                            $('.MapperItem:eq(' + i + ') [name="extendInfo"]').val(v.extendInfo);
+                            if (v.activeStatus == 1) {
+                                $('.MapperItem:eq(' + i + ') [name="activeStatus"]').prop('checked', true);
+                            } else {
+                                $('.MapperItem:eq(' + i + ') [name="activeStatus"]').prop('checked', false);
+                            }
+                          
+                        });
+                    }
+                });
+            }
+        }
+
+        var activeCount = 0;
+        function AddServiceProvider() {
+            activeCount++;
+            var str = ' <div class="MapperItem">';
+            str += '<label class="iwb-label col-md-2 control-label iwb-label-required" for="providerId">服务商</label>';
+            str += '  <div class="col-md-4">';
+            str +=
+                '     <select class="form-control"  name="providerId" type="text" placeholder="请输入服务商名称..." value="" style="width: 100%; ">';
+            str += getOptions() + ' </select>';
+            str += '</div>';
+            str += '<label class="iwb-label col-md-2 control-label iwb-label-required" for="mapperCode">映射编码</label>';
+            str += '<div class="col-md-4">';
+            str +=
+                '<input class="form-control"  name="mapperCode" type="text"  placeholder="请输入编码..." value="" style="width: 100%;">';
+            str += '</div>';
+            str +=
+                '<label class="iwb-label col-md-2 control-label " for="extendInfo" style="margin-top:10px;">扩展信息</label>';
+            str += '<div class="col-md-4">';
+            str +=
+                '<input class="form-control"  name="extendInfo" type="text"  placeholder="请输入..." value="" style="width: 100%;margin-top:10px">';
+            str += '</div>';
+            str += '  <div class="col-md-2" style="display: flex;justify-content: center;align-items: center; height: 50px;">';
+            str +=
+                '   <input name="activeStatus" type="radio" class="activeStatus" id="activeStatus'+activeCount+'"   value=""/><label for="activeStatus'+activeCount+'" style="color:#000;">激活</label>';
+            str += '    </div>';
+            str += '  <div class="col-md-4" style="text-align:center;">';
+            str +=
+                '   <button type="button" class="btn btn-sm btn-danger" style="width:90%;margin-top:10px; " onclick="DeleteMapper(this)">删除</button>';
+            str += '    </div>';
+            str += '</div>';
+            $("#form").append(str);
+
+        }
+
+        function DeleteMapper(that) {
+            $(that).closest('.MapperItem').remove();
+        }
+
+        function getOptions() {
+            var options = "";
+            var items = $('.MapperItem');
+            allProvider.forEach(function(v, i) {
+                var isAdd = true;
+                for (var j = 0; j < items.length; j++) {
+                    if ($('.MapperItem:eq(' + j + ') [name="providerId"]').val() == v.Id) {
+                        isAdd = false;
+                        break;
+                    }
+                }
+                if (isAdd) {
+                    options += '<option value="' + v.Id + '">' + v.ProviderName + '</option>';
+                }
+            });
+            return options;
+        }
+
+        function getFormData() {
+            var d = {
+                Id: $("#form #id").val(),
+                Code: $("#form #code").val(),
+                ExpressName: $("#form #expressName").val(),
+                Sort: $("#form #sort").val(),
+                ExpressProviderMapper: []
+            };
+            var items = $('.MapperItem');
+            for (var i = 0; i < items.length; i++) {
+                if (!$('.MapperItem:eq(' + i + ') [name="providerId"]').val()) {
+                    continue;
+                }
+                d.ExpressProviderMapper[i] = {
+                    ProviderId: $('.MapperItem:eq(' + i + ') [name="providerId"]').val(),
+                    MapperCode: $('.MapperItem:eq(' + i + ') [name="mapperCode"]').val(),
+                    ExtendInfo: $('.MapperItem:eq(' + i + ') [name="extendInfo"]').val(),
+                    ActiveStatus:$('.MapperItem:eq(' + i + ') [name="activeStatus"]').is(":checked")?"1":"0"
+                }
+            }
+
+            return d;
+        }
+    </script>
+
+
+}

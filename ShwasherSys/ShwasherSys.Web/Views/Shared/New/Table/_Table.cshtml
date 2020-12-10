@@ -1,0 +1,54 @@
+﻿@model ShwasherSys.Views.Shared.New.Table.TableViewModel
+<!-- TABLE  @(Model.TableId)  START-->
+
+@if (Model.HasBox)
+{
+    <style>
+        .table-box {
+            text-decoration: none;
+        }
+    </style>
+    @Html.Raw("<div class=\"table-box iwb-bootstrap-table\">")
+}
+@{
+    if (Model.HasBox&&(Model.ActiveMenu != null|| Model.SearchForm != null))
+    {
+        @Html.Action("ToolMenu", "Layout", new { pageName = Model.ActiveMenu, searchForm = Model.SearchForm })
+    }
+}
+@*data-content-type="application/x-www-form-urlencoded; charset=UTF-8"*@
+
+<table id="@(Model.TableId)"
+       data-url="@(Model.Url)"
+       data-striped="true" data-id-field="id" data-unique-id="id"
+       data-method="post"
+       data-side-pagination="server"
+       data-cache="false"
+       data-pagination="true"
+       data-page-size="@(Model.PageArray[0])"
+       data-page-number="1"
+       data-page-list="[@(Model.PageArrayStr)]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+       data-click-to-select="true"
+       data-single-select="@(Model.SingleSelectStr)" @(Html.Raw(Model.Other))>
+    <thead>
+    <tr class="row">
+        <th data-field="state" data-checkbox="true"></th>
+
+        @if (Model.FieldItems != null && Model.FieldItems.Any())
+        {
+            foreach (var item in Model.FieldItems)
+            {
+                var formatter = string.IsNullOrEmpty(item.Formatter) ? "" : "data-formatter=\"" + item.Formatter + "\"";
+                <th data-align="@(item.Align)" data-field="@(item.Filed)" @(Html.Raw(item.IsSortStr)) @(Html.Raw(formatter)) @(Html.Raw(item.IsTipStr)) @(Html.Raw(item.WidthStr))>@(item.DisplayName)</th>
+            }
+        }
+    </tr>
+    </thead>
+</table>
+
+@if (Model.HasBox)
+{
+    
+    @Html.Raw("</div>")
+}
+<!-- TABLE  @(Model.TableId)  END-->

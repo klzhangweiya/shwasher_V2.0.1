@@ -1,0 +1,379 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.CompanyInfo.DeviceInfo.Dto
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "机模维护记录";
+    string activeMenu = PermissionNames.PagesCompanyDieMaintenanceMaintainRecord; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<SelectListItem> mType = ViewBag.MaintainType, mState = ViewBag.MaintainState;
+	var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+        new SearchItem("id","记录编号"),   
+        new SearchItem("deviceNo","机模编号"),   
+        //new SearchItem("deviceType","机模类型",FiledType.I,ExpType.Equal).SetSearchItem(mType),   
+        new SearchItem("planDate","计划时间",FiledType.D,ExpType.GreaterOrEqual),   
+        new SearchItem("planDate","至",FiledType.D,ExpType.LessOrEqual),   
+        new SearchItem("completeState","完成状态",FiledType.I,ExpType.Equal).SetSearchItem(mState),   
+        new SearchItem("completeDate","完成时间",FiledType.Dnull,ExpType.GreaterOrEqual),   
+        new SearchItem("completeDate","至",FiledType.Dnull,ExpType.LessOrEqual),   
+    },"search-form",false);
+
+    var table = new TableViewModel( "/api/services/app/MaintainRecord/GetAll", activeMenu, searchForm)
+	.SetFields(new List<FieldItem>()
+    {
+        new FieldItem("id", "记录编号"),
+        new FieldItem("deviceMgPlanNo", "计划编号"),
+        new FieldItem("deviceNo", "设备编号"),
+        new FieldItem("deviceName", "设备名称"),
+        new FieldItem("mgType", "机模类型","DeviceTypeFormatter"),
+        new FieldItem("address", "维护地点"),
+        new FieldItem("planDate", "计划时间","ExDateFormatter"), 
+        new FieldItem("completeState", "完成状态","StateFormatter"),
+        new FieldItem("completeDate", "完成时间","DateFormatter"),
+    });
+
+    var table2 = new TableViewModel( "/api/services/app/MaintainRecord/GetAllMember", PermissionNames.PagesCompanyDieMaintenanceMaintainMember,"member-table")
+	.SetFields(new List<FieldItem>()
+    {
+        new FieldItem("id", "编号"),
+        new FieldItem("employeeNo", "工号"),
+        new FieldItem("name", "姓名"),
+        new FieldItem("workHour", "工时","WorkHourFormatter"),
+        new FieldItem("startDateTime", "开始时间","DateTimeFormatter"),
+        new FieldItem("endDateTime", "结束时间","DateTimeFormatter"),
+    });
+}
+@section css{
+}
+
+@Html.Partial("New/Table/_Table", table)
+@Html.Partial("New/Table/_Table", table2)
+
+@section modal{
+    <!--Main Modal-->
+    @{
+        var modal = new ModalViewModel("维护记录", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            //new Input("deviceNo", "设备编号"),   
+            new Input("deviceName", "设备名称"),
+            new Input("mgType", "机模类型").SetSelectOptions(mType),
+            new Input("address", "维护地点").SetNotRequired(),
+            new InputDate("planDate", "计划时间").SetNotRequired(),
+            new InputTextarea("description", "维护内容"),
+            //new InputDateTime("completeDate", "完成时间").SetNotRequired(),
+        }));
+    }
+    @Html.Partial("New/Modals/_Modal", modal)
+    @{
+        var mModal = new ModalViewModel("维护人员", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            new InputHide("maintenanceNo"),
+            new InputHide("employeeId"),
+            new InputHide("employeeNo", "工号"),
+            new Input("name", "维护人员").SetSearchIcon("query_employee_modal","member-modal"),
+            new InputDateTime("startDateTime", "开始时间",@class:"calc-date"),
+            new InputDateTime("endDateTime", "结束时间",@class:"calc-date").SetNotRequired(),
+            new Input("workHour", "工时(小时)").SetNotRequired(),
+            new InputTextarea("workDesc", "工作内容").SetNotRequired(),
+        }),"member-modal");
+    }
+    @Html.Partial("New/Modals/_Modal", mModal)
+    @{
+        var cModal = new ModalViewModel("完成维护","", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            new InputHide("maintenanceNo"),
+            new InputDate("completeDate", "完成时间"),
+        }),"complete-modal");
+    }
+    @Html.Partial("New/Modals/_Modal", cModal)
+
+    @Html.Partial("Modals/Query/_Employee", "employeeNo,name,employeeId")
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $table = $('#table'), $mTable = $('#member-table'), mNo = "";
+        $mTable.closest('.table-box').css("display", "none");
+        $(function() {
+            $("#table").bootstrapTable('resetView', { height: 800 });
+
+            function mOnCheck(row) {
+                $table.bootstrapTable('resetView', { height: 500 });
+                $mTable.closest('.table-box').css("display", "block");
+                mNo = row.id;
+                $mTable.bootstrapTable("destroy");
+                LoadTable({
+                    table: $mTable,
+                    queryParams: queryItemParams,
+                    onAll: function(eName, eData) {
+                        OnAll(eName, eData, "member-table");
+                    },
+                    onLoadSuccess: function(data) {
+                        OnLoadSuccess(data, "member-table");
+                    },
+                    onPostBody: function(data) {
+                        OnPostBody(data, "member-table");
+                    }
+                });
+                $mTable.bootstrapTable('resetView');
+            }
+
+            function mOnUnCheck() {
+                mNo = "";
+                $mTable.closest('.table-box').css("display", "none");
+                $mTable.bootstrapTable("destroy");
+                $("#table").bootstrapTable('resetView', { height: 800 });
+            }
+
+            function queryItemParams(params) {
+                return {
+                    MaxResultCount: params.limit,
+                    SkipCount: params.offset,
+                    sort: params.sort,
+                    sortOrder: params.order,
+                    SearchList: [{ KeyWords: mNo, KeyField: "maintenanceNo", FieldType: "0", ExpType: "0" }]
+                };
+            }
+
+            function tableLoad(data) {
+                OnLoadSuccess(data);
+                if (mNo && data.total > 0) {
+                    $table.bootstrapTable("checkBy", { field: "id", values: [mNo] });
+                } else {
+                    mOnUnCheck();
+                }
+            }
+
+            LoadTable({
+                onCheck: mOnCheck,
+                onUncheck: mOnUnCheck,
+                onLoadSuccess: tableLoad
+            });
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            $mTable.closest(".table-box").find("#tableTool .btn").on('click',
+                function() {
+                    var type = $(this).data('type').replace("_", "");
+                    var url = $(this).data('url') || "";
+                    funs[type] ? funs[type].call(this, url) : funs["none"].call(this);
+                });
+            funs["btnCreate"] = function() { BtnCreate({ data: { id: "", mgType: @(MaintainTypeDefinition.Other) }, disabled: "mgType"}); }
+            funs["btnUpdate"] = function() {
+                var row = $table.bootstrapTable("getSelections")[0];
+                console.log(row);
+                if (row) {
+                    if (row.completeState !== @(MaintainStateDefinition.New)) {
+                        abp.message.warn("维护已开始，不能修改。");
+                        return;
+                    }
+                    BtnUpdate({ disabled: "deviceNo,deviceName,mgType" });
+                }
+            };
+            funs["btnAddMember"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.completeState !== @(MaintainStateDefinition.New) &&
+                        row.completeState !== @(MaintainStateDefinition.Start)) {
+                        abp.message.warn("维护已完成，不能添加人员。");
+                        return;
+                    }
+                    var data = { url: url, data: row, disabled: "workHour" };
+                    $('#name').closest('.form-group-sm ').show();
+                    if (row.completeState === @(MaintainStateDefinition.New)) {
+                        MsgConfirm("确认开始维护并添加维护人员？", "开始维护", AddMember, data);
+                    } else {
+                        AddMember(data);
+                    }
+
+                }
+            };
+            funs["btnComplete"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.completeState !== @(MaintainStateDefinition.Start)) {
+                        abp.message.warn("维护未开始，不能完成。");
+                        return;
+                    }
+                    OpenModal({
+                        url: url,
+                        data: row,
+                        modal: $('#complete-modal'),
+                        success: function() {
+                            $('#complete-modal').modal("hide");
+                            RefreshTable();
+                        }
+                    });
+                }
+            };
+            funs["btnUpdateMember"] = function(url) {
+                var row = $mTable.bootstrapTable("getSelections")[0];
+                if (row) {
+                    $('#name').closest('.form-group-sm ').hide();
+                    var data = { url: url, data: row, disabled: "workHour", modaltitle: window.opUpdate };
+                    AddMember(data);
+                }
+            };
+            funs["btnDeleteMember"] = function(url) {
+                var row = $mTable.bootstrapTable("getSelections")[0];
+                if (row) {
+                    BtnDelete(url, $mTable);
+                }
+            };
+            $('.calc-date').on('change', CalcWorkHour);
+            $("#Tool1").append(
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType1" checked value=""/><label for="radioType1">全部</label></div>' +
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType2" value="@(MaintainTypeDefinition.Mold)"/><label for="radioType2">模具维护</label></div>' +
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType3" value="@(MaintainTypeDefinition.Device)"/><label for="radioType3">设备维护</label></div>' +
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType4" value="@(MaintainTypeDefinition.Other)"/><label for="radioType4">其他维护</label></div>');
+
+            $(".tool-radio input[type='radio']").on('click',
+                function(e) {
+                    document.getElementById("SearchForm").reset();
+                    GetSearchList();
+                    mOnUnCheck();
+                    RefreshTable();
+                });
+        });
+
+        function GetSearchList() {
+
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            var radioType = $('input[name="radioType"]:checked').val();
+            if (radioType) {
+                window._searchList.push({ KeyWords: radioType, KeyField: "mgType", FieldType: "1", ExpType: "0" });
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    window._searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+
+        function CalcWorkHour() {
+            var s = $('#startDateTime').val(), e = $('#endDateTime').val();
+            if (s && e) {
+                try {
+                    var sd = new Date(s), ed = new Date(e);
+                    if (sd < ed) {
+                        var timeSpan = ed.getTime() - sd.getTime();
+                        var h = Math.floor(timeSpan * 100 / (1000 * 60 * 60)) / 100;
+                        $('#workHour').val(h);
+                    } else {
+                        $('#workHour').val('');
+                    }
+                } catch (e) {
+
+                }
+            }
+        }
+
+        function AddMember(opt) {
+            var o = $.extend({},
+                {
+                    modal: $('#member-modal'),
+                    success: function() {
+                        $('#member-modal').modal("hide");
+                        RefreshTable();
+                    }
+                },
+                opt);
+            OpenModal(o);
+        }
+    </script>
+
+
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function DeviceTypeFormatter(v) {
+            var name = $('#hid-type option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+
+        function StateFormatter(v) {
+            var name = $('#hid-state option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-info">' + name + '</span>';
+            case 2:
+                return '<span class="label label-iwb">' + name + '</span>';
+            case 3:
+                return '<span class="label label-success">' + name + '</span>';
+            case 4:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+
+        function ExDateFormatter(v, r, i, f) {
+            var value = DateFormatter(v, r, i, f);
+            if (r.completeState === @(MaintainStateDefinition.Complete) ||
+                r.complateState === @(MaintainStateDefinition.End)) {
+                return '<span style="color:#00a65a">' + value + '</span>';
+            }
+            if (value <= new Date().format('yyyy-MM-dd')) {
+                return '<span style="color:red" class="iwb-flash2">' + value + ' [已到期]</span>';
+            }
+            var date = new Date(new Date(new Date().getTime() + 10 * 1000 * 60 * 60 * 24)).format('yyyy-MM-dd');
+            if (date >= value) {
+                return '<span style="color:orange" class="iwb-flash">' + value + ' [即将到期]</span>';
+            }
+            return value;
+        }
+
+        function WorkHourFormatter(v, r) {
+            if (v > 0) {
+                if (r.isComfirm) {
+                    return '<span class="label label-success">' + v + '小时 </span>';
+                } else {
+                    return '<span class="label label-info">' + v + '小时 </span>';
+
+                }
+            } else {
+                return '<span class="label label-danger">0</span>';
+            }
+        }
+
+        function TypeFormatter(v) {
+            var name = $('#hid-type option[value="' + v + '"]').text();
+            switch (v) {
+            case 0:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+    </script>
+    }
+
+
+    <section style="display: none">
+        <select id="hid-type">
+            <option value=""></option>
+        </select>
+
+        @Html.DropDownList("hid-state", mState)
+        @Html.DropDownList("hid-type", mType)
+    </section>

@@ -1,0 +1,201 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "证照信息维护";
+    string activeMenu = PermissionNames.PagesCompanyLicenseDocument; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<SelectListItem> group = ViewBag.LicenseGroup;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+        new SearchItem("no","证照编码"),
+        new SearchItem("name","证照名称"),
+        new SearchItem("licenseGroup","证照组").SetSearchItem(group),
+        new SearchItem("licenseType","证照类型").SetSearchItem(new List<SelectListItem>(){}),
+    },"search-form",false);
+
+    var table = new TableViewModel( "/api/services/app/LicenseDocument/GetAll", activeMenu, searchForm)
+    .SetFields(new List<FieldItem>()
+    {
+        new FieldItem("no", "证照编码"),
+        new FieldItem("name", "证照名称"),
+        new FieldItem("licenseGroup", "证照组"),
+        new FieldItem("licenseType", "证照类型"),
+        new FieldItem("expireDate", "过期时间","ExDateFormatter"),
+    });
+}
+@section css{
+    
+}
+
+@Html.Partial("New/Table/_Table", table)
+
+@section modal{
+    <!--Main Modal-->
+    @{
+        var modal = new ModalViewModel("证照", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            new Input("no", "证照编码"),   
+            new Input("name", "证照名称"),   
+            new InputTextarea("description", "证照描述").SetNotRequired(),   
+            new Input("licenseGroup", "证照组").SetSelectOptions(group),   
+            new Input("licenseType", "证照类型",InputTypes.List),   
+            new InputDate("expireDate", "过期时间"),   
+            new InputFile("filePath", "附件路径").SetFileOption("fileInfo","fileName","fileExt",100).SetHelp("上传PDF文件更佳").SetNotRequired().SetOuterBefore("<div class=\"attach-unit\" >").SetOuterAfter("</div>"),   
+        }));
+    }
+    @Html.Partial("New/Modals/_Modal", modal)
+}
+
+@section scripts
+{
+
+    <script type="text/javascript">
+        var $table;
+        $(function() {
+            $('#KeyWords-3').on('change', function() { GetLicenseType(this, 'KeyWords-4') });
+            $table = LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnCreate"] = function(url) {
+                $('#licenseGroup').off('change.group')
+                    .on('change.group', function() { GetLicenseType(this, 'licenseType') });
+                $('.custom-file-label').text('选择文件');
+                BtnCreate({
+                    data: { id: "" },
+                    save: function() {
+                        SaveLicense(url);
+                    }
+                });
+            }
+            funs["btnUpdate"] = function(url) {
+                var row = $('#table').bootstrapTable("getSelections")[0];
+                if (row) {
+                    $('#licenseGroup').off('change.group').on('change.group',
+                        function() { GetLicenseType(this, 'licenseType', row.licenseType) });
+                $('.custom-file-label').text('选择文件');
+                    BtnUpdate({
+                        disabled: "no",
+                        save: function() {
+                            SaveLicense(url);
+                        }
+                    });
+                }
+            };
+            funs["btnDownLoad"] = function() {
+                var row = $('#table').bootstrapTable("getSelections")[0];
+                if (row) {
+                    QueryAttach(row.no);
+                }
+            };
+        });
+
+        function QueryAttach(no) {
+            SaveAjax({
+                url: window.appUrl + 'SysAttachFile/QueryAttach',
+                data: { TableName: 'License', ColName: 'License', Key: no },
+                isValidate: false,
+                isAlert: false,
+                success: function(res) {
+                    if (res && res.length > 0) {
+                        var fileExt = res[0].fileExt;
+                        if (officeFileExt.indexOf(fileExt) > 0) {
+                            OpenFile(res[0].filePath, 'office', { height: 800 });
+                        } else {
+                            OpenFile(res[0].filePath, null, { height: 800 });
+                        }
+                    } else {
+                        abp.message.warn("未查询到附件！");
+                    }
+                }
+            });
+        }
+
+        function GetLicenseType(that, id, type) {
+            var groupName = $(that).val();
+            $.iwbAjax4({
+                url: window.appUrl + 'LicenseType/GetSelectStrByGroup?groupName=' + groupName,
+                success: function(res) {
+                    $('#' + id).html(res).select2();
+                    if (type) {
+                        $('#' + id).val(type).select2();
+                    }
+                }
+            });
+        }
+
+        function SaveLicense(url) {
+            var data = GetAttachFilesDate();
+            SaveAjax({
+                url: url,
+                data: data,
+                success: function() {
+                    RefreshTable();
+                    $('#modal').modal("hide");
+                }
+            });
+        }
+
+        function GetAttachFilesDate() {
+            var data = {
+                id: $("#modal #id").val(),
+                no: $("#modal #no").val(),
+                name: $("#modal #name").val(),
+                description: $("#modal #description").val(),
+                licenseGroup: $("#modal #licenseGroup").val(),
+                licenseType: $("#modal #licenseType").val(),
+                expireDate: $("#modal #expireDate").val(),
+                attachFiles: []
+            };
+            $(".attach-unit .form-group-sm").each(function(i, v) {
+                var fileInfo = $(v).find("input[name='fileInfo']").val();
+                if (fileInfo) {
+                    var fileName = $(v).find("input[name='fileName']").val();
+                    var fileExt = $(v).find("input[name='fileExt']").val();
+                    var fileTitle = $(v).find("label").text();
+                    data.attachFiles.push(
+                        { fileTitle: fileTitle, fileInfo: fileInfo, fileName: fileName, fileExt: fileExt });
+                }
+               
+            });
+            return data;
+        }
+
+    </script>
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function ExDateFormatter(v, r, i, f) {
+            var value = DateFormatter(v, r, i, f);
+            if (value <= new Date().format('yyyy-MM-dd')) {
+                return '<span style="color:red" class="iwb-flash2">' + value + ' [已到期]</span>';
+            }
+            var date = new Date(new Date(new Date().getTime() + 1 * 30 * 1000 * 60 * 60 * 24)).format('yyyy-MM-dd');
+            if (date >= value) {
+                return '<span style="color:orange" class="iwb-flash">' + value + ' [即将到期]</span>';
+            }
+            return value;
+        }
+
+        function TypeFormatter(v) {
+            var name = $('#hid-type option[value="' + v + '"]').text();
+            switch (v) {
+            case 0:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @*@Html.DropDownList("hid-type", type)*@
+</section>

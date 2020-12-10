@@ -1,0 +1,192 @@
+﻿@using Microsoft.Ajax.Utilities
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesFinshedStoreInfoCurrentStoreHouseQueryMg; //The menu item will be active for this page.
+    ViewBag.Title = "库存信息查询";
+    //List<SelectListItem> semiApplyStatus = ViewBag.SemiApplyStatus;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+    new SearchItem("productName","产品名称"),
+new SearchItem("model","规格"),
+    new SearchItem("material","材质"),
+new SearchItem("surfaceColor","表色"),
+new SearchItem("rigidity","硬度"),
+    new SearchItem("id","成品编号").SetSearchIcon("query_Product_modal"),
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .tool-rc-group {
+            border: 1px solid #ba63d3;
+            float: left;
+            margin: 0 5px;
+            padding-right: 5px;
+            border-radius: 5px;
+        }
+
+        /*[type="checkbox"] + label::before, [type="checkbox"]:not(.filled-in) + label::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            z-index: 0;
+            border: 2px solid #008080;
+            border-radius: 1px;
+            margin-top: -10px;
+            transition: .2s;
+            margin: -10px 20px 0 0;
+            margin-left: -5px;
+        }*/
+        #showZoreCheckBox + label::before,#showZoreCheckBox:not(.filled-in) + label::after {
+            top: -10px;
+            left: -5px;
+            width: 18px;
+            height: 18px;
+        }
+        #showZoreCheckBox:checked + label::before {
+            top: -10px;
+            left: -8px;
+            width: 11px;
+            height: 15px;
+            border-top: 2px solid transparent;
+            border-left: 2px solid transparent;
+            border-right: 2px solid #26a69a;
+            border-bottom: 2px solid #26a69a;
+            transform: rotate(40deg);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform-origin: 100% 100%;
+            transform-origin: 100% 100%;
+        }
+    </style>
+}
+<div id="exportCss">
+    <style>
+        .trProduct td {
+            text-align: left !important;
+            background: #c0c0c0;
+            font-size: 1.5rem !important;
+        }
+
+        .trProduct td span {
+            color: #632d32;
+            margin-left: 15px;
+        }
+    </style>
+</div>
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table" data-url="/api/services/app/StoreStatistics/QueryCurrentStoreTotal"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row">
+                <th data-align="center" data-field="id">产品编码</th>
+                <th data-align="center" data-field="productName">产品名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="allPreMonthQuantity">上月结算库存(千件)</th>
+                <th data-align="center" data-field="allQuantity">当前库存数量(千件)</th>
+                <th data-align="center" data-field="allFreezeQuantity">库存冻结数量(千件)</th>
+                <th data-align="center" data-formatter="ActionsFormatter"></th>
+            </tr>
+        </thead>
+    </table>
+</div>
+@section modal{
+    @Html.Partial("Modals/Query/_Product", "KeyWords-6")
+}
+@section scripts
+{
+    <script src="~/Content/Scripts/MyScript/ExportExcel.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4,
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function () {
+            $("#tableTool").css("min-height", "40px");
+            LoadTable();
+            funs["btnPrint"] = function (url) {
+                BtnPrint(url);
+            }
+            $("#Tool1").append(
+                '<div class="tool-rc-group">' +
+                '<div  class="tool-radio" style="padding:5px;" ><input name="showZoreCheckBox" type="checkbox" id="showZoreCheckBox"  value=""/><label for="showZoreCheckBox" style="color:white;padding-left: 15px; font-size: 1.5rem;">显示0库存</label></div>' +
+                '</div>');
+
+            $(".tool-radio input[type='radio'],.tool-radio input[type='checkbox']").on('click', function () {
+                document.getElementById("SearchForm").reset();
+                GetSearchList();
+
+                RefreshTable();
+            });
+        });
+        function BtnPrint(url) {
+            window.open("@Url.Action("StoreListReport")", "_blank");
+        }
+        function ActionsFormatter(v, r) {
+            return '<span class="table-action" onclick="ShowEnterOutDetail(\'' +
+                r.id +
+                '\')"><i class="iconfont icon-right"></i>查看进出货明细信息</span>';
+        }
+        function ShowEnterOutDetail(id) {
+            window.open("@Url.Action("ProductStoreDetail")?id="+id, "_blank");
+        }
+
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+           
+            //var isShowZoreCheckBox = $("#showZoreCheckBox").is(':checked') ? "1" : "0";
+            let zoreExt = $("#showZoreCheckBox").is(':checked') ? "4" : "2";//显示0 ，数量是大于等于0
+           // window._searchList.push({ KeyWords: 0, KeyField: "AllQuantity", FieldType: "7", ExpType: zoreExt });
+            if (zoreExt === "2") {
+                window._searchList.push({ KeyWords: 0, KeyField: "AllQuantity", FieldType: "7", ExpType: zoreExt });
+
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+    </script>
+
+}

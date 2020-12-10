@@ -1,0 +1,199 @@
+﻿@using IwbZero.Setting
+@using NPOI.SS.Formula.Functions
+@using ShwasherSys.CustomerInfo
+@using ShwasherSys.Order
+@using ShwasherSys.Order.Dto
+@using ShwasherSys.OrderSendInfo
+@using ShwasherSys.OrderSendInfo.Dto
+
+@{
+    Layout = null;
+    ViewBag.Title = "OrderPrint";
+    OrderHeaderDto orderHeader = ViewBag.OrderHeadDto;
+    Customer customer = ViewBag.Customer;
+    CustomerSend customerSend = ViewBag.CustomerSend;
+    List<ViewOrderItems> orderItems = ViewBag.OrderItems;
+    var tddate = orderHeader.OrderDate.ToString("yyyy-MM-dd");
+}
+<html>
+<head>
+    <title>订单打印</title>
+    <link href="~/Content/Css/PrintPage.css" rel="stylesheet" media="all" />
+    <link href="~/Content/Plugins/PrintPreView/print-preview.css" rel="stylesheet" />
+    @*<link href="~/Content/Plugins/jquery-print-preview/src/css/print-preview.css" rel="stylesheet" media="screen" />
+        <script src="https://cdn.bootcss.com/jquery-tools/1.2.7/jquery.tools.min.js"></script>
+        <script src="~/Content/Plugins/jquery-print-preview/src/jquery.print-preview.js"></script>*@
+
+    @*<script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>*@
+    <style>
+       
+    </style>
+</head>
+
+<body>
+
+    <header style="height: 40px;">
+        <div style="position: absolute;left: calc(50% - 100px)">
+            <input type="button" value="打印" class="btn" id="printBtn" />
+            <input type="button" value="导入Excel" class="btn" onclick="ExportExcel('printContent','订单明细','exportCss')" />
+        </div>
+        <hr class="hr01" />
+    </header>
+<div id="printContent">
+    <table id="OrderDetailTBL0" border="0" align="center" cellpadding="1" cellspacing="1" style="width:900px; height:91px; border-collapse:collapse;" runat="server">
+        <tr>
+            <td colspan="12" style="text-align: center; height:30px;font-size:large;font-weight:bold;">分&nbsp;配&nbsp;单</td>
+        </tr>
+        <tr>
+            <td id="tdCustomerId" colspan="12" style="text-align: center; height: 30px;font-size:large;font-weight:bold;"> @customer.CustomerName</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="height: 20px; width: 50px;">
+                <div style="text-align: center"> <strong>流水号</strong>:</div>
+            </td>
+            <td colspan="3" style="height: 20px; width: 300px;">@orderHeader.Id</td>
+            <td style="width:  50px ; height: 20px;" colspan="2">
+                <div style="text-align: center"> <strong>订单号</strong>:</div>
+            </td>
+            <td style="width:  auto;  height: 20px;" colspan="5" id="TextStockNo">@orderHeader.StockNo</td>
+
+        </tr>
+        <tr>
+            <td colspan="2" style="width:  50px ;height: 20px;"><div style="text-align: center"> <strong>送货地址</strong>:</div></td>
+            <td colspan="10" style="height: 20px; width: auto;" id="tdSendAddr">@customerSend.SendAdress</td>
+               
+        </tr>
+        <tr>
+            <td  colspan="2" style="width: 50px;height: 20px;">
+                <div style="text-align: center"> <strong>联系人</strong>:</div>
+            </td>
+            <td id="tdLinkName" colspan="3" style="height: 20px; width: 300px;">@orderHeader.LinkName</td>
+            <td style="width:50px ; height: 20px;" colspan="2">
+                <div style="text-align: center"> <strong>电话</strong>:</div>
+            </td>
+            <td style="width:  auto ; height: 20px;" colspan="5" id="TextTel">@orderHeader.Telephone</td>
+        </tr>
+        <tr>
+            <td style="width:500px  ; height: 28px;" colspan="5"></td>
+            <td style="width:  100px ; height: 17px;" colspan="2">
+                <div style="text-align: center"><strong> 订单日期</strong>:</div>
+            </td>
+            <td style="width:  auto ; height: 17px;" id="tdOrderDate" colspan="5">@tddate</td>
+        </tr>
+        <tr>
+            <td colspan="12">
+                <table id="OrderDetailTBL" class="table-body"  style="width: 1000px; height: 38px; border-collapse:collapse; table-layout: auto;" >
+                    <tr style="height:18px;">
+                        <td align="center" style="width:3%;">
+                            <strong>序号</strong>
+                        </td>
+                        <td align="center" style="width:8%;">
+                            <strong>零件号</strong>
+                        </td>
+                        <td align="center" style="width:8%; ">
+                            <strong>规格</strong>
+                        </td>
+                        <td align="center" style="width:8%">
+                            <strong>型号</strong>
+                        </td>
+                        <td align="center" style="width:8%; ">
+                            <strong>表色</strong>
+                        </td>
+                        <td align="center" style="width:8%; ">
+                            <strong>材质</strong>
+                        </td>
+                        <td align="center" style="width:8%;">
+                            <strong>硬度</strong>
+                        </td>
+                        <td align="center" style="width:4%;">
+                            <strong>数量</strong>
+                        </td>
+                        <td align="center" style="width:4%; ">
+                            <strong>单位</strong>
+                        </td>
+                        <td align="center" style="width:8% ">
+                            <strong>送货日期</strong>
+                        </td>
+                        <td align="center" style="width:10%">
+                            <strong>备注</strong>
+                        </td>
+                        <td align="center" style="width:12%">
+                            <strong>成品编号</strong>
+                        </td>
+                    </tr>
+                    @{
+                        int index = 1;
+                        foreach (var item in orderItems)
+                        {
+                            string orderSendDate = item.SendDate ==new DateTime(1900,1,1) ? "" : string.Format("{0:d}", item.SendDate);
+
+                                        <tr class="trColor">
+                                            <td align="center">@index</td>
+                                            <td align="center">@item.PartNo</td>
+                                            <td align="center">@item.Model</td>
+                                            <td align="center">@item.ProductName</td>
+                                            <td align="center">@item.SurfaceColor</td>
+                                            <td align="center">@item.Material</td>
+                                            <td align="center">@item.Rigidity</td>
+                                            <td align="center">@item.Quantity</td>
+                                            <td align="center">@item.OrderUnitName</td>
+                                            <td align="center">@orderSendDate</td>
+                                            <td align="center">@item.OrderItemDesc</td>
+                                            <td align="center">@item.ProductNo</td>
+                                        </tr>
+                            index++;
+                        }
+                    }
+                </table>
+            </td>
+        </tr>
+    </table>
+   
+</div>
+<div id="exportCss">
+    <style>
+        #OrderDetailTBL tr td{
+            border: 1pt solid gray;
+        }
+    </style>
+</div>
+    <script src="~/Content/Scripts/Jquery/jquery-3.3.1.min.js"></script>
+    @*<script src="~/Content/Plugins/printThis/printThis.js"></script>*@
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+    <script src="~/Content/Scripts/MyScript/ExportExcel.js"></script>
+    <script>
+        $(function () {
+            /*$("#printBtn").on('click',
+                function () {
+                    $("#printContent").printThis({
+                        debug: false, // show the iframe for debugging
+                        importCSS: true, // import page CSS
+                        importStyle: false, // import style tags
+                        printContainer: true, // grab outer container as well as the contents of the selector
+                        //loadCSS: "path/to/my.css",  // path to additional css file - use an array [] for multiple
+                        pageTitle: "", // add title to print page
+                        removeInline: false, // remove all inline styles from print elements
+                        printDelay: 333, // variable print delay
+                        header: null, // prefix to html
+                        footer: null, // postfix to html
+                        base: false, // preserve the BASE tag, or accept a string for the URL
+                        formValues: true, // preserve input/form values
+                        canvas: false, // copy canvas elements (experimental)
+                        //doctypeString: "...",       // enter a different doctype for older markup
+                        removeScripts: false, // remove script tags from print content
+                        copyTagClasses: false // copy classes from the html & body tag#1#
+                    });
+                });*/
+
+            $("#printBtn").printPreview({
+                printBody: "#printContent",
+                modalWidth: 900
+            })
+        })
+    </script>
+    
+  
+ 
+</body>
+
+</html>

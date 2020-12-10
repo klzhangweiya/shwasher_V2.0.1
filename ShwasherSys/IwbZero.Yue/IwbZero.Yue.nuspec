@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>IwbZero</id>
+    <version>1.0.0</version>
+    <title>Iwb后台管理系统基础框架Zero</title>
+    <authors>Yue</authors>
+    <owners>Yue</owners>
+    <licenseUrl>http://120.25.240.119/LICENSE.txt</licenseUrl>
+    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
+    <iconUrl>http://120.25.240.119/iwb-logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Iwb后台管理系统基础框架Zero</description>
+    <releaseNotes>Iwb Base System </releaseNotes>
+    <copyright>Copyright 2019</copyright>
+    <tags>Iwb Zero IwbZero</tags>
+  </metadata>
+</package>

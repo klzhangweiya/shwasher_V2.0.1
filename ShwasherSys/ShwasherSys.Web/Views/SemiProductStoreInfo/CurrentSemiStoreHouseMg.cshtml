@@ -1,0 +1,512 @@
+﻿@using Abp.Authorization
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSemiProductStoreInfoCurrentSemiStoreHouseMg; //The menu item will be active for this page.
+    ViewBag.Title = "半成品库存实时信息";
+    //List<SelectListItem> semiApplyStatus = ViewBag.SemiApplyStatus;
+    List<SelectListItem> storeHouses = ViewBag.StoreHouses;
+    string AddEnterAuth = PermissionNames.PagesSemiProductStoreInfoCurrentSemiStoreHouseMgAddEnter;
+    string AddOutAuth = PermissionNames.PagesSemiProductStoreInfoCurrentSemiStoreHouseMgAddOut;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+
+new SearchItem("productionOrderNo","流转单编号"),
+new SearchItem("semiProductName","半成品名称"),
+    new SearchItem("model","规格"),
+    new SearchItem("material","材质"),
+    new SearchItem("surfaceColor","表色"),
+    new SearchItem("partNo","零件号"),
+    new SearchItem("semiProductNo","半成品编码").SetSearchIcon("query_semiProduct_modal"),
+
+    //new SearchItem("storeHouseId","仓库",FiledType.I,ExpType.Equal).SetSearchItem(storeHouses),
+}, false);
+}
+<section style="display: none">
+    @Html.DropDownList("hide-StoreHouses", storeHouses)
+</section>
+@section css{
+    <style>
+        .tool-radio {
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+            padding-left: 25px;
+            font-size: 1.5rem;
+            color: #dad9db;
+        }
+
+        [type="radio"]:not(:checked) + label::before, [type="radio"]:not(:checked) + label::after {
+            border: 2px solid #fff;
+        }
+        .tool-rc-group {
+            border: 1px solid #ba63d3;
+            float: left;
+            margin: 0 5px;
+            padding-right: 5px;
+            border-radius: 5px;
+        }
+
+        [type="checkbox"] + label::before, [type="checkbox"]:not(.filled-in) + label::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            z-index: 0;
+            border: 2px solid #008080;
+            border-radius: 1px;
+            margin-top: -10px;
+            transition: .2s;
+            margin: -10px 20px 0 0;
+            margin-left: -5px;
+        }
+    </style>
+    
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/CurrentSemiStoreHouses/GetViewAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="semiProductName">半成品名称</th>
+                <th data-align="center" data-field="productionOrderNo">排产单编号</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                <th data-align="center" data-field="canUserQuantity" data-formatter="CanUserQuantityFormatte">可用数量</th>
+                <th data-align="center" data-field="actualQuantity">当前库存数量(kg)</th>
+                <th data-align="center" data-field="freezeQuantity">被冻结数量</th>
+                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatte">仓库</th>
+                <th data-align="center" data-field="storeLocationNo">库位</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="kgWeight" data-formatter="KgWeightFormatte">千件重</th>
+                @*<th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">状态</th>*@
+                <th data-align="center" data-formatter="ActionFormatter"></th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("申请包装", ""))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                        {
+                                    new InputViewModel("id", hide:true),
+                                    new InputViewModel("currentSemiStoreHouseNo", hide:true),
+                                    new InputViewModel("packType", hide:true),
+                                    new InputViewModel("semiProductNo", hide:true),
+                                    new InputViewModel("productionOrderNo",displayName:"流转单编号").SetDisabled(),
+                                    new InputViewModel("surfaceColor", displayName: "表色"),
+                                    new InputViewModel("model", displayName: "规格"),
+                                    new InputViewModel("rigidity", displayName: "硬度"),
+                                    new InputViewModel("material", displayName: "材质"),
+                                    new InputViewModel("kgWeight", displayName: "千件重"),
+                                    new InputViewModel("quantity", displayName:"包装数量(kg)",@class:"number",other:"min=0.001"),
+                                    new InputViewModel("remark",InputTypes.Textarea, "备注").SetNotRequired(),
+                                };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="kg-modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("修改千斤重", ""))
+                    @{
+                        var inputs2 = new List<InputViewModel>
+                                                        {
+                                    new InputViewModel("id", hide:true),
+                                    new InputViewModel("kgWeight", displayName:"千斤重",@class:"number",other:"min=0.001"),
+
+                                };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs2))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="addEnterModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("入库平衡", ""))
+                    @{
+
+                        var inputs3 = new List<InputViewModel>
+                                                            {
+                                        //new InputViewModel("freezeQuantity", hide:true),
+                                        //new InputViewModel("currentProductStoreHouseNo", hide:true),
+
+                                        new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                                        new InputViewModel("semiProductNo", displayName: "半成品编码").SetSearchIcon("query_semiProduct_modal","addEnterModal"),
+
+                                        new InputViewModel("storeHouseId",InputTypes.List,  displayName: "仓库").SetSelectOptions(storeHouses),
+                                                new InputViewModel("storeLocationNo", displayName:"库位编号").SetSearchIcon("query_storeHouseLocation_modal","#addEnterModal"),
+                                        new InputViewModel("quantity", displayName:"入库数量",@class:"number",other:"min=0.001"),
+                                        //new InputViewModel("packageSpecification", displayName:"包装规格",@class:"number",other:"min=0.001"),
+                                        //new InputViewModel("packageCount", displayName:"包数",@class:"number",other:"min=0.001"),
+
+
+                                    };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs3))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addOutModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("出库平衡", ""))
+                    @{
+
+                        var inputs4 = new List<InputViewModel>
+                                                {
+                            //new InputViewModel("freezeQuantity", hide:true),
+                            new InputViewModel("currentSemiStoreHouseNo", hide:true),
+                            new InputViewModel("storeHouseId", hide:true),
+                            new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                            new InputViewModel("semiProductNo", displayName: "半成品编码"),
+                            new InputViewModel("quantity", displayName:"出库数量",@class:"number",other:"min=0.001"),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs4))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="changeHouseModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("仓库变更", ""))
+                    @{
+
+                        var inputs5 = new List<InputViewModel>
+                                                {
+                            //new InputViewModel("freezeQuantity", hide:true),
+                            new InputViewModel("id", hide:true),
+                            new InputViewModel("storeHouseId",InputTypes.List, displayName:"仓库").SetSelectOptions(storeHouses),
+                            new InputViewModel("storeLocationNo", displayName:"库位编号").SetSearchIcon("query_storeHouseLocation_modal","#changeHouseModal"),
+                            new InputViewModel("changeQuantity", displayName:"变更数量",@class:"number",other:"min=0.001")
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs5))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="disCustomer-modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("降级客户", ""))
+                    <table class="table table-striped disCustomer">
+                        <tbody>
+                            <tr>
+                                <th style="width: 150px">批次号</th>
+                                <th style="width: 150px">客户编号</th>
+                                <th style="width: 150px">客户名称</th>
+
+
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    @Html.Partial("Modals/_ModalFooter", "1")
+                </div>
+            </div>
+        </div>
+    </section>
+    @Html.Partial("Modals/Query/_SemiProduct", "KeyWords-7|semiProductNo")
+    @Html.Partial("Modals/Query/_StoreHouseLocation", "storeHouseId,storeLocationNo")
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+
+
+        $(function () {
+            $("#tableTool").css("min-height", "40px");
+            LoadTable();
+            funs["btnPackage"] = function (url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+                    if (data.storeHouseId !== 4) {
+                        abp.message.warn("请选择处于待包装仓库的库存进行包装！");
+                        return;
+                    }
+                    data.quantity = rows[0].actualQuantity - rows[0].freezeQuantity;
+                    data.packType = 1;
+                    BtnUpdate({ url: url, disabled: "semiProductNo,productionOrderNo,model,surfaceColor,rigidity,material,kgWeight",data:data });
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+            funs["btnAddEnter"] = function(url) {
+                BtnAddEnter();
+            }
+            funs["btnChangeStoreHouse"] = function (url) {
+
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+                    queryParams.storeHouseId = data.storeHouseId;
+                    $("#changeHouseModal #storeHouseId").off('change.22');
+                    OpenModal(url, { url: url, disabled:"storeLocationNo",data: data, modal: $("#changeHouseModal") });
+                    $("#changeHouseModal #storeHouseId").on('change.22', function () {
+                        queryParams.storeHouseId = $(this).val();
+                        $("#changeHouseModal #storeLocationNo").val('');
+                    });
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+            $("#Tool1").append(
+                '<div class="tool-rc-group">'+
+                '<div  class="tool-radio"><input name="storeHouseType" type="radio" id="allStoreHouse" checked value=""/><label for="allStoreHouse">全部</label></div>' +
+                '<div  class="tool-radio"><input name="storeHouseType" type="radio" id="prePackage" value="4"/><label for="prePackage">待包装仓库</label></div>' +
+                '<div  class="tool-radio"><input name="storeHouseType" type="radio" id="otherStore" value="0"/><label for="otherStore">非待包装仓库</label></div></div>'+
+            '<div class="tool-rc-group">'+
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType1" checked value=""/><label for="radioType1">全部</label></div>' +
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType2" value="1"/><label for="radioType2">降级</label></div>'+
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType3" value="2"/><label for="radioType3">非降级</label></div></div>' +
+                '<div class="tool-rc-group">'+
+                '<div  class="tool-radio" style="padding:5px;" ><input name="showZoreCheckBox" type="checkbox" id="showZoreCheckBox"  value=""/><label for="showZoreCheckBox" style="color:white;padding-left: 15px; font-size: 1.5rem;">显示0库存</label></div>' +
+                '</div>');
+
+            $(".tool-radio input[type='radio'],.tool-radio input[type='checkbox']").on('click',
+                function (e) {
+                    //var outType = $(this).val();
+                    document.getElementById("SearchForm").reset();
+                    GetSearchList();
+                    RefreshTable();
+                });
+        });
+
+        //function changeStoreHouse(that) {
+        //    var houseId = $(that).val();
+        //    queryParams.storeHouseId = houseId;
+        //    $(that).closest('form').find('#storeLocationNo').val('');
+        //}
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            var storeHouseType = $('input[name="storeHouseType"]:checked').val();
+            if (storeHouseType) {
+                var ex = "0";
+                if (storeHouseType !== "4") {
+                    ex = "1";
+                    storeHouseType = "4";
+                }
+                window._searchList.push({
+                    KeyWords: storeHouseType,
+                    KeyField: "StoreHouseId",
+                    FieldType: "1",
+                    ExpType: ex
+                });
+            }
+            var radioType = $('input[name="radioType"]:checked').val();
+            if (radioType) {
+                window._searchList.push({ KeyWords: radioType, KeyField: "isUseDowngrade", FieldType: "1", ExpType: "0" });
+            }
+            var isShowZoreCheckBox = $("#showZoreCheckBox").is(':checked')?"1":"0";
+            window._searchList.push({ KeyWords: isShowZoreCheckBox, KeyField: "showZoreCheckBox", FieldType: "0", ExpType: "0" });
+            ////排除掉实际数量小于等于0
+            //window._searchList.push({
+            //    KeyWords: '0',
+            //    KeyField: "ActualQuantity",
+            //    FieldType: "7",
+            //    ExpType: '2'
+            //});
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+        function BtnAddEnter(productionOrderNo, productNo, quantity, storeHouseId, storeLocationNo) {
+            $("#addEnterModal #storeHouseId").off('change');
+            if (!storeHouseId) {
+                storeHouseId = 3;
+            }
+            queryParams.storeHouseId = storeHouseId;
+            OpenModal(window.appUrl + "CurrentSemiStoreHouses/AddEnter", { data: { quantity: 0, storeHouseId: storeHouseId,storeLocationNo:storeLocationNo }, readonly: "productionOrderNo,semiProductNo", modal: $("#addEnterModal"), success: function () { $("#addEnterModal").modal("hide"); } });
+            if (!productionOrderNo) {
+                SaveAjax({
+                    url: window.appUrl + "CurrentSemiStoreHouses/GetVirtualProOrderNo",
+                    isAlert: false,
+                    isValidate: false,
+                    success: function(res) {
+                        $("#addEnterModal #productionOrderNo").val(res);
+                    }
+                });
+                $("#addEnterModal").find("#semiProductNo").siblings(".input-group-addon").css("display", "table-cell");
+            } else {
+                $("#addEnterModal #productionOrderNo").val(productionOrderNo);
+                $("#addEnterModal").find("#semiProductNo").siblings(".input-group-addon").css("display", "none");
+            }
+            $("#addEnterModal #semiProductNo").val(productNo);
+            $("#addEnterModal #quantity").val("1");
+            $("#addEnterModal #storeHouseId").on('change',
+                function(e) {
+                    queryParams.storeHouseId = $(this).val();
+                    $('#addEnterModal #storeLocationNo').val('');
+                });
+            //$("#addEnterModal #packageSpecification").val(packageSpecification);
+            //$("#addEnterModal #packageCount").val(packageCount);
+
+        }
+        function BtnAddOut(currentSemiStoreHouseNo, productionOrderNo, semiProductNo, quantity, storeHouseId) {
+            OpenModal(window.appUrl + "CurrentSemiStoreHouses/AddOut", { data: { quantity: quantity, storeHouseId: storeHouseId, currentSemiStoreHouseNo: currentSemiStoreHouseNo, productionOrderNo: productionOrderNo, semiProductNo: semiProductNo }, readonly: "productionOrderNo,semiProductNo", modal: $("#addOutModal"), success: function () { $("#addOutModal").modal("hide"); }});
+        }
+        function UpdateKgWeight(id,value) {
+            OpenModal({
+                url: window.appUrl + 'CurrentSemiStoreHouses/UpdateKgWeight',
+                modal: $('#kg-modal'),
+                data: { id: id, kgWeight: value }
+            });
+        }
+
+        function StoreHouseIdFormatte(v, r) {
+            var name = $("#hide-StoreHouses option[value='" + v + "']").text();
+            return '<span class="label label-primary">' + name + '</span>';
+        }
+        function CanUserQuantityFormatte(v, r) {
+            var count = r.actualQuantity - r.freezeQuantity;
+            var str = '<span class="label label-warning">' + count + '</span>';
+            if (count > 0) {
+                str = '<span class="label label-info">' + count + '</span>';
+            } else if (count < 0) {
+                str = '<span class="label label-danger">' + count + '</span>';
+            }
+            return str;
+        }
+        function KgWeightFormatte(v, r) {
+            @{
+                var str = PermissionChecker.IsGranted(PermissionNames.Pages) ? "  return '<span style=\"text-decoration:underline; color: red; \" onclick=\"UpdateKgWeight('+r.id+','+v+')\">' + v + '</span>'" : "  return '<span class=\"\">' + v + '</span>'";
+            }
+            @Html.Raw(str);
+        }
+        function ActionFormatter(v,r) {
+            var str = '';
+            if (abp.auth.isGranted('@AddEnterAuth')) {
+                str = '<span class="table-action" onclick="BtnAddEnter(\'' +
+                    r.productionOrderNo +
+                    '\',\'' +
+                    r.semiProductNo +
+                    '\',\'' +
+                    r.actualQuantity +
+                    '\',\'' +
+                    r.storeHouseId +
+                    '\',\'' +
+                    r.storeLocationNo +
+                    '\')"><i class="iconfont icon-right"></i>入库平衡</span>';
+            }
+            if (abp.auth.isGranted('@AddOutAuth')) {
+                str += '<span class="table-action" onclick="BtnAddOut(\'' +
+                    r.currentSemiStoreHouseNo +
+                    '\',\'' +
+                    r.productionOrderNo +
+                    '\',\'' +
+                    r.semiProductNo +
+                    '\',\'' +
+                    r.actualQuantity +
+                    '\',\'' +
+                    r.storeHouseId +
+                    '\')"><i class="iconfont icon-right"></i>出库平衡</span>';
+
+            }
+            str += '<span class="table-action" onclick="ShowNotDisCustomer(\'' +
+                r.productionOrderNo +
+                '\')"><i class="iconfont icon-right"></i>降级的客户</span>';
+            return str;
+        }
+
+        function ShowNotDisCustomer(orderNo) {
+            var $tbody = $(".table.table-striped.disCustomer > tbody");
+            $tbody.find("tr:not(:first)").remove();
+            SaveAjax({
+                url: window.appUrl + "Common/GetDisCustomerInfo",
+                data: { id: orderNo },
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    if (res && res.length > 0) {
+                        res.forEach(function(r) {
+                            var sTr = '<tr>';
+                            sTr += '<td class="currentProductStoreHouseNo" >' +
+                                r.productionOrderNo +
+                                '</td>';
+                            sTr += '<td class="customerId">' + r.customerId + '</td>';
+                            sTr += '<td class="customerName">' + r.customerName + '</td>';
+                            sTr += '</tr>';
+                            $tbody.append(sTr);
+
+                        });
+                    }
+                    $("#disCustomer-modal").modal('show');
+                }
+            });
+        }
+    </script>
+
+
+}

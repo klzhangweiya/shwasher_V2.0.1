@@ -1,0 +1,843 @@
+﻿@using System.Web.UI.HtmlControls
+@using Abp.Authorization
+@using IwbZero.Session
+@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesOrderInfoOrderMg; //The menu item will be active for this page.
+    ViewBag.Title = "订单维护";
+
+    bool isCanViewPrice = IsGranted(PermissionNames.PagesOrderInfoOrderMgQueryOrderPrice);
+
+    List<SelectListItem> OrderStatusList = ViewBag.OrderStatus;
+    List<SelectListItem> OrderItemStatusList = ViewBag.OrderItemStatus;
+    List<Currency> loCurrencies = ViewBag.FromCurrenyId;
+    List<CurrencyExchangeRate> loToCNYCurrenyRate = ViewBag.ToCNYCurreny;
+    List<SelectListItem> emergencyLevelList = ViewBag.EmergencyLevel;
+    string strCurrencies = "";
+    if (loCurrencies != null)
+    {
+        foreach (var loCurrency in loCurrencies)
+        {
+            if (loCurrency.Id == "CNY")
+            {
+                strCurrencies += "<option  value=\""+ loCurrency.Id+ "\"  selected=\"selected\">" + loCurrency.CurrencyName+ "</option>";
+            }
+            else
+            {
+                strCurrencies += "<option  value=\"" + loCurrency.Id + "\">" + loCurrency.CurrencyName + "</option>";
+            }
+
+        }
+    }
+    List<SelectListItem> OrderSaleTypeList = ViewBag.OrderSaleType;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("id", "流水号"),
+new SearchItem("orderDate", "订单日期",FiledType.D,ExpType.Greater),
+new SearchItem("orderDate", "到",FiledType.D,ExpType.LessOrEqual),
+new SearchItem("customerId", "客户编号").SetSearchIcon("query_customer_modal"),
+new SearchItem("stockNo", "客户订单号"),
+new SearchItem("orderStatusId", "状态",FiledType.I,ExpType.Equal).SetSearchItem(OrderStatusList)
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .store-query > strong {
+            width: 70px;
+            text-align: right;
+        }
+        #storeQuantity, #orderQuantity {
+            padding: 0 5px;
+            color: red;
+        }
+    </style>
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/OrderHeaders/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true"
+           data-show-jumpto="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">流水号</th>
+                <th data-align="center" data-field="orderStatusName">订单状态</th>
+                <th data-align="center" data-field="isLock" data-formatter="IsLockFormatter">是否删除</th>
+                <th data-align="center" data-field="customerId">客户编号</th>
+                <th data-align="center" data-field="orderDate" data-formatter="DateFormatter">订单日期</th>
+                <th data-align="center" data-field="linkName">联系人</th>
+                <th data-align="center" data-field="telephone">电话</th>
+                <th data-align="center" data-field="saleManName">业务员</th>
+                <th data-align="center" data-field="saleTypeName">外销/内销</th>
+                @*<th data-align="center" data-formatter="ActionsFormatter"></th>*@
+
+            </tr>
+        </thead>
+    </table>
+</div>
+<div class="table-box mr-4  iwb-bootstrap-table" id="orderItemInfo" style="display: none;">
+    <div class="btn-toolbar row" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="col-sm-12 col-lg-12 pull-left" style="padding: 0">
+            <div class="btn-group btn-group-sm" id="Tool1" role="group" aria-label="First group">
+                @if (PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderMgCreateOrderItem))
+                {
+                    <button type="button" class="btn btn-default btnOrderTool" data-type="_btnCreate" data-url="/api/services/app/OrderItems/Create" onclick="CreateItem()">
+                        <i class="iconfont icon-add">添加订单明细</i>
+                    </button>
+                }
+                @if (PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderMgUpdateOrderItem))
+                {
+                    <button type="button" class="btn btn-default btnOrderTool" data-type="btnUpdate" data-url="/api/services/app/OrderItems/Update" onclick="UpdateItem()">
+                        <i class="iconfont icon-edit">修改订单明细</i>
+                    </button>
+                }
+                @if (PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderMgDeleteOrderItem))
+                {
+                    <button type="button" class="btn btn-default btnOrderTool" data-type="btnDelete" data-url="/api/services/app/OrderItems/Delete" onclick="DeleteItem()">
+                        <i class="iconfont icon-delete">删除订单明细</i>
+                    </button>
+                }
+
+            </div>
+        </div>
+    </div>
+    <table id="tableOrderItem"
+           data-url="/api/services/app/OrderItems/GetAll"
+           data-id-field="id" data-unique-id="id"
+           data-striped="true" data-click-to-select="true" data-single-select="true"
+           data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false" data-pagination="true" data-page-size="10" data-page-number="1" data-page-list="[10,30,50,100]"
+           data-pagination-h-align="left" data-pagination-detail-h-align="right"
+           data-query-params="QueryItemParams" data-response-handler="ResponseHandler"  data-show-jumpto="true">
+        <thead>
+            <tr class="row">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">明细流水号</th>
+                <th data-align="center" data-field="productNo">产品编号</th>
+                <th data-align="center" data-field="emergencyLevel" data-formatter="EmergencyLevelFormatter">紧急程度</th>
+                <th data-align="center" data-field="isLock" data-formatter="IsLockFormatter">是否删除</th>
+                <th data-align="center" data-field="quantity">数量</th>
+                @if (isCanViewPrice)
+                {
+                    <th data-align="center" data-field="price">含税价格</th>
+                    <th data-align="center" data-field="afterTaxPrice">不含税价格</th>
+                    <th data-align="center" data-field="currencyId">货币</th>
+                    @*<th data-align="center" data-field="currencyPrice">货币价格(含税)</th>*@
+                }
+                <th data-align="center" data-field="sendDate" data-formatter="DateFormatter">送货时间</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("订单"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                {
+                                                    new InputViewModel("customerId",hide:true),
+                                                    new InputViewModel("saleMan",hide:true),
+                                                    new InputViewModel("saleManId",hide:true),
+                                                    new InputViewModel("id",displayName:"流水号"),
+                                                    new InputViewModel("stockNo",displayName:"客户订单号"),
+                                                    new InputViewModel("orderStatusId",InputTypes.List, displayName:"订单状态").SetSelectOptions(OrderStatusList),
+                                                    new InputViewModel("orderDate", displayName:"订单日期").SetNotRequired(),
+                                                    new InputViewModel("customerName",displayName:"客户名称").SetSearchIcon("query_customer_modal","modal"),
+                                                    new InputViewModel("saleType",InputTypes.List, displayName: "外销/内销").SetSelectOptions(OrderSaleTypeList),
+                                                    new InputViewModel("customerSendId",InputTypes.List, displayName: "送货地址名称").SetEvents("onchange=ChangeCustomerSend()"),
+                                                    new InputViewModel("linkName", displayName: "联系人"),
+                                                    new InputViewModel("fax", displayName: "传真").SetNotRequired(),
+                                                    new InputViewModel("telephone", displayName: "电话").SetNotRequired(),
+                                                    new InputViewModel("sendAdress",displayName:"送货地址"),
+                                                    
+                                                    new InputViewModel("saleManName",displayName:"销售人员").SetSearchIcon("query_employee_modal")
+                                                };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        @*@Html.Hidden("isForSearch", "0");*@
+        @Html.Partial("Modals/Query/_Customer", "customerId|KeyWords-4")
+        @Html.Partial("Modals/Query/_Employee", "saleMan,saleManName,saleManId")
+    </section>
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal_OrderItemEdit" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content" style="width: 680px;">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("订单明细"))
+                    <div class="modal-body container-fluid" style="padding: 0; padding-top: 15px;">
+                        <form class="pr-3 pl-3 form-horizontal" style="padding: 0 10px" id="formItem">
+                            <input type="hidden" name="id" />
+                            <input type="hidden" id="orderNo" name="orderNo" />
+                            <input type="hidden" id="orderItemStatusId" name="orderItemStatusId" />
+                            <input type="hidden" id="orderUnitId" name="orderUnitId" />
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="productNo">产品编号</label>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <select class="form-control" Required id="productNo" name="productNo" placeholder="请输入..." value="" style="width: 100%;" type="text" onchange="RefreshProductInfo()">
+                                            @*@Html.Raw(ViewBag.CustomerDefaultProducts)*@
+                                        </select>
+                                        <div class="input-group-addon" onclick="ShowModal('query_Product_modal');">
+                                            <i class="iconfont icon-search"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                @*<div class="col-md-1" style="padding: 0 0">
+                <button type="button" class="btn btn-info btn-flat" style="height: 30px; width: 40px;" onclick="showSelectProductDialog()"><i class="iconfont icon-search"></i></button>
+            </div>*@
+                                <div class="col-md-4" style="padding: 0 5px;margin-top: -6px;">
+                                    <span class="store-query"> <strong>库存量:</strong><span id="storeQuantity">0</span><span>千件</span></span>
+                                    <br>
+                                    <span class="store-query"><strong>被定量:</strong><span id="orderQuantity">0</span><span>千件</span></span>
+                                    <br>
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="sendDate">送货时间</label>
+                                <div class="col-md-4">
+                                    <input class="form-control"  id="sendDate" name="sendDate" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="IsStandard">标准件</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" style="width: 100%" id="IsStandard" disabled="disabled" name="IsStandard" placeholder="请输入..." value="" type="text">
+
+                                </div>
+
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="price">货币类型</label>
+                                <div class="col-md-4">
+                                    <select class="form-control" style="width: 100%" id="currencyId" name="currencyId" placeholder="请输入..." value="" onchange="RefreshCurrency()"  type="text">
+                                        @Html.Raw(@strCurrencies);
+                                    </select>
+
+                                </div>
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="toCnyRate">当前汇率</label>
+                                <div class="col-md-4">
+                                    <input class="form-control required number" Required style="width: 100%" id="toCnyRate" name="toCnyRate" placeholder="请输入..." min="0" value="" type="text">
+
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="price">含税价格</label>
+                                <div class="col-md-4">
+                                    <input class="form-control required number" Required style="width: 100%" id="price" name="price"  placeholder="请输入..." value="" min="0" type="text">
+
+                                </div>
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="quantity">数量</label>
+                                <div class="col-md-4">
+                                    <input class="form-control required number" Required style="width: 100%" id="quantity" name="quantity" placeholder="请输入..." min="0" value="" type="text">
+
+                                </div>
+                            </div>
+                            <div class="form-group-sm row" id="noTaxDiv">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="price">不含税价格</label>
+                                <div class="col-md-4">
+                                    <input class="form-control required number" Required style="width: 100%" id="afterTaxPrice" name="afterTaxPrice" placeholder="请输入..." value="" min="0" type="text">
+
+                                </div>
+                                <div class="col-md-4" style="padding: 6px 25px;">
+                                    <span class="store-query"> <strong>当前税率:</strong><span id="currentTaxRate">@ViewBag.TagRate</span><span>%</span></span>
+                                    <br>
+                                    
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="isReport">检验报告</label>
+                                <div class="col-md-4">
+                                    <select class="form-control" style="width: 100%" id="isReport" name="isReport" placeholder="请输入..." value="" style="" type="text">
+                                        <option value="Y" selected="selected">是</option>
+                                        <option value="N">否</option>
+                                    </select>
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="isPartSend">部分送货</label>
+                                <div class="col-md-4">
+                                    <select class="form-control" style="width: 100%" id="isPartSend" name="isPartSend" placeholder="请输入..." value="" style="" type="text">
+                                        <option value="Y" selected="selected">是</option>
+                                        <option value="N">否</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="Material">材质</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="Material" name="Material" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="Model">规格</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="Model" name="Model" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+
+
+                            </div>
+                            <div class="form-group-sm row">
+
+                                <label class="iwb-label col-md-2 control-label" for="SurfaceColor">表色</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="SurfaceColor" name="surfaceColor" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="Rigidity">硬度</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="Rigidity" name="Rigidity" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="ProductName">产品名称</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="ProductName" name="ProductName" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="partNo">零件号</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="partNo" name="partNo" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="wareHouse">送货仓库</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="wareHouse" name="wareHouse" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="emergencyLevel">紧急程度</label>
+                                <div class="col-md-4">
+                                    @*<input class="form-control" id="emergencyLevel" name="emergencyLevel" placeholder="请输入..." value="" style="" type="text">*@
+                                    @Html.DropDownList("emergencyLevel", emergencyLevelList,htmlAttributes: new {@class= "form-control Required", placeholder="请选择",style = "width: 100%" })
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label " for="orderItemDesc">描述</label>
+                                <div class="col-md-10">
+                                    <textarea class="form-control" id="orderItemDesc" name="orderItemDesc" placeholder="请输入..." value="" style=""></textarea>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+        @Html.Partial("Modals/Query/_Product", "productNo")
+
+
+
+    </section>
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+
+    <script type="text/javascript">
+        //cId  cStockNo cOrderStatusId cCustomerId cStartDate cEndDate
+        var loToCNYCurrenyRate = [];
+
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        var itemTable = $("#tableOrderItem");
+        $(function () {
+            @{
+                // List<CurrencyExchangeRate> loToCNYCurrenyRate
+                foreach (var currency in loToCNYCurrenyRate ?? new List<CurrencyExchangeRate>())
+                {
+                    <text>
+                         loToCNYCurrenyRate.push({ FromCurrencyId: "@currency.FromCurrencyId", ExchangeRate: "@currency.ExchangeRate" });
+                    </text>
+                }
+            }
+            //show完毕前执行
+            //$("#orderDate").datetimepicker(datePickerOpt).on('show', function (event) {
+            //    event.preventDefault();
+            //    event.stopPropagation();
+            //}).on('hide',
+            //    function (event) {
+            //        event.preventDefault();
+            //        event.stopPropagation();
+            //    });
+            $("#sendDate").datetimepicker(datePickerOpt).on('show',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            $("#KeyWords-2").datetimepicker(datePickerOpt);
+            $("#KeyWords-3").datetimepicker(datePickerOpt);
+            LoadTable({
+                onCheck: ShowOrderItem,
+                onUncheck: UnShowOrderItem,
+                onLoadSuccess: OnLoadSuccessOrder,
+            });
+            //LoadQueryCustomerTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "standardName,saleManName",disabled:"saleType" }); };
+
+            funs["btnCreate"] = function () {
+                abp.ajax({
+                    url: window.appUrl + 'OrderHeaders/GetNewOrderNo',
+                    async: true,
+                    type: "Post",
+                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                    isValidate: false,
+                    dataType: "json",
+                    success: function (res) {
+                        BtnCreate({ readonly: "id,sendAdress,customerName,saleManName,orderDate ", disabled: "orderStatusId,saleType", data: { orderStatusId: "2", id: res, orderDate: GetNowFormatDate() } });
+                        //$("#OrderStatusId").val("2").select2();
+                    }
+                });
+
+            }
+            funs["btnDelete"] = function (url) {
+                var rows = $("#table").bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    //if (rows[0].orderStatusId === 2) {
+                    //    abp.message.confirm(abp.localization.localize("DeleteConfirmMsg"),
+                    //        abp.localization.localize("DeleteConfirmTitle"),
+                    //        function() {
+                    //            SaveAjax({ url: url, data: { Id: rows[0].id }, isValidate: false, table: $("#table") });
+                    //        });
+                    //} else {
+                    //    abp.message.warn("非新建的订单不可删除！");
+                    //}
+                    abp.message.confirm(abp.localization.localize("DeleteConfirmMsg"),
+                        abp.localization.localize("DeleteConfirmTitle"),
+                        function() {
+                            SaveAjax({ url: url, data: { Id: rows[0].id }, isValidate: false, table: $("#table") });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+               
+            }
+            funs["btnShow"] = function(url) {
+                BtnShow(url);
+            }
+            //$("#currencyPrice").off("blur").on("blur",
+            //    function() {
+            //        RefreshCurrency();
+            //    });
+            $("#price").off("blur").on("blur",
+                function() {
+                    var p = $(this).val();
+                    var rate = $("#currentTaxRate").text();
+                    var r = (Number(p) / (1 + Number(rate) / 100)).toFixed(3);
+                    $("#afterTaxPrice").val(r);
+                });//afterTaxPrice
+            $("#afterTaxPrice").off("blur").on("blur",
+                function () {
+                    var p = $(this).val();
+                    var rate = $("#currentTaxRate").text();
+                    var r = (Number(p) *(1 + Number(rate) / 100)).toFixed(3);
+                    $("#price").val(r);
+                });
+        });
+        function RefreshCurrency() {
+            var currency = $("#currencyId").val();
+            if (!currency) {
+                return;
+            }
+            loToCNYCurrenyRate.forEach(function(v, i) {
+                if (currency === v.FromCurrencyId) {
+                    //var p = $("#currencyPrice").val();
+                    var rate = v.ExchangeRate;
+                    //var r = Number(p) * Number(rate);
+                    $("#toCnyRate").val(rate);
+                }
+                if (currency !== "CNY") {
+                    $("#noTaxDiv").hide();
+                } else {
+                    $("#noTaxDiv").show();
+                }
+            });
+        }
+        function BtnShow(url) {
+            var rows = config.table.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                window.open("@Url.Action("OrderDetail")/" + rows[0].id, "_blank");
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+
+        }
+
+        function ActionsFormatter(v, r) {
+            var str = '<span class="table-action" onclick="OrderItemDetail(\'' +
+                r.id +
+                '\')"><i class="iconfont icon-right"></i>订单明细</span>';
+
+            return str;
+        }
+        function OrderItemDetail(id) {
+            window.location.href = "OrderItemDetail/" + id;
+        }
+
+        function Submit_query_customer_modal(row) {
+            var $modal = $("#query_customer_modal");
+            row = row || $modal.find("table").bootstrapTable("getSelections")[0];
+            if (targetDom !== "#modal") {
+                $("#KeyWords-4").val(row.id);
+                $modal.modal("hide");
+                return;
+            }
+            if (row) {
+                $("#customerId").val(row.id);
+                $("#customerName").val(row.customerName);
+                abp.ajax({
+                    url: window.appUrl + "CustomerSends/GetCustomerSendDtoByCustomerId",
+                    async: true,
+                    type: "Post",
+                    data: { customerId: row.id },
+                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                    isValidate: false,
+                    dataType: "json",
+                    success: function (res) {
+                        if (res && res.length > 0) {
+                            $("#customerSendId").empty();
+                            var options = "";
+                            $("#saleType").val(row.saleType).select2();
+
+                            res.forEach(function (value, index) {
+                                console.log(value, index);
+                                if (index === 0) {
+                                    options += '<option value=\"' +
+                                        value.id +
+                                        '\" selected=\"selected\">' +
+                                        value.customerSendName +
+                                        '</option>';
+                                } else {
+                                    options += '<option value=\"' + value.id + '\">' + value.customerSendName + '</option>';
+                                }
+                            });
+                            $("#customerSendId").html(options);
+                            $("#customerSendId").trigger("change");
+                        }
+                    }
+                });
+                $modal.modal("hide");
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+        }
+
+        function ChangeCustomerSend() {
+
+            var customerSendId = $("#customerSendId").val();
+            if (!customerSendId) {
+                customerSendId = 0;
+            }
+            abp.ajax({
+                url: window.appUrl + "Query/GetCustomerSendInfo",
+                async: false,
+                type: "Post",
+                data: { Id: customerSendId },
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function (res) {
+                    if (res) {
+                        $("#linkName").val(res.linkMan);
+                        $("#fax").val(res.fax);
+                        $("#telephone").val(res.telephone);
+                        $("#sendAdress").val(res.sendAdress);
+                    }
+
+                }
+            });
+        }
+        function OnAllItem(eName, eData, table) {
+            //console.log(eName, eData);
+            var $table = config.table;
+            if (table) {
+                if (typeof (table) === "string") {
+                    $table = $("#" + table);
+                } else {
+                    $table = $(table);
+                }
+            }
+            $table.closest(".table-box").find("#Tool1 .btn[data-type^='btn']")
+                .prop('disabled', $table.bootstrapTable('getSelections').length !== 1);
+        }
+        function OnLoadSuccessOrder(data,table) {
+            var $table = config.table;
+            if (table) {
+                if (typeof (table) === "string") {
+                    $table = $("#" + table);
+                } else {
+                    $table = $(table);
+                }
+            }
+            $table.find(".bs-checkbox").find("input").addClass("filled-in").after("<label></label");
+            _isSearching = false;
+            abp.ui.clearBusy();
+            setTimeout(function () {
+                var alldata = $("#table").bootstrapTable('getData');
+                if (alldata.length > 0) {
+                    $("#table").bootstrapTable('check', 0);
+                } else {
+                    $("#orderItemInfo").css("display", "none");
+                }
+            },
+                500);
+        }
+
+        var checkedOrderNo = "";
+        var orderSaleType = 1;
+        function ShowOrderItem(row, $element) {
+            $("#table").bootstrapTable('resetView', { height: 500 });
+            $("#orderItemInfo").css("display", "block");
+            checkedOrderNo = row.id;
+            orderSaleType = row.saleType;
+          
+            itemTable.bootstrapTable("destroy");
+            LoadTable({
+                table: itemTable,
+                queryParams: QueryItemParams,
+                onAll: function (eName, eData) {
+                    OnAllItem(eName, eData, "tableOrderItem");
+                },
+                onLoadSuccess: function (data) {
+                    OnLoadSuccess(data, "tableOrderItem");
+                },
+                onPostBody: function (data) {
+                    OnPostBody(data, "tableOrderItem");
+                }
+            });
+            /*if (row.orderStatusId !== 2) {
+                $("#orderItemInfo .btnOrderTool").prop('disabled', true);
+            } else {
+                $("#orderItemInfo .btnOrderTool").prop('disabled', false);
+            }*/
+            itemTable.bootstrapTable('resetView');
+            if (orderSaleType === 2) {
+                itemTable.bootstrapTable('hideColumn', "afterTaxPrice");
+            }
+            initCurrentProduct();
+        }
+        function UnShowOrderItem(row, $element) {
+            $("#orderItemInfo").css("display", "none");
+            itemTable.bootstrapTable("destroy");
+            $("#table").bootstrapTable('resetView', { height: 800 });
+        }
+        function QueryItemParams(params) {
+            return {
+                MaxResultCount: params.limit,
+                SkipCount: params.offset,
+                sort: params.sort,
+                sortOrder: params.order,
+                SearchList: [{ KeyWords: checkedOrderNo, KeyField: "OrderNo", FieldType: "0", ExpType: "0" }]
+            };
+        }
+
+        function Submit_query_Product_modal(row) {
+            row = row || $("#query_Product_modal").find("table").bootstrapTable("getSelections")[0];
+            if (row) {
+                var productNo = row.id;
+                //RefreshProductInfo(productNo);
+                $("#productNo").append('<option value=\"' + productNo + '\">' + productNo + '</option>');
+                $("#productNo").val(productNo);
+                $("#productNo").trigger("change");
+                $("#query_Product_modal").modal("hide");
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+        }
+       
+        function RefreshProductInfo() {
+            var productNo = $("#productNo").val();
+            if (!productNo) {
+                return;
+            }
+            abp.ajax({
+                url: window.appUrl + 'Query/GetProductById',
+                data: { Id: productNo },
+                async: true,
+                type: "Post",
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function (res) {
+                    if (res) {
+                        $("#ProductName").val(res.productName);
+                        $("#Model").val(res.model);
+                        $("#Material").val(res.material);
+                        $("#SurfaceColor").val(res.surfaceColor);
+                        $("#Rigidity").val(res.rigidity);
+                        $("#IsStandard").val(res.isStandard === "Y" ? "是" : "否");
+                    }
+
+                }
+            });
+            RefreshCurrentStore();
+        }
+        function RefreshCurrentStore() {
+            var productNo = $("#productNo").val();
+            if (!productNo) {
+                return;
+            }
+            SaveAjax({
+                url: window.appUrl + "OrderItems/QueryCurrentProductNum",
+                data: { Id: productNo },
+                isAlert: false,
+                isValidate: false,
+                success: function (res) {
+                    if (res) {
+                        $("#storeQuantity").text(res.canUserQuantity ? Number(res.canUserQuantity) : 0);
+                        $("#orderQuantity").text(res.bookedQuantity ? Number(res.bookedQuantity) : 0);
+                    }
+                }
+            });
+        }
+
+        function initCurrentProduct() {
+            SaveAjax({
+                url: window.appUrl + "Query/GetDefualtProductByOrderNo?orderNo=" + checkedOrderNo,
+                isValidate: false,
+                isAlert: false,
+                dataType:"json",
+                success: function (res) {
+                    //console.log(res);
+                    if (res) {
+                        $("#productNo").html(res);
+                    }
+                }
+            });
+        }
+       
+        function CreateItem() {
+            var firstProductNo = $("#productNo").find("option").first().attr("value");
+            //console.log('firstProductNo' + firstProductNo);
+            var currencyId = "CNY";
+            if (orderSaleType === 2) {
+                currencyId = "USD";
+            }
+            BtnCreate({
+                modal: $("#modal_OrderItemEdit"),
+                url: "/api/services/app/OrderItems/Create",
+                readonly: "IsStandard,ProductName,SurfaceColor,Rigidity,Material,Model",
+                data: { orderNo: checkedOrderNo, productNo: firstProductNo, orderUnitId: "4", currencyId: currencyId, emergencyLevel:'@OrderItemEmergencyLevel.Normal'},
+                disabled: "",
+                table: itemTable
+            });
+            $("#isReport").val("Y").select2();
+            $("#isPartSend").val("Y").select2();
+        }
+        function UpdateItem() {
+           
+            var rows = itemTable.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                var defaultOption = {
+                    modal: $("#modal_OrderItemEdit"),
+                    modalContent: "",
+                    modaltitle: window.opUpdate,
+                    data: rows[0],
+                    savebtn: null,
+                    form: null,
+                    disabled: "IsStandard,ProductName,SurfaceColor,Rigidity,Material,Model,SendDate,currencyId,toCnyRate,price,afterTaxPrice,quantity",
+                    url: "/api/services/app/OrderItems/Update",
+                    select2: true,
+                    select2tree: false,
+                    save: null,
+                    table: itemTable
+                };
+                OpenModal(defaultOption);
+                $("#productNo").trigger("change");
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }  
+            
+        }
+
+        function DeleteItem() {
+            var rows = itemTable.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                abp.message.confirm(abp.localization.localize("DeleteConfirmMsg"), abp.localization.localize("DeleteConfirmTitle"),function() {
+                    /*SaveAjax({ url: "/api/services/app/OrderItems/Delete", data: { Id: rows[0].id }, isValidate: false});*/
+                    abp.services.app.orderItems.delete({ Id: rows[0].id },
+                        {
+                            async: false,
+                            timeout: 30000
+                        }).done(function() {
+                        RefreshTable("tableOrderItem");
+                    });
+                });
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+        }
+
+        function DateFormatter(v,r) {
+            var sendDate = new Date(v);
+            return '<span style="text-decoration:underline;" >' + sendDate.Format('yyyy-MM-dd') + '</span>';
+        }
+
+        function EmergencyLevelFormatter(v, r) {
+            var name = $('#hid-emergencyLevel option[value="' + v + '"]').text();
+            if (v === '1') {
+                return '<span class="label label-success">' + name + '</span>';
+            } else {
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+        }
+        function IsLockFormatter(v,r) {
+           
+            if (v === 'Y') {
+                return '<span class="label label-danger">已删除</span>';
+               
+            } else {
+                return '<span class="label label-success">-</span>';
+            }
+        }
+    </script>
+
+
+}
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @Html.DropDownList("hid-emergencyLevel", emergencyLevelList);
+
+</section>

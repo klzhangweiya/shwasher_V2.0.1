@@ -1,0 +1,54 @@
+﻿/** iwb_admin-v1.1.0 MIT License By http://www.iwbnet.com e-mail:yueyy@iwbnet.com */
+.iwb-message {
+ position:fixed;
+ left:225px;
+ top:50px;
+ z-index:19940201;
+ border-radius:3px
+}
+.iwb-message .iwb-message-item {
+ min-height:40px;
+ /*background-color:#fff;*/
+ background-color:rgba(0,0,0,.7);
+ border-radius:3px;
+ min-width:250px;
+ margin-top:15px;
+ position:relative;
+ border:1px solid #ecf0f5
+}
+.iwb-message .iwb-message-item:first-child {
+ margin-top:0
+}
+.iwb-message .iwb-message-item .iwb-message-body {
+ margin-right:40px;
+ line-height:40px;
+ padding:0 10px 0 20px
+}
+.iwb-message .iwb-message-item .iwb-close {
+ width:40px;
+ height:40px;
+ position:absolute;
+ right:0;
+ top:0;
+ text-align:center;
+ line-height:40px;
+ cursor:pointer
+}
+.iwb-message .iwb-skin-red {
+ color:#FF5722!important
+}
+.iwb-message .iwb-skin-orange {
+ color:#FFB800!important
+}
+.iwb-message .iwb-skin-cyan {
+ color:#2F4056!important
+}
+.iwb-message .iwb-skin-blue {
+ color:#1E9FFF!important
+}
+.iwb-message .iwb-skin-black {
+ color:#393D49!important
+}
+.iwb-message .iwb-skin-default {
+ color:#009688!important
+}

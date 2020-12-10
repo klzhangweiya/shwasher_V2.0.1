@@ -1,0 +1,277 @@
+﻿@using System.Web.Optimization
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSystemSysLog; //The menu item will be active for this page.
+    ViewBag.Title = "系统操作日志";
+    string serviceNames = ViewBag.ServiceNames;
+    //string methodNames = ViewBag.MethodNames;
+    var searchItems = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("methodName","操作名称"),
+new SearchItem("userName","用户名"),
+new SearchItem("clientName","客户端" ),
+new SearchItem("browserInfo","浏览器")
+});
+
+}
+@section css{
+    @Styles.Render("~/Content/datetimepicker/css")
+    <style>
+        .search-unit.dateISO {
+            float: left;
+        }
+        .search-unit {
+            float: left;
+            margin-left: 10px;
+        }
+        .search-unit input {
+            border-radius: 0 !important;
+        }
+        .search-unit .select2-container--default .select2-selection--single {
+            border-radius: 0;
+            height: 26px;
+        }
+        .search-unit .KeyField + .select2-container--default .select2-selection--single {
+            border-right: 0;
+        }
+        .search-unit .keyWords + .select2-container--default .select2-selection--multiple {
+            border-radius: 0;
+            height: 26px;
+        }
+        .search-unit .input-group .input-group-addon {
+            border-radius: 0;
+            /*border-color: #aaa;*/
+            background-color: #eee;
+        }
+        .search-unit .input-group .input-group-addon {
+            border-top-left-radius: 3px!important;
+            border-bottom-left-radius: 3px!important;
+        }
+        .search-unit .input-group input:last-child {
+            border-top-right-radius: 3px!important;
+            border-bottom-right-radius: 3px!important;
+        }
+    </style>
+}
+
+<div class="table-box mr-4 iwb-bootstrap-table">
+    @* @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu })*@
+    <div class="btn-toolbar row" id="tableTool" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="input-group input-group-sm hidden-sm hidden-xs hidden-sm" id="SearchBox" style="position: relative; width: 100%; max-width: 100%">
+            <form id="SearchForm">
+                @{
+                    <div class="search-unit" data-index="2" style="width: 40%">
+                        <div class="input-group input-group-sm text-non" style="position: relative; width: 100%;">
+                            <input class="form-control KeyField" id="KeyField-2" name="KeyField-2" style="display: none" disabled="disabled" value="ExecutionTime" />
+                            <input class="form-control KeyField" id="KeyField-3" name="KeyField-3" style="display: none" disabled="disabled" value="ExecutionTime" />
+                            <input class="form-control ExpType" id="FieldType-2" name="FieldType-2" style="display: none" value="5" />
+                            <input class="form-control ExpType" id="FieldType-3" name="FieldType-3" style="display: none" value="5" />
+                            <input class="form-control ExpType" id="ExpType-2" name="ExpType-2" style="display: none" value="4" />
+                            <input class="form-control ExpType" id="ExpType-3" name="ExpType-3" style="display: none" value="5" />
+                            <span class="input-group-addon" style="">执行时间</span>
+                            <input autocomplete="off" class="form-control dateISO KeyWords" id="KeyWords-2" name="KeyWords-2" placeholder="起始时间" value="" type="text">
+                            <span class="input-group-addon" style="border-radius: 0 !important;">至</span>
+                            <input autocomplete="off" class="form-control dateISO KeyWords" id="KeyWords-3" name="KeyWords-3" placeholder="终止时间" value="" type="text">
+                        </div>
+                    </div>
+                    <div class="search-unit" data-index="4" style="width: 28%">
+                        <div class="input-group input-group-sm text-non" style="position: relative; width: 100%;">
+                            <input class="form-control KeyField" id="KeyField-4" name="KeyField-4" style="display: none" disabled="disabled" value="ServiceName" />
+                            <input class="form-control ExpType" id="FieldType-4" name="FieldType-4" style="display: none" value="0" />
+                            <input class="form-control ExpType" id="ExpType-4" name="ExpType-4" style="display: none" value="0" />
+                            <span class="input-group-addon">日志名称</span>
+                            <select id="KeyWords-4" name="KeyWords-4" class="form-control KeyWords">
+                                <option value="">请选择...</option>
+                                @Html.Raw(serviceNames)
+                            </select>
+                        </div>
+                    </div>
+
+                    @*<div class="search-unit" data-index="5" style="width: 20%">
+                <div class="input-group input-group-sm text-non" style="position: relative; width: 100%;">
+                    <input class="form-control KeyField" id="KeyField-5" name="KeyField-5" style="display: none" disabled="disabled" value="methodName"/>
+                    <input class="form-control ExpType" id="FieldType-5" name="FieldType-5" style="display: none" value="0"/>
+                    <input class="form-control ExpType" id="ExpType-5" name="ExpType-5" style="display: none" value="0"/>
+                    <span class="input-group-addon">操作名称</span>
+                    <select id="KeyWords-5" name="KeyWords-5" class="form-control KeyWords">
+                        @Html.Raw(methodNames)
+                    </select>
+                </div>
+            </div>*@
+                    var selectItemStr = "{";
+                    if (searchItems.SearchItems != null)
+                    {
+                        int i = 0;
+                        <div class="search-unit" data-index="1" style="width: 28%">
+                            <div class="input-group input-group-sm text-non" style="position: relative; width: 100%;">
+                                <select id="KeyField-1" name="KeyField-1" class="form-control KeyField" style="width: 100px !important">
+                                    @foreach (var item in searchItems.SearchItems)
+                                    {
+                                        int isSelect = 0;
+                                        if (!string.IsNullOrEmpty(item.SelectItemStr))
+                                        {
+                                            selectItemStr += (selectItemStr == "{" ? "" : ",") + item.SelectItemStr;
+                                            isSelect = 1;
+                                        }
+                                        string selected = i == 0 ? "selected" : "";
+                                        int fieldType = (int)item.FiledType;
+                                        int expType = (int)item.ExpType;
+                                        <option value="@item.Field" data-index="1" data-select="@isSelect" data-field="@item.Field" data-field-type="@fieldType" data-exp-type="@expType" @selected>@item.DisplayName</option>
+                                        i++;
+                                    }
+                                </select>
+                                <input id="FieldType-1" name="FieldType-1" class="FieldType" type="hidden" value="0" />
+                                <input id="ExpType-1" name="ExpType-1" class="ExpType" type="hidden" value="6" />
+                                <input id="KeyWords-1" name="KeyWords-1" class="form-control  pull-right KeyWords" style="width: calc(100% - 100px) !important;border-top-right-radius: 3px!important;border-bottom-right-radius: 3px!important;" placeholder="请输入查询关键字..." autocomplete="off" />
+                                <span class="btn search-btn" data-type="_" onclick="BtnSearch(true)"><i class="iconfont icon-search "></i></span>
+                            </div>
+                        </div>
+                    }
+                    selectItemStr += "}";
+                }
+            </form>
+        </div>
+
+    </div>
+    <table id="table"
+           data-url="/api/services/app/AuditLogs/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true"
+           data-page-size="30"
+           data-page-number="1"
+           data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="userName">用户名</th>
+                <th data-align="center" data-field="serviceName">日志名称</th>
+                <th data-align="center" data-field="methodName">操作名称</th>
+                @*<th data-align="center" data-field="parameters"></th>*@
+                <th data-align="center" data-field="executionTime">执行时间</th>
+                <th data-align="center" data-field="clientIpAddress">IP地址</th>
+                <th data-align="center" data-field="clientName">客户端</th>
+                <th data-align="center" data-field="browserInfo">浏览器</th>
+
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <!--Main Modal-->
+    <section>
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel(""))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                {
+                                                    new InputViewModel("id", hide: true),
+                                                    new InputViewModel(""),
+
+                                                };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@section scripts
+{
+    @Scripts.Render("~/Bundles/datetimepicker/js")
+
+    <script>
+        $(function () {
+            $("#KeyWords-2").datetimepicker({
+                format: 'yyyy-mm-dd',
+                minView: 'month',
+                language: 'zh-CN',
+                autoclose: true,
+                startDate: "2008-01-01"
+            }).on("click", function () {
+                $("#KeyWords-2").datetimepicker("setEndDate", $("#KeyWords-3").val());
+            });
+            $("#KeyWords-3").datetimepicker({
+                format: 'yyyy-mm-dd',
+                minView: 'month',
+                language: 'zh-CN',
+                autoclose: true,
+                startDate: new Date()
+            }).on("click", function () {
+                $("#KeyWords-3").datetimepicker("setStartDate", $("#KeyWords-2").val());
+                });
+            var now = new Date();
+            $('#KeyWords-3').datetimepicker('setDate', new Date(now.getTime() + 24 * 60 * 60 * 1000));
+            $('#KeyWords-2').datetimepicker('setDate', new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000));
+            $(".search-unit select").select2();
+
+            $(".KeyField").off("change.keyfield").on("change.keyfield", function () {
+                var $that = $(this).find("option:selected");
+                var selectIndex = $that.data("index"),
+                    isSelect = $that.data("select"),
+                    field = $that.data("field"),
+                    expType = $that.data("exp-type"),
+                    fieldType = $that.data("field-type");
+                changeKeyWord(selectIndex, isSelect,field, expType, fieldType);
+            });
+            LoadTable();
+
+            var selectItem = @Html.Raw(selectItemStr);
+            function changeKeyWord(index, isSelect,field,expType, fieldType) {
+                var $index = $(".search-unit[data-index='" + index + "']");
+                $index.find(".ExpType").val(expType);
+                $index.find(".FieldType").val(fieldType);
+                var str;
+                var id = $index.find(".KeyWords").attr("id");
+                console.log(fieldType, "-", isSelect);
+                if (isSelect) {
+                    if (selectItem.length < 0) {
+                        return;
+                    }
+                    str = '<select id="' + id + '" name="' + id + '" class="form-control  pull-right KeyWords" style="width: calc(100% - 120px) !important;" placeholder="请选择查询项..." autocomplete="off" data-placeholder="请选择查询项...">';
+                    str += selectItem[field];
+                    str += '</select>';
+                    $index.find(".KeyWords").next("span.select2").remove();
+                    $index.find(".KeyWords").remove();
+                    $index.find(".ExpType").after(str);
+                    $index.find(".KeyWords").select2();
+                    if ($index.find(".search-btn").length>0) {
+                        $index.find(".KeyWords").next().find(".select2-selection__arrow").css("right", "30px");
+                    }
+                } else {
+                    if (fieldType === 1) {
+                        str = ' <input id="' + id + '" name="' + id + '" class="form-control number pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="请输入需查询的数字..." autocomplete="off" />';
+                    } else if (fieldType === 5) {
+                        str = ' <input id="' + id + '" name="' + id + '" class="form-control dateISO pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="请输入需查询的日期..." autocomplete="off" />';
+                    } else {
+                        str = '<input id="' + id + '" name="' + id + '" class="form-control  pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="请输入查询关键字..." autocomplete="off" />';
+                    }
+                    $index.find(".KeyWords").next("span.select2").remove();
+                    $index.find(".KeyWords").remove();
+                    $index.find(".ExpType").after(str);
+                }
+                AddSearchEvents();
+            }
+        });
+
+    </script>
+}

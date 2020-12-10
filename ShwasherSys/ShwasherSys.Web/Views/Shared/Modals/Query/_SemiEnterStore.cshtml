@@ -1,0 +1,43 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "productionOrderNo,semiProductNo,semiProductName,actualQuantity,storeHouseId,currentSemiStoreHouseNo,canUseQuantity",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems=new List<QueryItem>()
+    {
+        //new QueryItem("id","编码",true,FiledType.I,ExpType.Equal),
+        new QueryItem("productionOrderNo","排产单编号",true,FiledType.S,ExpType.Equal).SetHidden(),
+        new QueryItem("semiProductNo","半成品编码"),
+        new QueryItem("partNo","零件号"),
+        new QueryItem("semiProductName","名称"),
+        new QueryItem("quantity","申请入库数量"),
+        new QueryItem("actualQuantity","入库数量",formatter:"QuantityFormatter"),
+        new QueryItem("storeHouseId","仓库",formatter:"StoreHouseIdFormatter"),
+        new QueryItem("applyStatus","申请状态",formatter:"ApplyStatusFormatter"),
+        new QueryItem("applyEnterDate","申请时间"),
+        new QueryItem("surfaceColor","表色"),
+        new QueryItem("model","规格"),
+        new QueryItem("rigidity","硬度"),
+        new QueryItem("material","材质"),
+    };
+
+
+    QueryModalModel qmModel = new QueryModalModel("半成品入库明细", "/api/services/app/ProductionOrders/GetSemiEnterStoreApply", queryItems, originFiled, targetFiled, modalId: "query_semiEnterStore_modal",modalWidth:1300).SetDefaultValueFunction("SemiEnterDefaultValue");;
+}
+
+@Html.Partial("Modals/Query/_QueryModal",qmModel)
+
+@using (Html.BeginScripts())
+{
+    <script>
+        
+        function SemiEnterDefaultValue() {
+            $("#query_semiEnterStore_modal #Q-KeyWords-1").val(queryParams.no?queryParams.no:"");
+            //$("#query_semiProduct_modal #Q-KeyWords-2").val(queryParams.material?queryParams.material:"");
+        }
+    </script>
+}
+

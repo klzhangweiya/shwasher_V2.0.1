@@ -1,0 +1,176 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "包装日报统计";
+    string activeMenu = PermissionNames.PagesStatisticMgPackageDailyMg; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+	
+}
+@section css{
+    <link href="~/Content/Css/statistic.css" rel="stylesheet" />
+}
+
+<div class="box-tool">
+    <div class="tool-form" >
+        <input id="query-date" class="form-control iwb-date" type="text" value="" placeholder="请输入查询日期" style="width: 250px;"/>
+    </div>
+    <div class="tool-btn">
+        @if (IsGranted(PermissionNames.PagesStatisticMgPackageDailyMgQuery))
+        {
+            <button class="btn btn-info btn-sm" onclick="Query()">查询</button>
+        }
+        @* <button class="btn btn-success" onclick="Export()">导出</button>*@
+    </div>
+
+</div>
+<div class="box-data">
+    <div class="box-body">
+        <table id="table" style="display: none">
+            <thead>
+                <tr class="title">
+                    <td class="td" colspan="20">上海上垫垫圈有限公司包装车间生产日报表</td>
+                </tr>
+                <tr class="title-sm">
+                    <th class="td department" colspan="10">部门：包装车间</th>
+                    <th class="td date" colspan="6">日期：<span id="date">2020-01-20</span></th>
+                </tr>
+                <tr>
+                    <th class="td">序号</th>
+                    <th class="td">包装日期</th>
+                    <th class="td">零件号</th>
+                    <th class="td">规格</th>
+                    <th class="td">产品名称</th>
+                    <th class="td">材质</th>
+                    <th class="td">表色</th>
+                    <th class="td">重量</th>
+                    <th class="td">千件</th>
+                    <th class="td">千件重</th>
+                    <th class="td">包数</th>
+                    <th class="td">流转单号</th>
+                    <th class="td">订单号</th>
+                    <th class="td">包装分类</th>
+                    <th class="td">核件人</th>
+                    <th class="td">包装人</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+            <tfoot>
+                <tr>
+                    <td class="td" colspan="1"></td>
+                    <th class="td">总重量</th>
+                    <td class="td detail" colspan="3">
+                        <p>生产包装：<strong id="kg1">22</strong> kg</p>
+                        <p>改包装：<strong id="kg2">33</strong> kg</p>
+                    </td>
+                    <th class="td">总件数</th>
+                    <td class="td detail" colspan="4">
+                        <p>生产包装：<strong id="pcs1">44</strong> 千件</p>
+                        <p>改包装：<strong id="pcs2">55</strong> 千件</p>
+                    </td>
+                    <td class="td" colspan="2"></td>
+                    <th class="td" colspan="1">本月总计</th>
+                    <td class="td detail" colspan="3">
+                        <p>总重量：<strong id="kg">44</strong> kg</p>
+                        <p>总件数：<strong id="pcs">55</strong> 千件</p>
+                    </td>
+
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+@section modal{
+
+
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $table = $('#table');
+        $(function() {
+            $('#query-date').val(new Date().format('yyyy-MM-dd'));
+            Query();
+        });
+        function Query() {
+            var date = $('#query-date').val();
+            if (date) {
+                $.iwbAjax4({
+                    url: window.appUrl + 'PackInfoApply/QueryPackageDaily?date=' + date,
+                    success: function(res) {
+                        if (res) {
+                            $('#date').html(new Date(res.dayDate).format('yyyy-MM-dd'));
+                            $('#kg1').html(res.kgQuantity1);
+                            $('#pcs1').html(res.pcsQuantity1);
+                            $('#kg2').html(res.kgQuantity2);
+                            $('#pcs2').html(res.pcsQuantity2);
+                            $('#kg').html(res.kgTotal);
+                            $('#pcs').html(res.pcsTotal);
+
+                            var str = ItemFormatter(res.packageItems);
+                            $('#tbody').html(str);
+
+                            $table.fadeIn();
+                        } else {
+                            $table.hide();
+                            abp.message.warn("未查询到数据。");
+                        }
+                    }
+                });
+            } else {
+                abp.message.warn("请填写查询日期。");
+            }
+        }
+
+        function ItemFormatter(data) {
+            var str = "";
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    str += '<tr>';
+                    str += '<td class="td">{0}</td>'.format(item.index);
+                    str += '<td class="td">{0}</td>'.format(new Date(item.packageDate).format('yyyy-MM-dd'));
+                    str += '<td class="td">{0}</td>'.format(item.partNo || "");
+                    str += '<td class="td">{0}</td>'.format(item.model || "");
+                    str += '<td class="td">{0}</td>'.format(item.productName || "");
+                    str += '<td class="td">{0}</td>'.format(item.material || "");
+                    str += '<td class="td">{0}</td>'.format(item.surfaceColor || "");
+                    str += '<td class="td">{0}</td>'.format(item.kgQuantity || "");
+                    str += '<td class="td">{0}</td>'.format(item.pcsQuantity || "");
+                    str += '<td class="td">{0}</td>'.format(item.kgWeight || "");
+                    str += '<td class="td">{0}</td>'.format(item.packageDetail || "");
+                    str += '<td class="td">{0}</td>'.format(item.productionOrderNo || "");
+                    str += '<td class="td">{0}</td>'.format(item.packageEnterNum || "");
+                    str += '<td class="td">{0}</td>'.format(item.packageType || "");
+                    str += '<td class="td">{0}</td>'.format(item.verifyUser || "");
+                    str += '<td class="td">{0}</td>'.format(item.packageUser || "");
+                    str += '</tr>';
+                }
+            } else
+            {
+                str += '<tr>';
+                str += '<td class="td" colspan="20" style="color:red;padding:10px;">未查询到包装明细</td>';
+                str += '</tr>';
+            }
+            return str;
+        }
+
+        function Export() {
+
+        }
+    </script>
+
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @*@Html.DropDownList("hid-type", type)*@
+</section>

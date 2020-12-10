@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<localizationDictionary culture="zh-CN">
+  <texts>
+    <text name="InvalidTenancyName" value="租户名无效!" />
+    <text name="TenancyNameIsAlreadyTaken" value="租户名{0} 已被占用." />
+    <text name="Identity.DuplicateUserName" value="用户名{0}已被占用." />
+    <text name="Identity.DuplicateEmail" value="用户邮箱{0}已被占用." />
+    <text name="RoleNameIsAlreadyTaken" value="角色编码{0}已被占用." />
+    <text name="RoleDisplayNameIsAlreadyTaken" value="角色名称 {0}已被占用." />
+    <text name="CanNotDeleteStaticRole" value="不能删除系统预定义角色: {0}" />
+    <text name="CanNotRenameAdminUser" value="不能重命名默认管理员的用户名 {0}" />
+    <text name="CanNotDeleteAdminUser" value="不能删除默认管理员{0}!" />
+    <text name="UserLockedOutMessage" value="用户登陆已被锁定，请联系管理员解锁！" />
+    <text name="OrganizationUnitDuplicateDisplayNameWarning" value="已存在名为 {0} 的组织单位. 无法在同一级别创建相同名称的组织单位." />
+   
+    <text name="Home" value="主页" />
+    <text name="HomePage" value="主页" />
+    <text name="ErrorPage" value="出错了！" />
+    <text name="Version" value="版本" />
+    <text name="About" value="关于我们" />
+    <text name="WelcomeMessage" value="欢迎使用 管理系统！" />
+    <text name="FormIsNotValidMessage" value="部分输入信息不符合要求，请检查并改正！" />
+    <text name="TenantNameCanNotBeEmpty" value="租户名不能为空！" />
+    <text name="InvalidUserNameOrPassword" value="用户名或密码无效！" />
+    <text name="ThereIsNoTenantDefinedWithName{0}" value="租户 {0}不存在！" />
+    <text name="TenantIsNotActive" value="租户 {0} 未激活." />
+    <text name="UserIsNotActiveAndCanNotLogin" value="用户 {0} 未激活，不能登录！" />
+    <text name="PleaseEnterLoginInformation" value="请输入登录信息" />
+    <text name="Host" value="Host" />
+    <text name="TenancyName" value="租户标识" />
+    <text name="UserNameOrEmail" value="用户名或邮箱地址" />
+    <text name="Password" value="密码" />
+    <text name="RememberMe" value="记住我" />
+    <text name="ForgetPassword" value="忘记密码"/>
+    <text name="NotSelected" value="未选"/>
+    <text name="CurrentTenant" value="当前租户"/>
+    <text name="ChangeTenant" value="更改租户"/>
+    <text name="Change" value="更改"/>
+    <text name="LeaveEmptyToSwitchToHost" value="留空以切换到Host"/>
+    <text name="Logout" value="注销"/>
+    <text name="Confirm" value="确认"/>
+    <text name="LogoutConfirm" value="确认注销当前账号？"/>
+    <text name="LogIn" value="登录" />
+    <text name="LoginFailed" value="登录失败!" />
+    <text name="PleaseWait" value="稍等一会..."></text>
+    <text name="AppName" value="$ext_safeprojectname$" ></text>
+    <text name="UserNamePlaceholder" value="请输入账户" ></text>
+    <text name="PasswordPlaceholder" value="请输入密码" ></text>
+    <text name="CopyRight" value="© 2018 $ext_safeprojectname$" ></text>
+    <text name="LoginPrompt" value="正在登陆，请稍候！" ></text>
+    <text name="ManageMenu" value="菜单" ></text>
+    <text name="LabelOptions" value="页签操作" ></text>
+    <text name="ClearAll" value="关闭所有" ></text>
+    <text name="ClearOthers" value="关闭其他" ></text>
+    <text name="Find" value="查找" ></text>
+    <text name="CreationTime" value="创建时间" ></text>
+    <text name="Actions" value="操作" ></text>
+    <text name="Keyword" value="关键字" ></text>
+    <text name="NoDatas" value="没有结果" ></text>
+    <text name="Select" value="请选择" ></text>
+    <text name="SelectDate" value="请选择" ></text>
+    <text name="Tips" value="提示" ></text>
+    <text name="Title" value="标题" ></text>
+    <text name="Content" value="内容" ></text>
+    <text name="PersonalInformation" value="个人信息" ></text>
+    <text name="PasswordComplexityNotSatisfied" value="密码复杂度要求不符." ></text>
+    <text name="PasswordRequireDigit" value="密码至少需要一位是0到9的数字." ></text>
+    <text name="PasswordRequireLowercase" value="密码至少需要一位是a到z的小写字母." ></text>
+    <text name="PasswordRequireNonAlphanumeric" value="密码至少需要包含一个特殊字符（非字母或数字的字符）." ></text>
+    <text name="PasswordRequireUppercase" value="密码至少需要一位是A到Z的大写字母." ></text>
+    <text name="PasswordTooShort" value="密码长度太短" ></text>
+    <text name="IsActive" value="是否启用" ></text>
+    <text name="LastLoginTime" value="最近登陆时间" ></text>
+    <text name="RoleName" value="角色名" ></text>
+    <text name="DisplayName" value="显示名" ></text>
+    <text name="Description" value="描述" ></text>
+    <text name="IsStatic" value="是否内置" ></text>
+    <text name="Register" value="注册用户" ></text>
+    <text name="Back" value="返回登陆页" ></text>
+    <text name="WelcomeToSystem" value="欢迎您" ></text>
+
+
+    <text name="Search" value="查询"></text>
+    <text name="Clean" value="清空"></text>
+    <text name="SearchLabel" value="点击展开多条件查询框查询"></text>
+    <text name="SearchPlaceholder" value="请输入查询信息..."></text>
+    <text name="SearchPlaceholderSelect" value="请选择查询信息..."></text>
+    <text name="PlaceholderHeader" value="请输入"></text>
+    <text name="PlaceholderSelectHeader" value="请选择"></text>
+    <text name="id" value="编号"></text>
+    <text name="Skins" value="主题"></text>
+    <text name="Settings" value="设置" />
+    <text name="GetGuidNoError" value="获取Guid编号失败！" />
+    <text name="NoEntity" value="未查询到实体[{0}]" />
+    <text name="NoKeyFieldName" value="编码/编号字段不明确，请检查后再操作！" />
+    <text name="KeyExistMessage" value="编号已存在，请检查后再操作！" />
+    <text name="KeyExistMessageFormatter" value="{0}已存在，请检查后再操作！" />
+    <text name="KeyNotExistMessage" value="编号不存在，请检查后再操作！" />
+    <text name="KeyNotExistMessageFormatter" value="{0}不存在，请检查后再操作！" />
+    <text name="DataPermissionNameIsNull" value="需检查的权限名称不能为空。" />
+    <text name="UserSessionTimeout" value="未查询到登陆用户（或登陆已超时）。" />
+    <text name="NoPermissionOperation" value="没有操作权限！" />
+    <text name="FileUploadFileTypeInvalid" value="文件类型不合法，请上传合法文件！" />
+    <text name="FileUploadFileTypeInvalidFormatter" value="[{0}]文件类型不合法，请上传合法文件【{1}】！" />
+    <text name="FileUploadException" value="文件上传异常！" />
+    <text name="FileUploadNoFile" value="未发现上传文件！" />
+    <text name="FileUploadMaxSize" value="上传文件不能大于{0}！" />
+    <text name="UserSetting" value="用户配置" />
+    <text name="UserCache" value="用户缓存" />
+
+
+    <text name="AccountLoginOutConfirmTitle" value="确认注销" />
+    <text name="AccountLoginOutConfirmMsg" value="确认注销当前账号？" />
+    <text name="ChangePasswordTitle" value="用户密码更改" />
+    <text name="AccountChangePassword" value="修改密码" />
+    <text name="AccountNo" value="用户账号" />
+    <text name="CurrentPassword" value="原密码" />
+    <text name="NewPassword" value="新密码" />
+    <text name="NewPassword2" value="验证密码" />
+    <text name="PasswordNotEqual" value="两次密码不一致，请检查后重新输入！" />
+    <text name="UserProfileTitle" value="用户个人详情" />
+    <text name="UserProfile" value="个人信息" />
+    <text name="Profile" value="个人简介" />
+    <text name="Birthday" value="出生日期" />
+    <text name="IdCard" value="身份证" />
+    <text name="PhoneNumber2" value="备用号码" />
+    <text name="SaveInfo" value="保存信息" />
+    <text name="SaveInfoTip" value="部分信息需要重新登陆后更新" />
+    <text name="UpdateAvatar" value="修改头像" />
+    <text name="AvatarSelectFile" value="选择图片" />
+    <text name="AvatarTurnRight" value="向右旋转" />
+    <text name="AvatarTurnLeft" value="向左旋转" />
+    <text name="CanNotDeleteRecord" value="不能删除此条记录" />
+    <text name="ReceiveNotificationsSetting" value="是否启用通知" />
+    <text name="TickNotificationsToSubscribe" value="勾选需订阅的通知" />
+
+
+
+    <!-- JS START -->
+    <text name="OpCreate" value="创建"></text>
+    <text name="OpUpdate" value="修改"></text>
+    <text name="OpDelete" value="删除"></text>
+    <text name="OpRefresh" value="刷新"></text>
+    <text name="OpSuccess" value="操作成功"></text>
+    <text name="OpError" value="操作失败"></text>
+    <text name="OpTimeout" value="服务器响应超时，请稍后再试!"></text>
+    <text name="OpServerError" value="服务器出错！请稍后重试。。。"></text>
+
+    <text name="All" value="全部"></text>
+    <text name="Yes" value="是"></text>
+    <text name="No" value="否"></text>
+    <text name="Clear" value="清除"></text>
+    <text name="Cancel" value="取消"></text>
+    <text name="OK" value="确定"></text>
+    <text name="Save" value="保存"></text>
+
+    <text name="DeleteConfirm" value="确认删除"></text>
+    <text name="DeleteConfirmTitle" value="确认删除"></text>
+    <text name="DeleteConfirmContent" value="确认删除这条记录吗？"></text>
+    <text name="DeleteConfirmMsg" value="确认删除这条记录吗？"></text>
+    <text name="UserUnLockConfirm" value="确解锁用户？"></text>
+    <text name="UserUnLockConfirmContent" value="确认解锁用户？"></text>
+
+    <text name="SelectRecordOperation" value="请选择一条记录操作！"></text>
+    <text name="RecordAtTop" value="记录已在最顶端，无法上移！"></text>
+    <text name="RecordAtBottom" value="记录已在最底端，无法下移！"></text>
+    <text name="SelectFile" value="选择文件"></text>
+    <text name="FileUploadErrorMsg" value="上传的附件文件不能超过{0}M"></text>
+    <text name="FileUploadTipMsg" value="您的浏览器暂不支持计算上传文件的大小，确保上传文件不要超过{0}M，建议使用IE、FireFox、Chrome浏览器。"></text>
+    <text name="FileUploadOnlyImage" value="只能选择图片"></text>
+
+    <!-- JS END   -->
+
+
+
+  </texts>
+</localizationDictionary>

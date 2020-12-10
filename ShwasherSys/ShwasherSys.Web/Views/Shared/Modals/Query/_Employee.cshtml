@@ -1,0 +1,20 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "no,name,id",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems = new List<QueryItem>()
+    {
+        new QueryItem("no","人员编号",true),
+        new QueryItem("name","名称",true),
+        new QueryItem("cardId","身份证"),
+        new QueryItem("phoneNumber","电话"),
+        new QueryItem("departmentName","部门",true)
+    };
+
+
+    QueryModalModel qmModel = new QueryModalModel("用户信息", "/api/services/app/Query/QueryEmployee", queryItems, originFiled, targetFiled, modalId: "query_employee_modal");
+}
+@Html.Partial("Modals/Query/_QueryModal", qmModel)

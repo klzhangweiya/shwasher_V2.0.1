@@ -1,0 +1,808 @@
+﻿@using Abp.Runtime.Session
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@{
+    ViewBag.ActiveMenu = PermissionNames.PagesProductInspectProductInspectMg; //The menu item will be active for this page.
+    ViewBag.Title = "技术检验报告生成";
+
+
+    List<SelectListItem> inspectResult = new List<SelectListItem>()
+{
+new SelectListItem(){Text = @"合格",Value = "1"},
+new SelectListItem(){Text = @"不合格",Value = "0"},
+};
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("productionOrderNo","排产单号"),
+new SearchItem("semiProductName","半成品名称"),
+    new SearchItem("model","规格"),
+    new SearchItem("material","材质"),
+new SearchItem("surfaceColor","表色"),
+new SearchItem("semiProductNo","半成品编码"),
+/*new SearchItem("inspectResult","检验结果",FiledType.I,ExpType.Equal).SetSearchItem(inspectResult),
+new SearchItem("inspectDate","检验时间"),
+new SearchItem("inspectMember","检验人员"),*/
+}, false);
+
+}
+@section CSS{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker-wr.css" rel="stylesheet" />
+    <link href="~/Content/Plugins/kindeditor/themes/default/default.css" rel="stylesheet" />
+    <style>
+        .inspect-box {
+            display: block;
+        }
+    </style>
+    <link href="~/Content/Css/report-table.css" rel="stylesheet" />
+}
+
+<section style="display: none">
+    @Html.DropDownList("hide-inspectResult", inspectResult)
+</section>
+<div class="table-box iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/ProductInspect/GetAllInspect" data-id-field="id" data-unique-id="id"
+           data-striped="true" data-click-to-select="true" data-single-select="true"
+           data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false" data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]"
+           data-pagination-h-align="left" data-pagination-detail-h-align="right"
+           data-query-params="QueryParams" data-response-handler="ResponseHandler">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                <th data-align="center" data-field="semiProductName">半成品名称</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="outsourcingFactoryName">外协厂商</th>
+                <th data-align="center" data-field="remark">备注</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+
+
+@section modal{
+    <!--Main Modal-->
+    <section>
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width:1000px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("检验报告", ""))
+                    <div class="modal-body container-fluid" style="padding-top: 15px; padding-bottom: 0;">
+                    <div class="table-box iwb-bootstrap-table">
+                        <table id="table1"
+                               data-url="/api/services/app/ProductInspect/GetAll" data-id-field="id" data-unique-id="id"
+                               data-striped="true" data-click-to-select="true" data-single-select="true"
+                               data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                               data-cache="false" data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]"
+                               data-pagination-h-align="left" data-pagination-detail-h-align="right"
+                               data-query-params="QueryParams" data-response-handler="ResponseHandler">
+                            <thead>
+                            <tr class="row">
+                                <th data-field="state" data-checkbox="true"></th>
+                                <th data-align="center" data-field="productInspectNo">检测编号</th>
+                                <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                                <th data-align="center" data-field="semiProductName">半成品名称</th>
+                                <th data-align="center" data-field="inspectSubject">检验项目</th>
+                                <th data-align="center" data-field="inspectResult" data-formatter="InspectResultFormatter">检验结果</th>
+
+
+                                <th data-align="center" data-field="inspectDate">检验时间</th>
+                                <th data-align="center" data-field="inspectMember">检验人员</th>
+                            </tr>
+
+                            </thead>
+                        </table>
+                        
+                        <div class="row ">
+                            <div class="form-group-sm col-md-12">
+                                <label class="iwb-label col-md-1 control-label" for="inspectContent">附件列表：</label>
+                                <div class="col-md-11 attach-list">
+                                    <div class="attach">暂无附件</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                   
+                        <form class="pr-3 pl-3 form-horizontal " id="form">
+                     
+                        <input id="id" name="id" type="hidden" value="">
+                        <input id="reportContent" name="reportContent" type="hidden" value="">
+                        <div class="inspect-box row">
+                            <div class="form-group-sm col-md-6">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="productionOrderNo">排产单号</label>
+                                <div class="col-md-10">
+                                    <input class="form-control" id="productionOrderNo" name="productionOrderNo" required="" type="text" placeholder="" value="" style="">
+                                </div>
+                            </div>
+                            <div class="form-group-sm col-md-6">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="semiProductNo">半成品编码</label>
+                                <div class="col-md-10">
+                                    <input class="form-control" id="semiProductNo" name="semiProductNo" required="" type="text" placeholder="" value="" style="">
+                                </div>
+                            </div>
+
+                            <div class="form-group-sm col-md-6">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="inspectSubject">检验项目</label>
+                                <div class="col-md-10">
+                                    <input class="form-control" id="inspectSubject" name="inspectSubject" required="" type="text" placeholder="" value="" style="">
+                                </div>
+                            </div>
+                            <div class="form-group-sm col-md-6" style="height: 45px;">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="inspectResult">检验结果</label>
+                                <div class="col-md-10" >
+                                    @Html.DropDownList("inspectResult", inspectResult, new { style = "width:100%", required = "" })
+                                </div>
+                            </div>
+                            <div class="form-group-sm col-md-6">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="inspectDate">检验时间</label>
+                                <div class="col-md-10">
+                                    <input class="form-control datetime" id="inspectDate" name="inspectDate" required="" type="text" placeholder="请输入检验时间..." value="" style="" disabled="">
+                                </div>
+                            </div>
+                            <div class="form-group-sm col-md-5">
+                                <div class=" col-md-4" style="float: right;">
+                                    <button type="button" class="btn btn-sm btn-danger" style="width: 100%; background-color: #583d9c; border-color: #583d9c;" onclick="AddAttach()">添加附件</button>
+                                </div>
+
+                            </div>
+                            <div class="attach-unit"></div>
+                            <div class="form-group-sm col-md-12">
+                                <label class="iwb-label col-md-1 control-label" for="inspectContent">检验详情</label>
+                                <div class="col-md-11">
+                                    <textarea class="form-control" id="inspectContent" name="inspectContent" type="text" placeholder="请输入检验详情..." value="" style="" disabled=""></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="form-group-sm row">
+                                @*<label class="iwb-label col-md-2 control-label" for="">检验报告:</label>*@
+                                <div class="col-md-12 report-content ">
+                                    <table style="width: 950px;">
+                                        <thead>
+                                            <tr>
+                                                <td colspan="11" style="text-align: center; padding: 15px">
+                                                    <img src="../../Content/Images/excle/report.png" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="11" style="font-size: 24px; font-weight: 600">
+                                                    <span>产 品 检 验 报 告 </span>
+                                                    <br />
+                                                    <span>Inspection Report</span>
+                                                </td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <span>客户名称 </span>
+                                                    <br />
+                                                    <span>Customer Name</span>
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td>
+                                                    <span>品 名</span>
+                                                    <br />
+                                                    <span>Part Name</span>
+
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td>
+                                                    <span>订单号</span>
+                                                    <br />
+                                                    <span>Order Number</span>
+                                                </td>
+                                                <td colspan="4" class="td-input"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>
+                                                    <span>规 格</span>
+                                                    <br />
+                                                    <span>Part Name</span>
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td>
+                                                    <span>表面处理</span>
+                                                    <br />
+                                                    <span>Surface Treatment</span>
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td>
+                                                    <span>批次号</span>
+                                                    <br />
+                                                    <span>Product Lot</span>
+                                                </td>
+                                                <td colspan="4" class="td-input"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span>材料牌号</span>
+                                                    <br />
+                                                    <span>Material grade</span>
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td>
+                                                    <span>材料规格</span>
+                                                    <br />
+                                                    <span>Material size</span>
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td>
+                                                    <span>材料炉号</span>
+                                                    <br />
+                                                    <span>Material Lot No</span>
+                                                </td>
+                                                <td colspan="4" class="td-input"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span>零件号</span>
+                                                    <br />
+                                                    <span>Part Number</span>
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td>
+                                                    <span>检测件数</span>
+                                                    <br />
+                                                    <span>Test Lot</span>
+                                                </td>
+                                                <td colspan="2">
+                                                    <span class="td-count">1</span><span>件/pcs</span>
+                                                </td>
+                                                <td>
+                                                    <span>检测日期</span>
+                                                    <br />
+                                                    <span>Test Date</span>
+                                                </td>
+                                                <td colspan="4" class="td-input"></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="width: 11%;"></td>
+                                                <td style="width: 6%;">
+                                                    <span>内 径</span>
+                                                    <br />
+                                                    <span>Id</span>
+                                                </td>
+                                                <td style="width: 6%;">
+                                                    <span>外 径</span>
+                                                    <br />
+                                                    <span>Od</span>
+                                                </td>
+                                                <td style="width: 11%;">
+                                                    <span>厚 度</span>
+                                                    <br />
+                                                    <span>Th</span>
+                                                </td>
+                                                <td style="width: 6%;">
+                                                    <span>宽度</span>
+                                                    <br />
+                                                    <span>Width</span>
+                                                </td>
+                                                <td class="td-input" style="width: 6%; background: #f5f5f5">
+                                                </td>
+                                                <td style="width: 11%;">
+                                                    <span>镀层</span>
+                                                    <br />
+                                                    <span>Um</span>
+                                                </td>
+                                                <td style="width: 10%;">
+                                                    <span>盐雾试验 </span>
+                                                    <br />
+                                                    <span>Salt Spray Test</span>
+                                                </td>
+                                                <td colspan="3">
+                                                    <span>氢脆试验</span>
+                                                    <br />
+                                                    <span>Hydrogen Embrittlement Tests</span>
+                                                </td>
+                                            </tr>
+                                            <tr class="td-data-head">
+                                                <td>
+                                                    <span>尺寸范围</span>
+                                                    <br />
+                                                    <span>Range</span>
+                                                </td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td rowspan="2" class="td-input" style="background: #f5f5f5">
+                                                </td>
+
+                                                <td style="width: 10%;">
+                                                    <span>标准要求</span>
+                                                    <br />
+                                                    <span>Standards</span>
+                                                </td>
+                                                <td class="td-input" style="width: 10%; background: #f5f5f5">
+                                                </td>
+                                                <td class="td-input" style="width: 10%; background: #f5f5f5">
+                                                </td>
+                                            </tr>
+                                            <tr class="td-data">
+                                                <td class="td-input">1</td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>
+                                                    <span>检测结果</span>
+                                                    <br />
+                                                    <span>Inspect Result</span>
+                                                </td>
+                                                <td colspan="2" class="td-input"></td>
+                                                <td colspan="3">
+                                                    <span>检测人 </span>
+                                                    <br />
+                                                    <span>Inspector</span>
+                                                </td>
+                                                <td colspan="6" class="td-input"></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="11" style="font-size: 24px; font-weight: 600">
+                                                    <span>材料化学成分 ( Material chemical composition) %</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><span>C</span></td>
+                                                <td><span>Si</span></td>
+                                                <td><span>Mn</span></td>
+                                                <td><span>P</span></td>
+                                                <td><span>S</span></td>
+                                                <td><span>Cr</span></td>
+                                                <td><span>Ni</span></td>
+                                                <td><span>Cu</span></td>
+                                                <td><span> </span></td>
+                                                <td><span> </span></td>
+                                                <td><span> </span></td>
+                                            </tr>
+                                            <tr>
+
+
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                                <td class="td-input"></td>
+                                            </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4,
+            showSecond: false,
+            showHours: false,
+            minuteStep: 10
+        };
+    var $table1=$('#table1');
+        $(function() {
+            //UseKedit("#modal", "#reportContent");
+            @{
+                string script1 = "", script2 = "";
+                if (ViewBag.UserName == "admin"|| ViewBag.UserName == "system")
+                {
+                    script2 = "$(\".report-content td span\").off('click.').on('click',function() {";
+                    script2 += "   var text = $(this).text();";
+                    script2 += "   var $input = $('<input type=\"text\"/ class=\"edit-input\"/>');";
+                    script2 += "   $(this).css('display', 'none');";
+                    script2 += "   $(this).after($input);";
+                    script2 += "   $input.focus().val(text);";
+                    script2 += "   $input.on('blur',function() {";
+                    script2 += "       var value = $(this).val();";
+                    script2 += "       $(this).prev('span').css('display', 'inline');";
+                    script2 += "       if (value) {";
+                    script2 += "            $(this).prev('span').text(value);";
+                    script2 += "            if ($(this).prev('span').hasClass('td-count')) {";
+                    script2 += "                var count = Number(value);";
+                    script2 += "                if (count) {";
+                    script2 += "                    $('.td-data').remove();";
+                    script2 += "                    $('.td-data-head td[rowspan]').attr('rowspan', count + 1);";
+                    script2 += "                    for (var i = $(this).val(); i > 0; i--) {";
+                    script2 += "                    $('.td-data-head').after(";
+                    script2 += "                    '<tr class=\"td-data\"><td class=\"td-input\">' + i + '</td><td class=\"td-input\"></td><td class=\"td-input\"></td><td class=\"td-input\"></td><td class=\"td-input\"></td><td class=\"td-input\"></td><td class=\"td-input\"></td><td class=\"td-input\"></td><td class=\"td-input\"></td><td class=\"td-input\"></td></tr>');";
+                    script2 += "                    }";
+                    script2 += "                }";
+                    script2 += "            }";
+                    script2 += "        }";
+                    script2 += "        $(this).remove();";
+                    script2 += "    });";
+                    script2 += "});";
+                }
+                else
+                {
+                    script1 = "$('#Tool1 button[data-type=\"_btnTemplate\"]').css('display', 'none');";
+                }
+            }
+            @Html.Raw(script1);
+            LoadTable();
+            $(".datetime").datetimepicker(datePickerOpt).on('show',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+
+            funs["btnCreate"] = function(url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    GetOldReport(rows[0].productionOrderNo, 1, rows[0]);
+                    $("#modal .inspect-box,#modal .table-box").css("display", "block");
+                    $(".attach-unit").html('');
+                    $table1.bootstrapTable('destroy');
+                    LoadTable({
+                        table: $table1,
+                        queryParams: function(params) {
+                            var sorting = '';
+                            if (params.sort) {
+                                sorting = params.sort;
+                                if (params.order) {
+                                    sorting += ' ' + params.order;
+                                }
+                            }
+                            return {
+                                //limit: params.limit, //页面大小
+                                //page: (params.offset / params.limit) + 1, //页码
+                                MaxResultCount: params.limit,
+                                SkipCount: params.offset,
+                                Sorting: sorting, //排序列名
+                                sortOrder: params.order, //排位命令（desc，asc）
+                                SearchList: [
+                                    {
+                                        KeyWords: rows[0].productionOrderNo,
+                                        KeyField: "ProductionOrderNo",
+                                        FieldType: "0",
+                                        ExpType: "0"
+                                    }
+                                ]
+                            };
+                        },
+                        //onLoadSuccess: ICheckTableInit_SingleSelect
+                        onLoadSuccess: function(data) {
+                            OnLoadSuccess(data, $table1);
+                        },
+                        onPostBody: function(data) {
+                            OnPostBody(data, $table1);
+                        }
+                    });
+                    QueryAttach(rows[0].productionOrderNo);
+                    BtnCreate({
+                        data: rows[0],
+                        disabled:"productionOrderNo,semiProductNo",
+                        save: function () { SaveReport(url); }
+                    });
+
+                } else
+                {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            };
+            funs["btnTemplate"] = function(url) {
+                //console.log("template");
+                $("#modal .table-box,#modal .inspect-box").css("display", "none");
+                ShowModal("modal");
+                GetOldReport();
+                $(".save-btn").off("click.save").on("click.save",
+                    function() {
+                        SaveReport(url, true);
+                    });
+
+            };
+
+            $("#Tool1").append(
+                '<div  class="tool-radio"><input name="proType" type="radio" id="allProduction" checked value=""/><label for="allProduction">全部</label></div>' +
+                '<div  class="tool-radio"><input name="proType" type="radio" id="outPurchase" value="1"/><label for="outPurchase">外购</label></div>' +
+                '<div  class="tool-radio"><input name="proType" type="radio" id="machineShop" value="0"/><label for="machineShop">车间加工</label></div>'+
+                '<div  class="tool-radio"><input name="proType" type="radio" id="outProduct" value="2"/><label for="outProduct">外协</label></div>');
+
+            $(".tool-radio input[type='radio']").on('click',
+                function (e) {
+                    //var outType = $(this).val();
+                    document.getElementById("SearchForm").reset();
+                    GetSearchList();
+                    RefreshTable();
+                });
+
+    });
+
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+
+            var outType = $('input[name="proType"]:checked').val();
+            switch (outType) {
+                case "1":
+                case "0":
+                    window._searchList.push({
+                        KeyWords: outType,
+                        KeyField: "ProductionType",
+                        FieldType: "0",
+                        ExpType: "0"
+                    });
+                    break;
+                case "2":
+                    window._searchList.push({
+                        KeyWords: "2",
+                        KeyField: "ProcessingLevel",
+                        FieldType: "0",
+                        ExpType: "0"
+                    });
+                    break;
+                default:
+                    break;
+            }
+
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+    </script>
+    <script>
+        function AddAttach() {
+            var id = Math.floor(Math.random() * 9999);
+
+            $(".attach-unit").append(
+                '<div class="form-group-sm"><div class="col-md-6"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">附件名称</label><div class="col-md-10"><input class="form-control" name="fileTitle" required="" placeholder="请输入附件名称" type="text"></div> </div><div class="col-md-6"><div class="col-md-10"><input class="form-control" name="fileInfo" id="fileInfo-' + id + '" type="hidden"><input class="form-control" name="fileName" id="fileName-' + id + '"  type="hidden"><input class="form-control" name="fileExt" id="fileExt-' + id + '" type="hidden"><div class="custom-file "><input class="custom-file-input" id="customFile-' + id + '" type="file" onchange="FileCheck(this,' + id + ')" onclick="OpenUploadWindow()"><label class="custom-file-label" for="customFile-' + id + '">选择文件</label></div></div><div class="col-md-2" style="float: right;padding-left: 0;"><button type="button" class="btn btn-sm btn-danger" style="width: 100%;" onclick="RemoveAttach(this)">移除</button></div></div></div>');
+            var topHeight = $(window).height() - $("#modal").find('.modal-dialog').height() - 50;
+            if (topHeight < 30) {
+                topHeight = 30;
+            }
+            $("#modal").find('.modal-dialog').animate({ 'marginTop': topHeight / 2 + "px" });
+        }
+
+        function RemoveAttach(that) {
+            $(that).closest(".form-group-sm").remove();
+        }
+
+
+
+        function GetAttachFilesDate() {
+            var data = {
+                id: $("#modal #id").val(),
+                reportContent: $("#modal #reportContent").val(),
+                productionOrderNo: $("#modal #productionOrderNo").val(),
+                semiProductNo: $("#modal #semiProductNo").val(),
+                inspectSubject: $("#modal #inspectSubject").val(),
+                inspectResult: $("#modal #inspectResult").val(),
+                inspectDate: $("#modal #inspectDate").val(),
+                inspectMember: $("#modal #inspectMember").val(),
+                inspectContent: $("#modal #inspectContent").val(),
+                attachFiles: []
+            };
+            $(".attach-unit .form-group-sm").each(function (i, v) {
+                var fileTitle = $(v).find("input[name='fileTitle']").val();
+                var fileInfo = $(v).find("input[name='fileInfo']").val();
+                var fileName = $(v).find("input[name='fileName']").val();
+                var fileExt = $(v).find("input[name='fileExt']").val();
+                data.attachFiles.push({ fileTitle: fileTitle, fileInfo: fileInfo, fileName: fileName, fileExt: fileExt });
+            });
+            return data;
+        }
+
+        function FileCheck(that, id) {
+            FileInputCheck(that, 'fileInfo-' + id, false, 100, function (fileName) {
+                var name = fileName.substring(0, fileName.lastIndexOf("."));
+                var ext = fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length);
+                $("#fileName-" + id).val(name);
+                $("#fileExt-" + id).val(ext);
+            });
+        }
+    </script>
+
+    <script>
+        function SaveReport(url, isTemplate) {
+            $("#reportContent").val($(".report-content").html());
+            var data = isTemplate ? { ReportTemplate: $("#reportContent").val() } : GetAttachFilesDate();
+            isTemplate = !isTemplate;
+            SaveAjax({
+                url: url,
+                data: data,
+                isValidate: isTemplate,
+                success: function () {
+                    RefreshTable();
+                    $("#modal").modal('hide');
+                }
+            });
+        }
+
+        function GetOldReport(productNo, isProduct,row) {
+            productNo = productNo || "new";
+            isProduct = isProduct || 0;
+            SaveAjax({
+                url: window.appUrl + 'ProductInspect/QueryReport?no=' + productNo + '&isProduct=' + isProduct,
+                data: {
+                    no: productNo,
+                    isProduct:isProduct
+                },
+                isValidate: false,
+                isAlert: false,
+                success: function(res) {
+                    if (res) {
+                        //var str = Base642Str(res);
+                        $(".report-content").html(res);
+                        $(".report-content td.td-input").off('click.report').on('click.report',function tdClick() {
+                            var $that = $(this);
+                            $that.off('click.report');
+                            var text = $(this).text();
+                            var $input = $('<input type="text" class="edit-input"/> ');
+                            $that.text('');
+                            $that.append($input);
+                            $input.focus().val(text);
+                            $input.on('blur',function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                $(this).parent('td.td-input').text($(this).val());
+                                $(this).remove();
+                                $that.on('click.report', tdClick);
+                            });
+                        });
+                        if (row) {
+                            $("#reportContent").val(res);
+                            $("#tdProductName").html(row.semiProductName);
+                            $("#tdPartName").html(row.model);
+                            $("#tdSurfaceTreatment").html(row.surfaceColor);
+                            $("#tdProductionLot").html(row.productionOrderNo);
+                            $("#tdMaterialLotNo").html(row.stoveNo);
+                            $("#tdPartNumber").html(row.partNo);
+                        }
+                    }
+                    @Html.Raw(script2);
+                }
+            });
+        }
+
+        function ChangeReport() {
+            var str = Str2Base64($(".report-content").html());
+            $("#reportContent").val(str);
+
+        }
+
+        function Str2Base64(str) {
+            return str;
+        }
+
+        function Base642Str(str) {
+            return str;
+        }
+    </script>
+
+    <script>
+
+        function QueryAttach(no, hasDelete) {
+            SaveAjax({
+                url: window.appUrl + 'ProductInspect/QueryAttach',
+                data: { TableName: 'Product', ColName: 'Inspect', Key: no },
+                isValidate: false,
+                isAlert: false,
+                success: function (res) {
+                    FormatterAttach(res, hasDelete);
+                }
+            });
+        }
+
+        function FormatterAttach(data, hasDelete) {
+            var str = '';
+            if (data) {
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    var fileType = item.fileExt;
+                    var img = 'attach';
+                    if (fileType.indexOf('doc') >= 0)
+                        img = 'word';
+                    else if (fileType.indexOf('xls') >= 0) {
+                        img = 'excel';
+                    } else if (fileType.indexOf('zip') >= 0 || fileType.indexOf('rar') >= 0) {
+                        img = 'zip';
+                    }
+                    str += ' <div class="attach"><a href="' + item.filePath + '" title="下载查看" target="_blank"><img src="/Content/Images/attach/' + img + '.png" />' + item.fileTitle + '.' +
+                        item.fileExt + '</a>';
+                    if (hasDelete) {
+                        str += '<span class="iconfont icon-delete1 delete" title="删除附件" onclick="DeleteAttach(this,\'' +
+                            item.attachNo +
+                            '\')"></span>';
+                    }
+                    str += '</div>';
+                }
+            }
+            str = str ? str : '<div class="attach">暂无附件</div>';
+
+            if (hasDelete) {
+                $('.attach-box').html(str);
+            } else {
+                $('.attach-list').html(str);
+
+            }
+        };
+
+        function DeleteAttach(that, attachNo) {
+            abp.message.confirm("附件删除后不可恢复，确认删除附件？", "删除附件", function () {
+                SaveAjax({
+                    url: window.appUrl + 'ProductInspect/DeleteAttach?attachNo=' + attachNo,
+                    data: { attachNo: attachNo },
+                    isValidate: false,
+                    success: function () {
+                        $(that).closest('.attach').remove();
+                    }
+                });
+            });
+        }
+    </script>
+    
+    <script id="">
+        function InspectResultFormatter(v) {
+            var name = $("#hide-inspectResult option[value='" + v + "']").text();
+            if (v === 0) {
+                return '<span class="label label-danger">' + name + '</span>';
+            } else {
+                return '<span class="label label-success">' + name + '</span>';
+            }
+
+        }
+    </script>
+}

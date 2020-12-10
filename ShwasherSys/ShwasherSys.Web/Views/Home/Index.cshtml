@@ -1,0 +1,51 @@
+﻿@using IwbZero.Setting
+@using ShwasherSys.Authorization.Permissions
+@{
+    ViewBag.ActiveMenu = PermissionNames.Pages; //The menu item will be active for this page.
+    var systemName = SettingManager.GetSettingValue(SettingNames.AdminSystemName);
+
+}
+<style>
+    .content-wrapper {
+        height: 100%;
+        padding: 0 !important;
+        background: url('../../Content/Images/home-bg.png') 100% 100%;
+    }
+
+    .page {
+        padding-top: 200px;
+        width: 100%;
+    }
+
+    .page-title, .page-title-sm {
+        cursor: none;
+        width: 100%;
+        height: 150px;
+        /*font-family: SimHei;*/
+        font-size: 95px;
+        font-weight: 600;
+        letter-spacing: 10px;
+        color: #ddd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .page-title-sm {
+        font-size: 80px;
+        color: #ddd;
+    }
+
+        .page-title::selection, .page-title-sm::selection {
+            background: transparent;
+            color: #1e90ff;
+        }
+</style>
+<div class="page no-select">
+    <div class="page-title">
+        欢迎登陆
+    </div>
+    <div class="page-title-sm">
+        @systemName
+    </div>
+</div>

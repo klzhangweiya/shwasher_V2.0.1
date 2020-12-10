@@ -1,0 +1,246 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "库存盘点任务统计";
+    string activeMenu = PermissionNames.PagesStatisticMgStatementBillReportMg; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+   
+}
+@section css{
+    <link href="~/Content/Css/statistic.css" rel="stylesheet" />
+    <style>
+        #table1 th.td:not(.index) {
+            min-width: 120px;
+            max-width: 300px;
+        }
+    </style>
+}
+
+<div class="box-tool">
+    <div class="tool-form">
+        <form id="tool-form">
+            <div style="float: left">
+                <select id="year" name="year" class="form-control" autocomplete="off" style="width: 120px;">
+                    <option value="">请选择年份</option>
+                    @for (int i = DateTime.Now.Year; i >= 2019; i--)
+                    {
+                        <option value="@(i)">@(i)年</option>
+                    }
+                </select>
+                <select id="month" name="month" class="form-control" autocomplete="off" style="width: 180px;">
+                    <option value="">请选择月份/季度/年度</option>
+                    <optgroup label="月份">
+                        @for (int j = 1; j <= 12; j++)
+                        {
+                            <option value="@(j)">@(j)月</option>
+                        }
+                    </optgroup>
+
+                    <optgroup label="季度">
+                        @for (int j = 1; j <= 4; j++)
+                        {
+                            <option value="@(j+12)">第 @(j) 季度</option>
+                        }
+                    </optgroup>
+
+                    <optgroup label="年度">
+                        <option value="19">整年度</option>
+                        <option value="17">上半年</option>
+                        <option value="18">下半年</option>
+                    </optgroup>
+
+                </select>
+
+                @*<input id="query-date1" class="form-control iwb-date" type="text" value="" placeholder="请输入查询开始日期..." style="width: 250px;"/>
+            <input id="query-date2" class="form-control iwb-date" type="text" value="" placeholder="请输入查询结束日期..." style="width: 250px;"/>*@
+            </div>
+            @*<div style="width: 180px; float: left; margin-left: 10px;">
+                <select id="HouseType" name="HouseType" class="form-control" autocomplete="off" style="width: 160px;">
+                    <option value="">请选择成品/半成品</option>
+
+
+                    <option value="1">成品</option>
+                    <option value="2">半成品</option>
+
+                </select>
+                
+            </div>*@
+            @*<div style="width: 180px; float: left; margin-left: 10px;">
+                <select id="CheckState" name="CheckState" class="form-control" autocomplete="off" style="width: 150px;">
+                    <option value="">请选择盘点状态</option>
+
+
+                    @Html.Raw(CheckStateListStr)
+
+                </select>
+            </div>*@
+                <div style="width: 250px; float: left;margin-left: 10px;">
+                    <div class="input-group form-group-sm " style="width: 100%;">
+                       
+                        <input class="form-control" id="customerId" name="customerId" type="text" autocomplete="off" required="" placeholder="请输入客户编码..." readonly="">
+                        <div class="input-group-addon" onclick="ShowQueryModal('query_customer_modal', '.tool-form');">
+                            <i class="iconfont icon-search"></i>
+                        </div>
+                        <div class="input-group-addon" title="清除员工信息" onclick="ClearQueryValue(this);">
+                            <i class="iconfont icon-close"></i>
+                        </div>
+                    </div>
+                </div>
+
+        </form>
+       
+    </div>
+    <div class="tool-btn">
+        @if (IsGranted(PermissionNames.PagesStatisticMgStatementBillReportMgQuery))
+        {
+            <button class="btn btn-info btn-sm" onclick="Query()">查询</button>
+        }
+        @* <button class="btn btn-success btn-sm" onclick="Export()">导出</button>*@
+    </div>
+
+</div>
+<div class="box-data">
+    <div class="box-body">
+        <table id="table1" >
+            <thead>
+                <tr class="title">
+                    <td class="td" colspan="20">上海上垫垫圈有限公司对账单表</td>
+                </tr>
+               
+                <tr>
+                    <th class="td index">序号</th>
+                    <th class="td">编号</th>
+                    <th class="td">客户编号</th>
+                    <th class="td">客户名称</th>
+                    <th class="td">开票人</th>
+                    <th class="td">开票时间</th>
+                    <th class="td">发票编号</th>
+                    <th class="td">金额</th>
+                    <th class="td">税后金额</th>
+                    <th class="td">货币</th>
+                </tr>
+            </thead>
+            <tbody class="tbody"></tbody>
+            <tfoot>
+            <tr>
+                <td class="td" colspan="7"></td>
+                <td class="td detail" >
+                    总金额：<strong class="allPrice"></strong> 
+                </td>
+                <td class="td detail" colspan="2">
+                    税后总金额： <strong class="afterAllPrice"></strong> 
+                </td>
+              
+              
+
+            </tr>
+            </tfoot>
+        </table>
+      
+    </div>
+</div>
+@section modal{
+    @Html.Partial("Modals/Query/_Customer", "customerId")
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $table = $('#table1');
+        $(function () {
+            $('#year').val(@(DateTime.Now.Year)).select2();
+            $('#month').val(@(DateTime.Now.Month)).select2();
+            Query();
+        });
+        function Query() {
+            var date = $('#year').val();
+            if (date) {
+                $.iwbAjax4({
+                    url: window.appUrl + 'StatementBill/QueryStatisticStatementBillItems' ,
+                    form:'tool-form',
+                    success: function (res) {
+                        var str = ItemFormatter(res);
+                        $table.find('.tbody').html(str);
+                    }
+                });
+            } else {
+                abp.message.warn("请选择年份。");
+            }
+        }
+
+        function ItemFormatter(data) {
+            var str = "";
+            var allPrice = 0;
+            var afterAllPrice = 0;
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    str += '<tr>';
+
+                    str += '<td class="td">{0}</td>'.format(i+1);
+                    str += '<td class="td">{0}</td>'.format(item.statementBillNo || "");
+                    str += '<td class="td">{0}</td>'.format(item.customerId || "");
+                    str += '<td class="td">{0}</td>'.format(item.customerName || "");
+                    str += '<td class="td">{0}</td>'.format(item.billMan || "");
+                  
+                    str += '<td class="td">{0}</td>'.format(new Date(item.creationTime).format('yyyy-MM-dd'));
+                    //str += '<td class="td">{0}</td>'.format(new Date(item.productDate).format('yyyy-MM-dd'));
+                    str += '<td class="td">{0}</td>'.format(item.orderStickBillNo || "");
+                    str += '<td class="td">{0}</td>'.format(item.totalPrice || "");
+                    if (item.totalPrice) {
+                        allPrice += item.totalPrice;
+                    }
+                    str += '<td class="td">{0}</td>'.format(item.afterTaxTotalPrice || "");
+                    if (item.afterTaxTotalPrice) {
+                        afterAllPrice += item.afterTaxTotalPrice;
+                    }
+                    str += '<td class="td">{0}</td>'.format(item.currencyId || "");
+                   
+                    str += '</tr>';
+                }
+                
+            } else {
+                str += '<tr>';
+                str += '<td class="td" colspan="20" style="color:red;padding:10px;">未查询到生产明细</td>';
+                str += '</tr>';
+            }
+            $table.find('.allPrice').html(Number(allPrice).toFixed(3) || "");
+            $table.find('.afterAllPrice').html(Number(afterAllPrice).toFixed(3) || "");
+            return str;
+        }
+
+        function Export() {
+
+        }
+
+        function ClearQueryValue(that) {
+            var $that = $(that).closest('.input-group');
+            $that.find('input').val("");
+        }
+        function CheckStateFormatter(v) {
+            var name = $("#CheckState option[value='" + v + "']").text();
+            if (v === 1) {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === 2) {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === 3) {
+                return '<span class="label label-warning">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+    </script>
+
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @*@Html.DropDownList("hid-type", type)*@
+</section>

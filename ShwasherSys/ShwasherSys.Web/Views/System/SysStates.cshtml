@@ -1,0 +1,96 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSystemSysState; //The menu item will be active for this page.
+    ViewBag.Title = "系统翻译字典";
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("stateName","字典名称"),
+new SearchItem("tableName","表名称" ),
+new SearchItem("columnName","字段名")
+}, false);
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/States/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true"
+           data-page-size="30"
+           data-page-number="1"
+           data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                @*<th data-align="center" data-field="stateNo">字典编号</th>*@
+                <th data-align="center" data-field="stateName">字典名称</th>
+                <th data-align="center" data-field="tableName">表名称</th>
+                <th data-align="center" data-field="columnName">字段名</th>
+                <th data-align="center" data-field="codeValue">字段值</th>
+                <th data-align="center" data-field="displayValue">显示值</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@*<span id="print">打印</span>*@
+@section modal{
+    <!--Main Modal-->
+    <section>
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("字典"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                                        {
+                                                                                            new InputViewModel("id", hide: true),
+                                                                                            //new InputViewModel("stateNo", displayName: "字典编号"),
+                                                                                            new InputViewModel("stateName", displayName: "字典名称"),
+                                                                                            new InputViewModel("tableName", displayName: "表名称"),
+                                                                                            new InputViewModel("columnName", displayName: "字段名"),
+                                                                                            new InputViewModel("codeValue", displayName: "字段值"),
+                                                                                            new InputViewModel("displayValue", displayName: "显示值"),
+                                                                                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+}
+@section css
+{
+    @*<link href="~/Content/Plugins/PrintPreView/print-preview.css" rel="stylesheet" />*@
+}
+@section scripts
+{
+    @*<script src="~/Content/Plugins/PrintPreView/print-preview.js"></script>*@
+    <script type="text/javascript">
+        $(function () {
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "codeValue,tableName,columnName" }); };
+        });
+        //$('#print').printPreview({
+        //    printBody: ".table-box",
+        //    cssUrl: '../../Content/Plugins/bootstrap-3.3.7/css/bootstrap.css,../../Content/Css/Site.css'
+        //});
+
+    </script>
+}

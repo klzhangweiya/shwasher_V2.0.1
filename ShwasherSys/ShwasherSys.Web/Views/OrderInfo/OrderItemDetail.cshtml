@@ -1,0 +1,421 @@
+﻿@using Abp.Authorization
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@model ShwasherSys.Order.Dto.OrderHeaderDto
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesOrderInfoOrderMg; //The menu item will be active for this page.
+    ViewBag.Title = "订单信息详情";
+   
+    List<SelectListItem> MaterialSelect = ViewBag.MaterialSelect;
+    List<SelectListItem> SurfaceColorSelect = ViewBag.SurfaceColorSelect;
+    List<SelectListItem> RigiditySelect = ViewBag.RigiditySelect;
+    string materialSelectOptions = "<option value=\"\" selected=\"selected\" ></option>\r\n";
+    foreach (var mItem in MaterialSelect)
+    {
+        materialSelectOptions  += string.Format("<option value=\"{0}\" >{1}</option>\r\n",mItem.Value,mItem.Text);
+    }
+    string surfaceColorSelectOptions = "<option value=\"\"  selected=\"selected\"></option>\r\n";
+    foreach (var mItem in SurfaceColorSelect)
+    {
+        surfaceColorSelectOptions += string.Format("<option value=\"{0}\" >{1}</option>\r\n", mItem.Value, mItem.Text);
+    }
+    string rigiditySelectOptions = "<option value=\"\"  selected=\"selected\" ></option>\r\n";
+    foreach (var mItem in RigiditySelect)
+    {
+        rigiditySelectOptions += string.Format("<option value=\"{0}\" >{1}</option>\r\n", mItem.Value, mItem.Text);
+    }
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .queryFormLabel{
+            padding-top: 2px; 
+        }
+        .queryFormInput {
+            height: 20px;
+        }
+        .invoice {
+            margin: 10px 5px 0px;
+
+        }
+        .store-query > strong {
+            width: 70px;
+            text-align: right;
+        }
+        #storeQuantity, #orderQuantity {
+            padding: 0 5px;
+            color: red;
+        }
+
+    </style>
+}
+<section class="invoice">
+    <!-- title row -->
+    <div class="row">
+        <div class="col-xs-12">
+            <h2 class="page-header">
+                <i class="fa fa-globe"></i> 订单信息
+            </h2>
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- info row -->
+    <div class="row invoice-info">
+        <div class="col-sm-3 invoice-col">
+            <b>流水号:</b>@Model.Id<br>
+            <b>客户订单号:</b> @Model.StockNo<br>
+            <b>订单状态:</b>@Model.OrderStatusName<br>
+           
+        </div>
+        <!-- /.col -->
+        <div class="col-sm-3 invoice-col">
+            <b>客户编号:</b>@Model.CustomerId<br>
+            <b>送货地址名称:</b>@Model.CustomerSendName<br>
+           
+        </div>
+        <!-- /.col -->
+        <div class="col-sm-3 invoice-col">
+            <b>联系人:</b>@Model.LinkName<br>
+            <b>电话:</b> @Model.Telephone<br>
+            <b>传真:</b> @Model.Fax<br>                         
+        </div>
+        <!-- /.col -->
+        <div class="col-sm-3 invoice-col">
+            <b>订单日期</b>@Model.OrderDate<br>
+            <b>送货地址:</b>@Model.SendAdress<br>
+             
+        </div>
+    </div>
+    <!-- /.row -->
+
+</section>
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <div class="btn-toolbar row" id="tableTool" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="col-sm-12 col-lg-12 pull-left" style="padding: 0">
+            <div class="btn-group btn-group-sm" id="Tool1" role="group" aria-label="First group">
+                @if (PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderMgCreateOrderItem))
+                {
+                    <button type="button" class="btn btn-default" data-type="_btnCreate" data-url="/api/services/app/OrderItems/Create">
+                        <i class="iconfont icon-add">添加订单明细</i>
+                    </button>
+                }
+                @if (PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderMgUpdateOrderItem))
+                {
+                    <button type="button" class="btn btn-default" data-type="btnUpdate" data-url="/api/services/app/OrderItems/Update">
+                        <i class="iconfont icon-edit">修改订单明细</i>
+                    </button>
+                }
+                @if (PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderMgDeleteOrderItem))
+                {
+                    <button type="button" class="btn btn-default" data-type="btnDelete" data-url="/api/services/app/OrderItems/Delete">
+                        <i class="iconfont icon-delete">删除订单明细</i>
+                    </button>
+                }
+
+            </div>
+        </div>
+    </div>
+    
+    <table id="table"
+           data-url="/api/services/app/OrderItems/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+        <tr class="row" id="header">
+            <th data-field="state" data-checkbox="true"></th>
+            <th data-align="center" data-field="orderNo">流水号</th>
+            <th data-align="center" data-field="productNo">产品编号</th>
+            <th data-align="center" data-field="quantity">数量</th>
+            <th data-align="center" data-field="price">单价</th>
+            <th data-align="center" data-field="sendDate">送货时间</th>
+
+        </tr>
+        </thead>
+    </table>
+</div>
+
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" >
+                <div class="modal-content" style="width: 480px;">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("订单明细"))
+                    <div class="modal-body container-fluid" style="padding: 0; padding-top: 15px;">
+                        <form class="pr-3 pl-3 form-horizontal" style="padding: 0 10px" id="form">
+                            <input type="hidden" id="id" name="id"/>
+                            <input type="hidden" id="orderNo" name="orderNo"/>
+                            <input type="hidden" id="currencyId" name="currencyId"/>
+                            <input type="hidden" id="orderUnitId" name="orderUnitId"/>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required"  for="productNo">产品编号</label>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <select class="form-control" Required id="productNo" name="productNo" placeholder="请输入..." value="" style="width: 100%;" type="text" onchange="RefreshProductInfo()">
+                                            @Html.Raw(ViewBag.CustomerDefaultProducts)
+                                        </select>
+                                        <div class="input-group-addon" onclick="ShowModal('query_Product_modal');">
+                                            <i class="iconfont icon-search"></i>
+                                        </div>
+                                    </div></div>
+                                    @*<div class="col-md-1" style="padding: 0 0">
+            <button type="button" class="btn btn-info btn-flat" style="height: 30px; width: 40px;" onclick="showSelectProductDialog()"><i class="iconfont icon-search"></i></button>
+        </div>*@
+                                <div class="col-md-4" style="padding: 0 5px;margin-top: -6px;">
+                                   
+                                    <span class="store-query"> <strong>库存量:</strong><span id="storeQuantity">0</span><span>千件</span></span>
+                                    <br>
+                                    <span class="store-query"><strong>被定量:</strong><span id="orderQuantity">0</span><span>千件</span></span>
+                                    <br>
+                                </div>
+                                </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="SendDate">送货时间</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" Required id="sendDate" name="sendDate" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="IsStandard">标准件</label>
+                                <div class="col-md-4">
+                                    <input class="form-control required" style="width: 100%" id="IsStandard" disabled="disabled" name="IsStandard" placeholder="请输入..." value="" type="text">
+
+                                </div>
+
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="price">价格</label>
+                                <div class="col-md-4">
+                                    <input class="form-control required number" Required style="width: 100%" id="price" name="price" placeholder="请输入..." value="" type="text">
+
+                                </div>
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="quantity">数量</label>
+                                <div class="col-md-4">
+                                    <input class="form-control required number" Required style="width: 100%" id="quantity" name="quantity" placeholder="请输入..." value="" type="text">
+
+                                </div>
+                            </div>
+
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="isReport">检验报告</label>
+                                <div class="col-md-4">
+                                    <select class="form-control" style="width: 100%" id="isReport" name="isReport" placeholder="请输入..." value="" style="" type="text">
+                                        <option value="Y" selected="selected">是</option>
+                                        <option value="N">否</option>
+                                    </select>
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="isPartSend">部分送货</label>
+                                <div class="col-md-4">
+                                    <select class="form-control" style="width: 100%" id="isPartSend" name="isPartSend" placeholder="请输入..." value="" style="" type="text">
+                                        <option value="Y" selected="selected">是</option>
+                                        <option value="N">否</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="Material">材质</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="Material" name="Material" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="Model">规格</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="Model" name="Model" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+
+
+                            </div>
+                            <div class="form-group-sm row">
+
+                                <label class="iwb-label col-md-2 control-label" for="SurfaceColor">表色</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="SurfaceColor" name="surfaceColor" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="Rigidity">硬度</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="Rigidity" name="Rigidity" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="ProductName">产品名称</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="ProductName" name="ProductName" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" for="partNo">零件号</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="partNo" name="partNo" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="wareHouse">送货仓库</label>
+                                <div class="col-md-10">
+                                    <input class="form-control" id="wareHouse" name="wareHouse" placeholder="请输入..." value="" style="" type="text">
+                                </div>
+
+                            </div>
+                            <div class="form-group-sm row">
+                                <label class="iwb-label col-md-2 control-label" for="orderItemDesc">描述</label>
+                                <div class="col-md-10">
+                                    <textarea class="form-control" id="orderItemDesc" name="orderItemDesc" placeholder="请输入..." value="" style="" ></textarea>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    @Html.Partial("Modals/Query/_Product","productNo")
+       
+
+
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function() {
+            //show完毕前执行
+            $("#sendDate").datetimepicker(datePickerOpt).on('show',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnUpdate"] = function() {
+               
+                BtnUpdate({
+                    readonly: "IsStandard,ProductName,SurfaceColor,Rigidity,Material,Model"
+                });
+                $("#productNo").trigger("change");
+            };
+
+           // LoadTableQueryProduct();
+            funs["btnCreate"] = function() {
+                var firstProductNo = $("#productNo").find("option").first().attr("value");
+                console.log('firstProductNo' + firstProductNo);
+                BtnCreate({
+                    readonly: "IsStandard,ProductName,SurfaceColor,Rigidity,Material,Model",
+                    data: { orderNo: "@Model.Id", productNo: firstProductNo, orderUnitId: "4", currencyId: "CNY" }
+                });
+                $("#isReport").val("Y").select2();
+                $("#isPartSend").val("Y").select2();
+
+               
+            }
+
+        });
+
+        function GetSearchList() {
+            _searchList = [];
+            _searchList.push({ KeyWords: "@Model.Id", KeyField: "orderNo", FieldType: "0", ExpType: "0" });
+            var count = $("#SearchForm").find(".KeyWords").length;
+           
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({ KeyWords: keyWords, KeyField: keyField, FieldType: fieldType, ExpType: expType });
+                }
+            }
+        }
+        function Submit_query_Product_modal(row) {
+            row = row || $("#query_Product_modal").find("table").bootstrapTable("getSelections")[0];
+            if (row) {
+                var productNo = row.id;
+                //RefreshProductInfo(productNo);
+                $("#productNo").append('<option value=\"' + productNo + '\">' + productNo + '</option>');
+                $("#productNo").val(productNo);
+                $("#productNo").trigger("change");
+                $("#query_Product_modal").modal("hide");
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+        }
+
+        function RefreshProductInfo() {
+            var productNo = $("#productNo").val();
+            if (!productNo) {
+                return;
+            }
+            abp.ajax({
+                url: window.appUrl + 'Query/GetProductById',
+                data: { Id: productNo },
+                async: true,
+                type: "Post",
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function(res) {
+                    if (res) {
+                        $("#ProductName").val(res.productName);
+                        $("#Model").val(res.model);
+                        $("#Material").val(res.material);
+                        $("#SurfaceColor").val(res.surfaceColor);
+                        $("#Rigidity").val(res.rigidity);
+                        $("#IsStandard").val(res.isStandard === "Y" ? "是" : "否");
+                    }
+
+                }
+            });
+            RefreshCurrentStore();
+        }
+        function RefreshCurrentStore() {
+            var productNo = $("#productNo").val();
+            if (!productNo) {
+                return;
+            }
+            SaveAjax({
+                url: window.appUrl + "OrderItems/QueryCurrentProductNum",
+                data: { Id: productNo },
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    if (res) {
+                        $("#storeQuantity").text(res.canUserQuantity ? Number(res.canUserQuantity ): 0);
+                        $("#orderQuantity").text(res.bookedQuantity ? Number(res.bookedQuantity) : 0);
+                    }
+                }
+            });
+        }
+       
+
+    </script>
+
+
+}

@@ -1,0 +1,551 @@
+﻿@using Abp.Authorization
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@using ShwasherSys.Views.Shared.New.Table
+@model ShwasherSys.CustomerInfo.Dto.CustomerDto
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesCustomerInfoCustomers; //The menu item will be active for this page.
+    ViewBag.Title = "客户信息详情";
+    bool isCanDeleteDefaultProduct = IsGranted(PermissionNames.PagesCustomerInfoCustomersDeleteDefaultProduct);
+    bool isCanUpdateDefaultProduct = IsGranted(PermissionNames.PagesCustomerInfoCustomersUpdateDefaultProduct);
+
+}
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        @Model.CustomerName
+    </h1>
+    @*<ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="#">Examples</a></li>
+            <li class="active">User profile</li>
+        </ol>*@
+</section>
+
+<!-- Main content -->
+<section class="content">
+
+    <div class="row">
+        <div class="col-md-3">
+
+            <!-- /.box -->
+            <!-- About Me Box -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">客户详情</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <strong><i class="fa fa-book margin-r-5"></i> 客户编号</strong>
+
+                    <p class="text-muted">
+                        @Model.Id
+                    </p>
+
+                    <hr>
+
+                    <strong><i class="fa fa-map-marker margin-r-5"></i> 客户名称</strong>
+
+                    <p class="text-muted">@Model.CustomerName</p>
+
+                    <hr>
+
+                    <strong><i class="fa fa-pencil margin-r-5"></i> 联系人</strong>
+
+                    <p class="text-muted">@Model.LinkMan</p>
+
+                    <hr>
+
+                    <strong><i class="fa fa-file-text-o margin-r-5"></i> 电话</strong>
+
+                    <p class="text-muted">@Model.Telephone</p>
+                    <hr>
+                    <strong><i class="fa fa-file-text-o margin-r-5"></i> 传真</strong>
+
+                    <p class="text-muted">@Model.Fax</p>
+                    <hr>
+                    <strong><i class="fa fa-file-text-o margin-r-5"></i> 邮编</strong>
+
+                    <p class="text-muted">@Model.Zip</p>
+                    <hr>
+                    <strong><i class="fa fa-file-text-o margin-r-5"></i> 电子邮件</strong>
+
+                    <p class="text-muted">@Model.Email</p>
+                    <hr>
+                    <strong><i class="fa fa-file-text-o margin-r-5"></i> 网址</strong>
+
+                    <p class="text-muted">@Model.WebSite</p>
+                    <hr>
+                    <strong><i class="fa fa-file-text-o margin-r-5"></i> 地址</strong>
+
+                    <p class="text-muted">@Model.Address</p>
+                    <hr>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+        <!-- /.col -->
+        <div class="col-md-9">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#customerSend" data-toggle="tab">客户发货地址</a></li>
+                    <li><a href="#invoiceAddress" data-toggle="tab">客户发票地址</a></li>
+                    <li><a href="#defaultProduct" data-toggle="tab">客户默认产品</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="active tab-pane" id="customerSend">
+                        <div class="table-box mr-4  iwb-bootstrap-table">
+                            <div class="btn-toolbar row" id="tableTool" role="toolbar" aria-label="Toolbar with button groups">
+                                <div class="col-sm-12 col-lg-12 pull-left" style="padding: 0">
+                                    <div class="btn-group btn-group-sm" id="Tool1" role="group" aria-label="First group">
+                                        @if (PermissionChecker.IsGranted(PermissionNames.PagesCustomerInfoCustomersCreateSend))
+                                            {
+                                        <button type="button" class="btn btn-default" data-type="_btnCreate1" data-url="/api/services/app/CustomerSends/Create">
+                                            <i class="iconfont icon-add">添加客户发货地址</i>
+                                        </button>
+                                            }
+                                        @if (PermissionChecker.IsGranted(PermissionNames.PagesCustomerInfoCustomersUpdateSend))
+                                            {
+                                        <button type="button" class="btn btn-default" data-type="btnUpdate1" data-url="/api/services/app/CustomerSends/Update">
+                                            <i class="iconfont icon-edit">修改客户发货地址</i>
+                                        </button>
+                                            }
+                                        @if (PermissionChecker.IsGranted(PermissionNames.PagesCustomerInfoCustomersDeleteSend))
+                                            {
+                                        <button type="button" class="btn btn-default" data-type="btnDelete1" data-url="/api/services/app/CustomerSends/Delete">
+                                            <i class="iconfont icon-delete">删除客户发货地址</i>
+                                        </button>
+                                            }
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="table"
+                                   data-url="/api/services/app/CustomerSends/GetAll"
+                                   data-striped="true" data-id-field="id" data-unique-id="id"
+                                   data-method="post"
+                                   data-side-pagination="server"
+                                   data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                                   data-cache="false"
+                                   data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                                   data-query-params="QueryParam"
+                                   data-response-handler="ResponseHandler"
+                                   data-click-to-select="true"
+                                   data-single-select="true">
+                                <thead>
+                                    <tr class="row" id="header">
+                                        <th data-field="state" data-checkbox="true"></th>
+                                        <th data-align="center" data-field="customerSendName">送货地址名称</th>
+                                        <th data-align="center" data-field="linkMan">联系人</th>
+                                        <th data-align="center" data-field="telephone">电话</th>
+                                        <th data-align="center" data-field="mobile">手机</th>
+                                        <th data-align="center" data-field="sendAdress">送货地址</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <div class=" tab-pane" id="invoiceAddress">
+                        @{
+                            var invoiceTable = new TableViewModel("/api/services/app/CustomerInvoiceAddress/GetAll", PermissionNames.PagesCustomerInfoCustomerInvoices, "invoice-table")
+                                .SetFields(new List<FieldItem>()
+                                {
+                                    new FieldItem("invoiceAddressName", "发票地址名称"),
+                                    new FieldItem("linkMan", "联系人"),
+                                    new FieldItem("telephone", "电话"),
+                                    new FieldItem("mobile", "手机"),
+                                    new FieldItem("invoiceAddress", "发票地址"),
+
+                                });
+                        }
+                        @Html.Partial("New/Table/_Table", invoiceTable)
+                    </div>
+                    <!-- /.tab-pane -->
+                    <div class="tab-pane" id="defaultProduct">
+                        <!-- The timeline -->
+                        <div class="table-box mr-4  iwb-bootstrap-table">
+                            <div class="btn-toolbar row" id="tableTool" role="toolbar" aria-label="Toolbar with button groups">
+                                <div class="col-sm-12 col-lg-12 pull-left" style="padding: 0">
+                                    <div class="btn-group btn-group-sm" id="Tool1" role="group" aria-label="First group">
+                                        @if (PermissionChecker.IsGranted(PermissionNames.PagesCustomerInfoCustomersCreateDefaultProduct))
+                                            {
+                                        <button type="button" class="btn btn-default" data-type="_btnCreate" data-url="/api/services/app/CustomerDefaultProduct/Create" onclick="AddDefaultProduct()">
+                                            <i class="iconfont icon-add">添加客户默认产品</i>
+                                        </button>
+                                            }
+
+                                        @*@if (PermissionChecker.IsGranted(PermissionNames.PagesCustomerInfoCustomersDeleteDefaultProduct))
+                                            {
+                                                <button type="button" class="btn btn-default" data-type="btnDelete" data-url="/api/services/app/CustomerDefaultProduct/Delete">
+                                                    <i class="iconfont icon-delete">删除客户默认产品</i>
+                                                </button>
+                                            }*@
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="tableDefaultProduct"
+                                   data-url="/api/services/app/CustomerDefaultProduct/GetAll"
+                                   data-striped="true" data-id-field="id" data-unique-id="id"
+                                   data-method="post"
+                                   data-side-pagination="server"
+                                   data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                                   data-cache="false"
+                                   data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                                   data-query-params="QueryParams"
+                                   data-response-handler="ResponseHandler"
+                                   data-click-to-select="true"
+                                   data-single-select="true">
+                                <thead>
+                                    <tr class="row">
+                                        <th data-field="state" data-checkbox="true"></th>
+                                        <th data-align="center" data-field="productNo">产品编号</th>
+                                        <th data-align="center" data-field="productName">产品名称</th>
+                                        <th data-align="center" data-field="customerProductName">客户定义名称</th>
+                                        <th data-align="center" data-field="sequence">序号</th>
+                                        <th data-align="center" data-formatter="ActionsFormatter"></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- /.tab-pane -->
+                    <!-- /.tab-pane -->
+                </div>
+                <!-- /.tab-content -->
+            </div>
+            <!-- /.nav-tabs-custom -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+<!-- /.content -->
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("送货信息"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                {
+                                    new InputViewModel("id", hide:true),
+                                    new InputViewModel("customerId", hide:true),
+                                    new InputViewModel("customerSendName", displayName: "送货地址名称"),
+                                    new InputViewModel("telephone", displayName: "电话"),
+                                    new InputViewModel("fax", displayName: "传真").SetNotRequired(),
+                                    new InputViewModel("zip", displayName: "邮编").SetNotRequired(),
+                                    new InputViewModel("email", displayName: "Email").SetNotRequired(),
+                                    new InputViewModel("linkMan", displayName: "联系人"),
+                                    new InputViewModel("mobile", displayName: "移动电话").SetNotRequired(),
+                                    new InputViewModel("sendAdress",  displayName: "送货地址"),
+
+                                };
+
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+        <!--Main Modal-->
+        <div class="modal fade" id="modalInvoice" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("发票信息"))
+                    @{
+                        var invoiceInputs = new List<InputViewModel>
+                                {
+                                    new InputViewModel("id", hide:true),
+                                    new InputViewModel("customerId", hide:true),
+                                    new InputViewModel("invoiceAddressName", displayName: "发票地址名称"),
+                                    new InputViewModel("telephone", displayName: "电话"),
+                                    new InputViewModel("fax", displayName: "传真").SetNotRequired(),
+                                    new InputViewModel("zip", displayName: "邮编").SetNotRequired(),
+                                    new InputViewModel("email", displayName: "Email").SetNotRequired(),
+                                    new InputViewModel("linkMan", displayName: "联系人"),
+                                    new InputViewModel("mobile", displayName: "移动电话").SetNotRequired(),
+                                    new InputViewModel("invoiceAddress",  displayName: "发票地址"),
+
+                                };
+
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(invoiceInputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalProduct" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content" style="width: 800px;">
+
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("产品信息"))
+                    <div class="modal-body container-fluid" style="padding: 0; padding-top: 15px;">
+                        <form class="pr-3 pl-3 form-horizontal">
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-1 control-label" for="ProductNo">产品编码</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="ProductNo" name="ProductNo" placeholder="请输入..." value="" style="" type="text"></input>
+                                </div>
+                                <label class="iwb-label col-md-1 control-label" for="ProductName">产品名称</label>
+                                <div class="col-md-4">
+                                    <input class="form-control" id="ProductName" name="ProductName" placeholder="请输入..." value="" style="" type="text"></input>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-default" onclick="SearchProducts()">
+                                        <i class="iconfont icon-search">查询</i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="table-box mr-4  iwb-bootstrap-table">
+                        <table id="tableQueryProduct"
+                               data-url="/api/services/app/Query/GetQueryCustomerDefaultProduct"
+                               data-striped="true" data-id-field="id" data-unique-id="id"
+                               data-method="post"
+                               data-side-pagination="server"
+                               data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                               data-cache="false"
+                               data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                               data-response-handler="ResponseHandler"
+                               data-click-to-select="true"
+                               data-single-select="false">
+                            <thead>
+                                <tr class="row">
+                                    <th data-field="state" data-checkbox="true"></th>
+                                    <th data-align="center" data-field="id">产品编号</th>
+                                    <th data-align="center" data-field="productName">产品名称</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div class="modal-footer" style="text-align: center;">
+                        <button type="button" class="btn btn-default waves-effect" data-dismiss="modalProduct" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;" onclick="$('#modalProduct').modal('hide');">取消</button>
+                        <button type="button" class="btn btn-success save-btn waves-effect" style="min-width:100px;background-color: #678ceb;border: 1px solid #678ceb;" onclick="f_submit()">确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalSetDefaultName" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("设置客户命名"))
+                    @{
+                        var inputSetDefaultName = new List<InputViewModel>
+                                {
+                                    new InputViewModel("id", hide:true),
+                                    new InputViewModel("customerId", hide:true),
+                                    new InputViewModel("productNo", hide:true),
+                                    new InputViewModel("customerProductName", displayName: "客户产品命名"),
+                                    new InputViewModel("sequence", displayName: "排序")
+
+                                };
+
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputSetDefaultName, "setDefaultName"))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $invoiceTable = $("#invoice-table");
+        $(function() {
+            //show完毕前执行
+          
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnUpdate1"] = function(url) { BtnUpdate({ url:url, readonly: "" }); };
+            funs["btnCreate1"] = function(url) {
+                BtnCreate({ url:url, data: { customerId: "@Model.Id" } });
+            }
+            funs["btnDelete1"] = function(url) {
+                BtnDelete(url);
+            };
+            LoadTable({ table: $("#invoice-table") });
+            LoadTable({ table: $("#tableDefaultProduct"),
+                onAll: function(e,r) {},
+                onLoadSuccess: function(d) {OnLoadSuccess(d,$invoiceTable)},
+                onPostBody: function(d) {OnPostBody(d,$invoiceTable)},
+            });
+            LoadTableQueryProduct();
+            var funs2 = window.funs || { none: function() { console.log("No type"); } };
+
+            $invoiceTable.closest('.table-box').find('.btn-toolbar .btn').on('click',
+                function() {
+                    var type = $(this).data('type').replace("a_", "").replace("_", "");
+                    var url = $(this).data('url') || "";
+                    funs2[type] ? funs2[type].call(this, url) : funs2["none"].call(this);
+                });
+            funs2["btnUpdate"] = function(url) {
+                BtnUpdate({url:url, table: $invoiceTable, readonly: "", modal: $('#modalInvoice') });
+            };
+            funs2["btnCreate"] = function(url) {
+                BtnCreate({url:url,  table:$invoiceTable,modal: $('#modalInvoice'), data: { customerId: "@Model.Id" } });
+            };
+            funs2["btnDelete"] = function(url) {
+                BtnDelete(url,$invoiceTable);
+            };
+        });
+
+        function GetSearchList() {
+            window._searchList = [];
+            window._searchList.push({ KeyWords: "@Model.Id", KeyField: "CustomerId", FieldType: "0", ExpType: "6" });
+
+        }
+        var isCanUpdateDefaultProduct = "@isCanUpdateDefaultProduct";
+        var isCanDeleteDefaultProduct = "@isCanDeleteDefaultProduct";
+
+        function ActionsFormatter(v, r) {
+            var str = '';
+
+            if (isCanUpdateDefaultProduct==="True") {
+                str += '<span class="table-action" onclick="SetCustomerDefaultName(\'' +
+                    r.id +
+                    '\',\'' + r.customerId + '\',\'' + r.customerProductName + '\',\'' + r.sequence+'\',\''+r.productNo+'\')"><i class="iconfont icon-edit"></i>设置客户命名</span>';
+            }
+            if (isCanDeleteDefaultProduct === "True") {
+                str += '<span class="table-action" onclick="DeleteDefaultProduct(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-delete"></i>删除</span>';
+            }
+            return str;
+        }
+        function SetCustomerDefaultName(id, customerId, customerProductName, sequence, productNo) {
+
+            OpenModal("/api/services/app/CustomerDefaultProduct/Update", {
+                modal: $('#modalSetDefaultName'), modaltitle: "", data: { id: id, customerId: customerId, customerProductName: customerProductName, sequence: sequence, productNo: productNo }, success: function (res) {
+                    $('#modalSetDefaultName').modal("hide");
+                    $('#tableDefaultProduct').bootstrapTable("refresh", { silent: true });
+                }
+            });
+            /*var rows = config.table.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                if (rows[0].userName) {
+                    abp.message.warn("该联系人已绑定账号，请解绑后再操作！");
+                    return;
+                }
+                abp.ajax({
+                    url: window.appUrl + 'CustomerContact/GetAccountSelectStr',
+                    type: 'POST',
+                    dataType: "json",
+                    success: function (res) {
+                        console.log(res);
+                        if (res) {
+                            $("#userName").html(res).select2();
+                        }
+                        OpenModal(url, { modal: $('#bind-modal'), modaltitle: "", data: { contactNo: rows[0].contactNo } });
+                    }
+                });
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));*/
+        }
+        function AddDefaultProduct() {
+            $("#ProductNo").val("");
+            $("#ProductName").val("");
+            SearchProducts();
+            $("#modalProduct").modal("show");
+        }
+        function f_submit() {
+            var rows = $("#tableQueryProduct").bootstrapTable("getSelections");
+            if (rows.length >= 1) {
+                /*if (rows[0].userName) {
+                    abp.message.warn("该联系人已绑定账号，请解绑后再操作！");
+                    return;
+                }*/
+                var products='';
+                for (var i = 0; i < rows.length; i++) {
+                    products += rows[i].id + ",";
+                }
+                abp.ajax({
+                    url: window.appUrl + 'CustomerDefaultProduct/Create',
+                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                    data: { ProductNo: products, CustomerId:"@Model.Id"},
+                    type: 'POST',
+                    dataType: "json",
+                    isValidate: false,
+                    success: function (res) {
+                        console.log(res);
+                        abp.message.success(abp.localization.localize("OpSuccess"));
+                        $("#modalProduct").modal("hide");
+                        RefreshDefaultProductTable($("#tableDefaultProduct"));
+                    }
+                });
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+        }
+        function DeleteDefaultProduct() {
+            abp.message.confirm(abp.localization.localize("DeleteConfirmMsg"), abp.localization.localize("DeleteConfirmTitle"), function () {
+                var rows = $("#tableDefaultProduct").bootstrapTable("getSelections");
+                if (rows.length !== 1) {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                    return;
+                }
+                SaveAjax({ url: window.appUrl + 'CustomerDefaultProduct/Delete', data: { Id: rows[0].id }, isValidate: false, success: function() {
+                    RefreshDefaultProductTable($("#tableDefaultProduct"));
+                } });
+            });
+        }
+
+        function SearchProducts() {
+            GetProductSearchList();
+            RefreshDefaultProductTable($("#tableQueryProduct"));
+        }
+        function LoadTableQueryProduct() {
+            GetProductSearchList();
+            $("#tableQueryProduct").bootstrapTable({
+                queryParams: function(params) {
+                    return {
+                        //limit: params.limit, //页面大小
+                        //page: (params.offset / params.limit) + 1, //页码
+                        MaxResultCount: params.limit,
+                        SkipCount: params.offset,
+                        sort: params.sort, //排序列名
+                        sortOrder: params.order, //排位命令（desc，asc）
+                        SearchList: _searchProductList
+                    };
+                },
+                onLoadSuccess: OnLoadSuccess,
+                onPostBody: OnPostBody
+            });
+        }
+        var _searchProductList = [];
+        function GetProductSearchList() {
+            _searchProductList = [];
+            _searchProductList.push({ KeyWords: "@Model.Id", KeyField: "CustomerId", FieldType: "0", ExpType: "6" });
+            var productNo = $("#ProductNo").val();
+            var productName = $("#ProductName").val();
+            if (productNo) {
+                _searchProductList.push({ KeyWords: productNo, KeyField: "Id", FieldType: "0", ExpType: "6" });
+            }
+            if (productName) {
+                _searchProductList.push({ KeyWords: productName, KeyField: "ProductName", FieldType: "0", ExpType: "6" });
+            }
+        }
+        function RefreshDefaultProductTable($this) {
+            //parms = parms || RefreshQueryParams();
+            //$("#table").bootstrapTable("refreshOptions", parms);
+            //config.table.bootstrapTable("refreshOptions", {});
+            abp.ui.setBusy();
+            $this.bootstrapTable("refresh", { silent: true });
+            setTimeout(function () { abp.ui.clearBusy();  }, 8 * 1000);
+        }
+    </script>
+
+}

@@ -1,0 +1,266 @@
+﻿@using Abp.Authorization
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductionInfoOutProductionOrderMg; //The menu item will be active for this page.
+    ViewBag.Title = "外协生产维护";
+    List<SelectListItem> productionOrderStatus = ViewBag.ProductionOrderStatus;
+    List<SelectListItem> storeHouses = ViewBag.StoreHouses;
+    List<SelectListItem> applyStatus = ViewBag.ApplyStatus;
+    List<SelectListItem> employee = ViewBag.Employee;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("productionOrderNo","排产单号"),
+new SearchItem("partNo","零件号"),
+    new SearchItem("semiProductName","半成品名称"),
+        new SearchItem("model","规格"),
+        new SearchItem("material","材质"),
+        new SearchItem("remark","备注" ),
+        new SearchItem("planProduceDate","计划完成时间",FiledType.Dnull,ExpType.GreaterOrEqual),
+    new SearchItem("planProduceDate","至",FiledType.Dnull,ExpType.LessOrEqual),
+        new SearchItem("semiProductNo","半成品编码").SetSearchIcon("query_semiProduct_modal"),
+    new SearchItem("productionOrderStatus","排产状态" ,FiledType.I)
+            .SetSearchItem(productionOrderStatus),
+        new SearchItem("surfaceColor","表色" ),
+        //new SearchItem("outsourcingFactoryName","外协厂商" ).SetSearchIcon("query_outFactory_modal"),
+    }, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/ProductionOrders/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="false">
+        <thead>
+            <tr class="row" id="header">
+
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="semiProductName">名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                @*<th data-align="center" data-field="outsourcingFactory">外协厂商</th>*@
+                <th data-align="center" data-field="outsourcingFactoryName">外协厂商</th>
+                <th data-align="center" data-field="quantity">排产数量(公斤)</th>
+                <th data-align="center" data-field="processingType" data-formatter="ProcessingTypeFormatter">加工类型</th>
+                <th data-align="center" data-field="remark">备注</th>
+                <th data-align="center" data-field="planProduceDate" data-formatter="PlanDateFormatter">计划完成时间</th>
+                @*<th data-align="center" data-field="stoveNo">炉号</th>
+                    <th data-align="center" data-field="carNo">车号</th>*@
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="productionOrderStatus" data-formatter="ProductionOrderStatusFormatter">状态</th>
+                <th data-align="center" data-field="kgWeight">千件重</th>
+                <th data-align="center" data-field="enterDate" data-formatter="DateFormatter">入库时间</th>
+                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                <th data-align="center" data-formatter="ActionFormatter">操作</th>
+
+
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("排产单"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                        {
+                                    new InputViewModel("id", hide:true),
+                                    new InputViewModel("productionOrderNo",displayName:"流转单编号").SetDisabled().SetOuterBefore("<div class=\"type2\">"),
+                                    new InputViewModel("semiProductNo", displayName: "半成品编码").SetSearchIcon("query_semiProductEx_modal","modal"),
+                                    new InputViewModel("quantity", displayName:"生产数量",@class:"number",other:"min=0.001").SetNotRequired(),
+                                    new InputViewModel("planProduceDate", displayName:"计划完成时间",@class:"iwb-date"),
+                                    new InputViewModel("semiProductName", displayName: "半成品名称").SetNotRequired(),
+                                    new InputViewModel("model", displayName: "规格").SetNotRequired(),
+                                    new InputViewModel("material", displayName: "材质").SetNotRequired(),
+                                    new InputViewModel("rigidity", displayName: "硬度").SetNotRequired(),
+                                    new InputViewModel("surfaceColor", displayName: "表色").SetNotRequired().SetOuterAfter("</div>"),
+                                    new InputViewModel("remark",InputTypes.Textarea,displayName:"备注").SetNotRequired(),
+                                    new InputViewModel("productionOrderStatus",hide:true),
+                                    new InputViewModel("processingType",hide:true),
+                                    new InputViewModel("processingLevel",hide:true),
+                                };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @Html.Partial("Modals/Query/_OutFactory", "outsourcingFactory-tool,outsourcingFactory-toolName")
+    @{
+        List<SelectListItem>[] arr = new List<SelectListItem>[4] { employee, storeHouses, applyStatus, productionOrderStatus };
+    }
+    @Html.Partial("_EnterStoreShare", arr)
+    @Html.Partial("Modals/Query/_SemiProductEx", "semiProductNo")
+    @Html.Partial("Modals/Query/_SemiProduct", "KeyWords-9")
+
+}
+
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function () {
+            //$("#planProduceDate").datetimepicker(datePickerOpt).on('show',
+            //    function (event) {
+            //        event.preventDefault();
+            //        event.stopPropagation();
+            //    }).on('hide',
+            //        function (event) {
+            //            event.preventDefault();
+            //            event.stopPropagation();
+            //        });
+            //$("#KeyWords-7").datetimepicker(datePickerOpt);
+            //$("#KeyWords-8").datetimepicker(datePickerOpt);
+            //show完毕前执行
+            LoadTable();
+            //$("#print").printPreview({
+            //    printBody: "#modal"
+            //});
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].productionOrderStatus > 2 && rows[0].productionOrderStatus !== 7) {
+                        abp.message.warn("排产单已审核或者生产入库，不可进行更改！");
+                        return;
+                    }
+                    if (rows[0].productionOrderStatus === 2) {
+                        $(".type2").css("display", "none");
+                    } else {
+                        $(".type2").css("display", "block");
+                    }
+                    queryParams.model = rows[0].model;
+                    queryParams.material = rows[0].material;
+                    queryParams.semiProductName = rows[0].semiProductName;
+                    BtnUpdate({ readonly: "id,productionOrderNo,quantity,semiProductName,model,material,rigidity,surfaceColor", data: rows[0] });
+                }
+            };
+
+            funs["btnDelete"] = function (url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].productionOrderStatus >= 2 && rows[0].productionOrderStatus !== 7) {
+                        abp.message.warn("排产单已生产，不可进行删除！");
+                        return;
+                    }
+                    BtnDelete(url);
+                }
+            };
+            funs["btnExportOut"] = function (url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length >= 1) {
+
+                    var ids = "";
+                    rows.forEach(function (v, i) {
+                        ids += v.id + ",";
+                    });
+                    ids = ids.substr(0, ids.length - 1);
+                    SaveAjax({
+                        url: url,
+                        data: { id: ids },
+                        isValidate: false,
+                        isAlert: false,
+                        success: function (res) {
+                            //console.log(res);
+                            RefreshTable();
+                            window.location.href = res;
+                        }
+                    });
+                }
+            }
+
+
+            $("#tableToolExt").append(
+                '<div  class="tool-input" style="float:left;margin-left:10px;max-width: 200px;"><div class="input-group input-group-sm text-non" style="position: relative; width: 100%;"><input id="outsourcingFactory-tool" name="outsourcingFactory-tool" type="hidden"/><input id="outsourcingFactory-toolName" name="outsourcingFactory-toolName" class="form-control" placeholder="请输入外协产商" autocomplete="off" value="" readonly style="width:200px;color:#000"><div class="input-group-addon" style="border-radius: 0 3px 3px 0" onclick="ShowQueryModal(\'query_outFactory_modal\',\'#tableToolExt\');"><i class="iconfont icon-search"></i></div><div class="input-group-addon" style="border-radius: 0 3px 3px 0" onclick="$(this).closest(\'.input-group\').find(\'input\').val(\'\')"><i class="iconfont icon-delete"></i></div></div></div>');
+
+            $(".tool-input input").on('change', function (e) {
+                //var outType = $(this).val();
+                document.getElementById("SearchForm").reset();
+                GetSearchList();
+                RefreshTable();
+            });
+        });
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            window._searchList.push({ KeyWords: "2", KeyField: "ProcessingLevel", FieldType: "0", ExpType: "0" });
+            if ($('#outsourcingFactory-tool').val()) {
+                window._searchList.push({ KeyWords: $('#outsourcingFactory-tool').val(), KeyField: "outsourcingFactory", FieldType: "0", ExpType: "6" });
+
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+    </script>
+
+
+    <script id="formatter">
+        function ProcessingTypeFormatter(v, r) {
+            if (v === "2") {
+                return '<span class="label label-info">表面处理</span>';
+            } else if (v === "3") {
+                return '<span class="label label-danger">热处理</span>';
+            }
+            return "";
+        }
+
+    </script>
+
+}

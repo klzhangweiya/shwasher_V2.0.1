@@ -1,0 +1,37 @@
+﻿<#@ template debug="true" hostspecific="false" language="C#" #>
+<#@ assembly name="Microsoft.CSharp" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ assembly name="System.Data" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Data.SqlClient" #>
+<#@ import namespace="System.Dynamic" #>
+<#@ assembly name="$(TargetDir)ShwasherSys.Core.dll" #>
+<#@ import namespace="ShwasherSys.BaseSysInfo" #>
+
+<#@ output extension=".cs" #>
+namespace ShwasherSys.Authorization.Permissions
+{
+    public static class PermissionNames
+    {
+<# 
+
+	//System.Diagnostics.Debugger.Launch(); //模版调试第一个断点
+	//System.Diagnostics.Debugger.Break();  //模版调试断点
+List<T4FunctionInfo> funs= T4Function.GetAllFunctions();
+foreach(var f in funs){
+	string path = f.FunctionPath;
+    //string[] paths = path.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
+    //string nameStr = string.Join("_", paths);
+    string nameStr = f.FunctionPath.Replace(",","");
+    string nameVal = f.PermissionName;
+#>
+		public const string <#=nameStr#> = "<#=nameVal#>";
+
+<# 
+}
+#>
+	}
+}
+

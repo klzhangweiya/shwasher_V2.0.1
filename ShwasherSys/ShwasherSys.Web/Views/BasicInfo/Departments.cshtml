@@ -1,0 +1,102 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesBasicInfoDepartments; //The menu item will be active for this page.
+    ViewBag.Title = "部门信息管理";
+    // List<SelectListItem> classification = ViewBag.Classification;
+
+}
+@section css
+{
+
+    <link href="~/Content/Plugins/kindeditor/themes/default/default.css" rel="stylesheet" />
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <input type="hidden" id="IsLock" value="N" />
+    @Html.Action("ToolMenu", "Layout", new {pageName = ViewBag.ActiveMenu})
+    <table id="table"
+           data-url="/api/services/app/Departments/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">部门编号</th>
+                <th data-align="center" data-field="departmentName">部门名称</th>
+                <th data-align="center" data-field="remark">备注</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("部门信息"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                            {
+                                                                new InputViewModel("id", displayName: "编号"),
+                                                                new InputViewModel("departmentName", displayName: "部门名称"),
+
+                                                                new InputViewModel("remark",InputTypes.Textarea, "内容").SetNotRequired(),
+
+                                                            };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/kindeditor/kindeditor-all.js"></script>
+    <script src="~/Content/Plugins/kindeditor/lang/zh-CN.js"></script>
+    <script type="text/javascript">
+
+        $(function () {
+            //show完毕前执行
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "name" }); };
+
+        });
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords && keyWords !== "") {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    window._searchList.push({ KeyWords: keyWords, KeyField: keyField, FieldType: fieldType, ExpType: expType });
+                }
+            }
+            var isLock = $("#IsLock").val();
+            window._searchList.push({ KeyWords: isLock, KeyField: "IsLock", FieldType: "0", ExpType: "6" });
+        }
+    </script>
+
+}

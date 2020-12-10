@@ -1,0 +1,589 @@
+﻿@using System.Text
+@using Abp.Timing
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "盘点任务维护";
+    string activeMenu = PermissionNames.PagesInventoryCheckInfoInventoryCheckCreate; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<StoreHouse> storeHouseList = ViewBag.StoreHouseList;
+    List<SelectListItem> checkStateList = ViewBag.CheckState;
+    StringBuilder strOptionStoreHouse = new StringBuilder();
+    strOptionStoreHouse.Append("<option value=\"\">请选择</option>");
+    foreach (var c in storeHouseList)
+    {
+        strOptionStoreHouse.Append(string.Format("<option data-type="+c.StoreHouseTypeId+" value=\"{0}\">{1}</option>", c.Id, c.StoreHouseName));
+    }
+    string newCheckNo = "SC" + Clock.Now.ToString("yyMMddHHmmss");
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("checkNo","盘点编号"),
+        new SearchItem("checkState","盘点状态",FiledType.I,ExpType.Equal).SetSearchItem(checkStateList),
+    });
+
+    var table = new TableViewModel("/api/services/app/InventoryCheck/GetAll", activeMenu, searchForm)
+    .SetFields(new List<FieldItem>()
+    {
+        new FieldItem("actionExecute", "",formatter:"ActionExecuteFormatter"),
+        new FieldItem("checkNo", "盘点编号"),
+        new FieldItem("storeHouseId", "仓库",formatter:"StoreHouseFormatter"),
+        new FieldItem("storeAreaCode", "区号"),
+        new FieldItem("shelfNumber", "货架"),
+        new FieldItem("shelfLevel", "层次"),
+        new FieldItem("sequenceNo", "序列号"),
+        new FieldItem("checkUserName", "待盘点人员"),
+        new FieldItem("planStartDate", "计划执行时间","DateTimeFormatter"),
+        new FieldItem("planEndDate", "计划完成时间","PlanEndDateFormatter"),
+        new FieldItem("checkState", "盘点状态",formatter:"CheckStateFormatter"),
+      
+                            });
+
+}
+
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .form-box {
+            min-height: 50px;
+        }
+
+            .form-box .input-group-addon {
+                background: #d1dcf9;
+                border-color: #d1dcf9;
+                color: #563d7c;
+            }
+
+            .form-box .form-control {
+                border-color: #d1dcf9;
+            }
+
+            .form-box .form-box-column {
+                float: left;
+                min-width: 250px;
+                width: 16%;
+                margin: 5px 5px;
+                min-height: 32px;
+            }
+
+        .btn-action {
+            margin-left: 20px;
+            width: 100px;
+            margin-top: 0px;
+        }
+        .select2-container .select2-selection--multiple {
+            min-height: 22px;
+        }
+    </style>
+}
+<div class="row" style="margin: 0 0;">
+    <div class="col-xs-12" style="padding: 0 5px;">
+        <div class="nav-tabs-custom" style="margin-bottom: 5px;">
+            <ul class="nav nav-tabs" id="tabIndex">
+
+                <li class="active"><a href="#createInvoice_tab" data-toggle="tab">创建盘点</a></li>
+                <li><a href="#query_tab" data-toggle="tab">查询信息页</a></li>
+            </ul>
+            <div class="tab-content form-box">
+
+                <div class="tab-pane active" id="createInvoice_tab" style="width: 100%; ">
+                    <form id="formQuery">
+                        <div style="width: 100%; height:65px;margin: 1px 0 5px 0;">
+
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon" style="">
+                                        <span>仓库</span>
+                                    </div>
+                                    <select class="form-control selectFrom" Required id="storeHouseId" name="storeHouseId" placeholder="请输入..." value="" style="width: 100%;" type="text" onchange="RefreshHouseType(this)" autocomplete="off">
+                                        @Html.Raw(strOptionStoreHouse)
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>库区</span>
+                                    </div>
+                                    @*<input type="text" class="form-control" id="storeAreaCode" name="storeAreaCode" />*@
+                                    <select class="form-control selectFrom" id="storeAreaCode" name="storeAreaCode" onchange="RefreshArea(this)"></select>
+                                </div>
+                            </div>
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>货架</span>
+                                    </div>
+                                    @*<input type="text" class="form-control" id="shelfNumber" name="shelfNumber" />*@
+                                    <select class="form-control selectFrom"  id="shelfNumber" name="shelfNumber" onchange="RefreshShelfNumber(this)"></select>
+                                </div>
+                            </div>
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>层次</span>
+                                    </div>
+                                   
+                                    <select class="form-control selectFrom" id="shelfLevel" name="shelfLevel" multiple="multiple" ></select>
+                                </div>
+                            </div>
+                            @*<div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>序列号</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="sequenceNo" name="sequenceNo" />
+                                </div>
+                            </div>*@
+                            <div class="form-box-column" style="min-width: 300px;">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>产品编号</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="productNo" name="productNo"  autocomplete="off"/>
+                                    <div class="input-group-addon" id="productId" >
+                                        <i class="iconfont icon-search"></i>@*query_semiProduct_modal*@
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-box-column" style="min-width: 100px; width: 100px;">
+                                <button type="button" class="btn btn-block btn-info btn-sm"  onclick="QueryCurrentStore()"><i class="iconfont icon-search"></i><span style="font-size: 1.3rem;"><strong>查询预览</strong></span></button>
+                            </div>
+
+
+                        </div>
+                        <div style="width: 100%; height:45px;margin: 15px 0 5px 0; padding-top: 3px; border-top: 1px solid #d1dcf9; display: none;" id="createFrom" >
+
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>盘点编号</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="checkNo" name="checkNo" value="@newCheckNo" />
+                                </div>
+                            </div>
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>计划执行日期</span>
+                                    </div>
+                                    <input type="text" class="form-control iwb-date-time" id="planStartDate" name="planStartDate" />
+                                </div>
+                            </div>
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>计划完成日期</span>
+                                    </div>
+                                    <input type="text" class="form-control iwb-date-time" id="planEndDate" name="planEndDate" />
+                                </div>
+                            </div>
+                            <div class="form-box-column">
+                                <div class="form-group-sm input-group">
+                                    <div class="input-group-addon">
+                                        <span>盘点人员</span>
+                                    </div>
+                                    <input type="hidden" class="form-control" id="checkUser" name="checkUser" />
+                                    <input type="text" class="form-control" id="checkUserName" name="checkUserName" disabled=""/>
+                                    <div class="input-group-addon" onclick="ShowQueryModal('query_employee_modal','#formQuery');">
+                                        <i class="iconfont icon-search"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-box-column">
+                                <button type="button" class="btn btn-block btn-info btn-sm" style="width: 160px;" onclick="CreateTask()"><i class="iconfont icon-add"></i><span style="font-size: 1.3rem;"><strong>创建盘点任务</strong></span></button>
+                            </div>
+
+                        </div>
+                    </form>
+                    <div class="table-box iwb-bootstrap-table">
+                        <table id="tableSendItem"
+                               data-striped="true" data-id-field="id" data-unique-id="id"
+                               data-method="post"
+                               data-side-pagination="server"
+                               data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                               data-cache="false"
+                               data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                               data-query-params="QueryParams"
+                               data-response-handler="ResponseHandler"
+                               data-click-to-select="true"
+                               data-single-select="true">
+                            <thead>
+                                <tr class="row" id="header">
+                                    @*<th data-field="state" data-checkbox="false"></th>*@
+                                    <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                                    <th data-align="center" data-field="storeHouse" data-formatter="StoreHouseFormatter">仓库</th>
+                                    <th data-align="center" data-field="storeLocationNo">库位 </th>
+                                    @*<th data-align="center" data-field="customerId">客户编号</th>*@
+                                    <th data-align="center" data-field="productNo">产品编号</th>
+                                    <th data-align="center" data-field="productDesc">产品描述</th>
+                                    @*<th data-align="center" data-field="partNo">零件号</th>*@
+                                    <th data-align="center" data-field="productName">产品名称</th>
+                                    <th data-align="center" data-field="model">规格</th>
+                                    <th data-align="center" data-field="surfaceColor">表色</th>
+                                    <th data-align="center" data-field="rigidity">硬度</th>
+                                    <th data-align="center" data-field="quantity">数量</th>
+                                    <th data-align="center" data-field="freezeQuantity">冻结数量</th>
+                                    @*<th data-align="center" data-field="orderDate">订单日期</th>
+                                        <th data-align="center" data-field="sendDate">送货日期</th>
+                                        <th data-align="center" data-field="linkName">联系人</th>*@
+
+                                </tr>
+                            </thead>
+                        </table>
+
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="query_tab" style="width: 100%;">
+                    @Html.Partial("New/Table/_Table", table)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section modal{
+    <!--Main Modal-->
+    @{
+        var modal = new ModalViewModel("人员", new ModalBodyViewModel(new List<Input>()
+{
+            new InputHide("id"),
+            new Input("checkNo", "盘点编号"),
+            new Input("planStartDate", "计划执行日期",@class:"iwb-date-time").SetNotRequired(),
+            new Input("planEndDate", "计划完成日期",@class:"iwb-date-time").SetNotRequired(),
+         
+        }));
+        //        var accountModal = new ModalViewModel("绑定账号", new ModalBodyViewModel(new List<Input>()
+        //{
+        //            new InputHide("id"),
+        //            new Input("userName", "登陆账号",InputTypes.List),
+        //        }), "Account_Modal");
+    }
+    @Html.Partial("New/Modals/_Modal", modal)
+    @*@Html.Partial("New/Modals/_Modal", accountModal)*@
+
+    <section>
+        @Html.Partial("Modals/Query/_Product", "productNo")
+        @Html.Partial("Modals/Query/_SemiProduct", "productNo")
+        @Html.Partial("Modals/Query/_Employee", "checkUser,checkUserName")
+    </section>
+}
+
+@section scripts
+{
+
+    <script type="text/javascript">
+
+        var $table = $('#table');
+        $(function() {
+            $(".selectFrom").select2();
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            //funs["btnCreate"] = function () { BtnCreate({ data: { id: "" } }); }
+            funs["btnUpdate"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    OpenModal({
+                        url: url,
+                        data: row,
+                        disabled: "checkNo"
+                    });
+                }
+            };
+
+            funs["btnShow"] = function() {
+                var row = $table.bootstrapTable("getSelections")[0];
+                @*window.open("@Url.Action("InvoiceDetail","InvoiceInfo")/" + row.id, "_blank");*@
+            }
+            $("#tableSendItem").hide();
+        });
+
+        function RefreshHouseType(that) {
+            $("#productId").off('click.aa');
+            var storeHouseId = $(that).val();
+            var ty = $(that).find("option:selected").data('type');
+            $("#storeAreaCode").empty();
+            $("#shelfNumber").empty();
+            $("#shelfLevel").empty();
+            $("#productNo").val('');
+            if (!storeHouseId) {
+                return;
+            }
+            if (ty === 1) {
+                $("#productId").off('click.aa').on('click.aa',
+                    function() { ShowQueryModal('query_Product_modal', '#formQuery') });
+            } else {
+                $("#productId").off('click.aa').on('click.aa',
+                    function() { ShowQueryModal('query_semiProduct_modal', '#formQuery') });
+            }
+            SaveAjax({
+                url: window.appUrl + 'Common/FilterLocationInfo?storeId=' + storeHouseId,
+                isValidate: false,
+                isAlert: false,
+                success: function(res) {
+                    if (res) {
+                        var str = '';
+                        res.forEach(function(v, i) {
+                            str += '<option value="' + v.value + '">' + v.value + '</option>';
+                        });
+                        $("#storeAreaCode").append(str);
+                        $("#storeAreaCode").trigger('change');
+                    }
+                }
+            });
+
+        }
+
+        function RefreshArea(that) {
+            var storeId = $("#storeHouseId").val();
+            var areaNo = $(that).val();
+            $("#shelfNumber").empty();
+            $("#shelfLevel").empty();
+            if (!storeId || !areaNo) {
+                return;
+            }
+            SaveAjax({
+                url: window.appUrl + 'Common/FilterLocationInfo?storeId=' + storeId + '&areaNo=' + areaNo,
+                isValidate: false,
+                isAlert: false,
+                success: function(res) {
+                    if (res) {
+                        var str = '';
+                        res.forEach(function(v, i) {
+                            str += '<option value="' + v.value + '">' + v.value + '</option>';
+                        });
+                        $("#shelfNumber").append(str);
+                        $("#shelfNumber").trigger('change');
+                    }
+                }
+            });
+        }
+
+        function RefreshShelfNumber(that) {
+            var storeId = $("#storeHouseId").val();
+            var areaNo = $("#storeAreaCode").val();
+            var shelfNum = $("#shelfNumber").val();
+            $("#shelfLevel").empty();
+            if (!storeId || !areaNo || !shelfNum) {
+                return;
+            }
+            SaveAjax({
+                url: window.appUrl +
+                    'Common/FilterLocationInfo?storeId=' +
+                    storeId +
+                    '&areaNo=' +
+                    areaNo +
+                    '&shelfNo=' +
+                    shelfNum,
+                isValidate: false,
+                isAlert: false,
+                success: function(res) {
+                    if (res) {
+                        var str = '';
+                        res.forEach(function(v, i) {
+                            str += '<option value="' + v.value + '">' + v.value + '</option>';
+                        });
+                        $("#shelfLevel").append(str);
+                    }
+                }
+            });
+        }
+
+        function QueryCurrentStore() {
+            var storeHouseId = $("#storeHouseId").val();
+            var storeAreaCode = $("#storeAreaCode").val();
+            var shelfNumber = $("#shelfNumber").val(); //shelfLevel sequenceNo productNo
+            if (storeHouseId && storeAreaCode && shelfNumber) {
+                $("#tableSendItem").show();
+                $("#createFrom").fadeIn();
+                $("#checkNo").val('SC' + (new Date()).Format("yyMMddhhmmss"));
+            } else {
+                $("#tableSendItem").hide();
+                $("#createFrom").fadeOut();
+                $("#checkNo").val('SC' + (new Date()).Format("yyMMddhhmmss"));
+                abp.message.warn('盘点请精确到货架！');
+                return;
+            }
+            var shelfLevel = $("#shelfLevel").val();
+            //var sequenceNo = $("#sequenceNo").val();
+            var productNo = $("#productNo").val();
+            if (shelfLevel) {
+                shelfLevel = shelfLevel.join(',');
+            }
+            var searchObj = [
+                { KeyField: 'storeHouseId', KeyWords: storeHouseId, FieldType: '1', ExpType: '0' },
+                { KeyField: 'storeAreaCode', KeyWords: storeAreaCode, FieldType: '0', ExpType: '6' },
+                { KeyField: 'shelfNumber', KeyWords: shelfNumber, FieldType: '0', ExpType: '6' },
+                { KeyField: 'shelfLevel', KeyWords: shelfLevel, FieldType: '0', ExpType: '6' },
+                //{ KeyField: 'sequenceNo', KeyWords: sequenceNo, FieldType: '0', ExpType: '6' },
+                { KeyField: 'productNo', KeyWords: productNo, FieldType: '0', ExpType: '0' }
+            ];
+            $("#tableSendItem").bootstrapTable("destroy");
+            $("#tableSendItem").bootstrapTable({
+                url: window.appUrl + 'InventoryCheck/QueryCheckStoreItems',
+                queryParams: function(params) {
+                    var sorting = '';
+                    if (params.sort) {
+                        sorting = params.sort;
+                        if (params.order) {
+                            sorting += ' ' + params.order;
+                        }
+                    }
+                    return {
+                        //limit: params.limit, //页面大小
+                        //page: (params.offset / params.limit) + 1, //页码
+                        MaxResultCount: params.limit,
+                        SkipCount: params.offset,
+                        Sorting: sorting, //排序列名  
+                        sortOrder: params.order, //排位命令（desc，asc） 
+                        SearchList: searchObj
+                    };
+                },
+                onPostBody: OnPostBody,
+                onAll: function() {
+                    $("#createInvoice_tab .btn-action").prop('disabled',
+                        !$("#tableSendItem").bootstrapTable('getSelections').length);
+                },
+                onLoadSuccess: OnLoadSuccess
+            });
+        }
+
+        function CreateTask() {
+            var storeHouseId = $("#storeHouseId").val();
+            var storeAreaCode = $("#storeAreaCode").val();
+            var shelfNumber = $("#shelfNumber").val(); //shelfLevel sequenceNo productNo
+            if (storeHouseId && storeAreaCode && shelfNumber) {
+                $("#tableSendItem").show();
+                $("#createFrom").fadeIn();
+            } else {
+                $("#tableSendItem").hide();
+                $("#createFrom").fadeOut();
+                $("#checkNo").val('SC' + (new Date()).Format("yyMMddhhmmss"));
+                abp.message.warn('盘点请精确到货架！');
+                return;
+            }
+            var start = $("#planStartDate").val();
+            var end = $("#planEndDate").val();
+            var checkNo = $("#checkNo").val();
+            var checkUser = $("#checkUser").val();
+            if (!start || !end || !checkNo || !checkUser) {
+                abp.message.warn('请填写有效的盘点编码|开始结束日期|待盘点人员！');
+                return;
+            }
+            var d = $.formSerialize($("#formQuery"));
+            console.log('d', d);
+            var shelfLevel = $("#shelfLevel").val();
+            if (shelfLevel) {
+                shelfLevel = shelfLevel.join(',');
+            }
+            d.shelfLevel = shelfLevel;
+            SaveAjax({
+                url: window.appUrl + "InventoryCheck/Create",
+                data: d,
+                dataType: "json",
+                isValidate: false,
+                isAlert: false,
+                success: function(res) {
+                    //QueryOrderSend(customerId);
+                    @*abp.message.success("创建成功！").done(function() {
+                              window.open("@Url.Action("OrderSendBillDetail")/" + res.id, "_blank");
+                          });*@
+
+                    $('#tabIndex li:eq(1) a').tab('show');
+                    RefreshTable();
+                }
+            });
+        }
+
+
+    </script>
+
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function StoreHouseFormatter(v, r) {
+            var name = $('#hid-storeHouse option[value="' + r.storeHouseId + '"]').text();
+            if (name) {
+                return '<span class="label label-info">' + name + '</span>';
+            }
+            return '';
+
+        }
+
+        function CheckStateFormatter(v) {
+            var name = $('#hid-checkState option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-info">' + name + '</span>';
+            case 2:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+
+        function ActionExecuteFormatter(v, r) {
+            var str;
+            if (r.checkState === 1) {
+                str = '<span class="table-action" onclick="f_cancel(\'' +
+                    r.id +
+                    '\',4)"><i class="iconfont icon-right"></i>取消</span>';
+            } else {
+                str = '<span class="table-action">暂无操作</span>';
+            }
+            str += '<span class="table-action" onclick="f_showRecord(\'' +
+                r.id +
+                '\',\'' +
+                r.storeHouseId +
+                '\')"><i class="iconfont icon-right"></i>盘点详情</span>';
+            return str;
+        }
+
+        function f_cancel(id, state) {
+            SaveAjax({
+                url: window.appUrl + "InventoryCheck/ChangeState",
+                data: { Id: id, CheckState: state },
+                dataType: "json",
+                isValidate: false,
+                isAlert: false,
+                success: function(res) {
+                    RefreshTable();
+                }
+            });
+        }
+
+        function f_showRecord(id, storeHouseId) {
+            if (storeHouseId === '1') {
+                window.open("@Url.Action("InventoryCheckRecord")/" + id, "_blank");
+            } else {
+                window.open("@Url.Action("InventoryCheckRecordSemi")/" + id, "_blank");
+            }
+
+        }
+        function PlanEndDateFormatter(v, r, i, f) {
+            var value = DateDiffBeforeToAfter(v);
+            v = DateTimeFormatter(v, r, i, f);
+            if (value > 0) {
+                return '<span  style="color:red">'+v+'</span>';
+            } 
+            return '<span class="text-default">'+v+'</span>';
+        }
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-storeHouse">
+        @Html.Raw(strOptionStoreHouse)
+    </select>
+
+    @*@Html.DropDownList("hid-du", duty)
+        @Html.DropDownList("hid-de", depart)
+        @Html.DropDownList("hid-gender", gender)*@
+   
+    @Html.DropDownList("hid-checkState", checkStateList)
+</section>

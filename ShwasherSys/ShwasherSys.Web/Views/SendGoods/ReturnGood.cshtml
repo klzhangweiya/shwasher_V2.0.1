@@ -1,0 +1,426 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+
+    ViewBag.Title = "退货退款单维护";
+    string activeMenu = PermissionNames.PagesSendGoodsReturnGoodMg; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<SelectListItem> returnType = new List<SelectListItem>()
+{
+        new SelectListItem(){Text = @"退货",Value = ReturnGoodType.Return+"",Selected = true},
+        new SelectListItem(){Text = @"换货",Value = ReturnGoodType.Change+""},
+    },returnState=ViewBag.ReturnState ;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("customerId","客户编号").SetSearchIcon("query_customer_modal"),
+        new SearchItem("returnOrderNo","退货单号"),
+        new SearchItem("productionOrderNo","批次号"),
+        new SearchItem("sendOrderNo","发货单号"),
+        new SearchItem("orderNo","订单号"),
+        new SearchItem("productNo","产品编号").SetSearchIcon("query_Product_modal","SearchForm"),
+        new SearchItem("returnState", "退货状态",FiledType.I,ExpType.Equal).SetSearchItem(returnState),
+
+    }, "search-form", false);
+    var tableField = new List<FieldItem>()
+    {
+        new FieldItem("productionOrderNo", "批次号"),
+        new FieldItem("returnDate", "退货日期", "DateFormatter"),
+        new FieldItem("returnOrderNo", "退货单号",isSort:true),
+        new FieldItem("sendOrderNo", "发货单号"),
+        new FieldItem("orderNo", "订单号"),
+        new FieldItem("customerName", "客户名称"),
+        new FieldItem("quantity", "退货数量（K）"),
+        new FieldItem("returnType", "退货/换货", formatter: "ReturnTypeFormatter"),
+        new FieldItem("handleUserName", "退货处理人"),
+        new FieldItem("productNo", "产品编号"),
+        new FieldItem("returnState", "退货状态", formatter: "ReturnStateFormatter"),
+    };
+    if (IsGranted(PermissionNames.PagesSendGoodsReturnGoodMgRefundConfirm))
+    {
+        tableField.AddRange(new List<FieldItem>{
+            new FieldItem("amount", "退款金额"),
+            new FieldItem("auditAmount", "确认金额"),
+            new FieldItem("applyUser", "申请退款人"),
+            new FieldItem("confirmUser", "确认退款人"),
+        });
+       
+    }
+    else if (IsGranted(PermissionNames.PagesSendGoodsReturnGoodMgRefundApply))
+    {
+        tableField.AddRange(new List<FieldItem>{
+            new FieldItem("amount", "退款金额"),
+            new FieldItem("applyUser", "申请退款人"),
+        });
+    }
+
+    var table = new TableViewModel("/api/services/app/ReturnGoodOrder/GetAll", activeMenu, searchForm)
+    .SetFields(tableField);
+
+}
+@section css{
+
+}
+
+@Html.Partial("New/Table/_Table", table)
+
+@section modal{
+    <!--Main Modal-->
+    @{
+        var modal = new ModalViewModel("退货记录", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            new InputHide("handleUser"),
+            new InputHide("orderItemNo"),
+            new InputHide("returnOrderNo"),
+            new InputHide("customerId"),
+            //new InputHide("productNo"),
+            new Input("returnType", "退换货类型", other: "onchange=ChangeReturnType(this)").SetSelectOptions(returnType),
+            new Input("sendOrderNo", "发货单号").SetSearchIcon("query_send_modal", "modal"),
+            new Input("orderNo", "系统订单号"),
+            new Input("customerName", "客户名称"),
+            new Input("productNo", "产品编号"),
+            new Input("productionOrderNo", "批次号", other: "minlength=7 maxlength=11"),
+            new Input("linkName", "联系人"),
+            new Input("stockNo", "客户订单号").SetNotRequired().SetOuterBefore("<div class=\"type2\">"),
+            new InputDate("orderDate", "订单日期"),
+            new Input("customerSendId", "送货地址名称",InputTypes.List).SetEvents("onchange=ChangeCustomerSend()"),
+            new Input("fax", "传真").SetNotRequired(),
+            new Input("telephone", "电话").SetNotRequired(),
+            new Input("sendAddress", "送货地址").SetNotRequired(),
+            new InputDate("sendDate", "送货日期").SetNotRequired(),
+            new Input("wareHouse", "送货仓库").SetOuterAfter("</div>"),
+            new Input("quantity", "退货数量", other: "min=0.001"),
+            new InputDate("returnDate", "退货日期"),
+            new InputTextarea("reason", "退货原因"),
+            new Input("handleUserName", "处理人员").SetSearchIcon("query_employee_modal"),
+        }));
+        var modal2 = new ModalViewModel("退款","", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            new InputHide("returnOrderNo"),
+            new Input("amount", "申请金额", other: "min=0.001"),
+            new Input("auditAmount", "退款金额", other: "min=0.001"),
+        },"form-amount"),"modal-amount");
+    }
+    @Html.Partial("New/Modals/_Modal", modal)
+    @Html.Partial("New/Modals/_Modal", modal2)
+
+    @Html.Partial("Modals/Query/_SendGood", "productNo")
+    @Html.Partial("Modals/Query/_Product", "productNo|KeyWords-6,productName")
+    @Html.Partial("Modals/Query/_Employee", "handleUser,handleUserName")
+    @Html.Partial("Modals/Query/_Customer", "customerId|KeyWords-1,customerName")
+}
+
+@section scripts
+{
+    @*<script src="~/Content/Scripts/MyScript/iwb.js"></script>
+        <script src="~/Content/Scripts/MyScript/util.js"></script>*@
+    <script type="text/javascript">
+        var $table;
+        $(function() {
+            $table = LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnCreate"] = function() {
+                $('.type1').hide();
+                $('.type2').hide();
+                BtnCreate({
+                    data: { id: "" },
+                    readonly:
+                        "sendOrderNo,orderNo,orderItemNo,productionOrderNo,customerName,productNo,productName,stockNo,handleUserName,sendAddress"
+                });
+            }
+            funs["btnUpdate"] = function() {
+                var rows = $table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+
+                    if (data.returnState === @(ReturnGoodStateDefinition.New)) {
+                        if (data.returnType === @(ReturnGoodType.Change)) {
+                            abp.message.warn("换货记录不可修改，可删除后重新创建！");
+                            return;
+                        }
+                        $('.type1').hide();
+                        $('.type2').hide().find('input,select').removeClass('required ');
+                        BtnUpdate({
+                            disabled: "",
+                            readonly:
+                                "sendOrderNo,orderNo,orderItemNo,productionOrderNo,productNo,productName,stockNo,handleUserName,customerName,sendAddress"
+                        });
+                        $("#returnType").trigger("change");
+                    } else {
+                        abp.message.warn("已提交检验不可修改！");
+                    }
+
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+
+            };
+            funs["btnDelete"] = function(url) {
+
+                var rows = $table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+                    if (data.returnState === @(ReturnGoodStateDefinition.New)) {
+                        BtnDelete(url, $table);
+                    } else {
+                        abp.message.warn("已提交检验不可删除！");
+                    }
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+            funs["btnChangeState"] = function(url) {
+                var rows = $table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+                    if (data.returnState !== @(ReturnGoodStateDefinition.New)) {
+                        abp.message.warn("已经检验处理，请勿重复操作!");
+                        return;
+                    }
+                    BtnConfirm("确定提交检验？", "提交检验", url, data);
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+            funs["btnRefundApply"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.returnType === @(ReturnGoodType.Change)) {
+                        abp.message.warn("换货不能申请退款!");
+                        return;
+                    }
+                    if (row.returnState === @(ReturnGoodStateDefinition.New) ||
+                        row.returnState === @(ReturnGoodStateDefinition.Check)) {
+                        abp.message.warn("检验处理未完成，不能操作!");
+                        return;
+                    } else if (row.returnState !== @(ReturnGoodStateDefinition.HasChecked)) {
+                        abp.message.warn("已经申请退款，请勿重复操作!");
+                        return;
+                    }
+                    $('#modal-amount #auditAmount').removeClass('required ').closest('.form-group-sm ').hide();
+                    OpenModal({
+                        url: url,
+                        data: row,
+                        modal: $('#modal-amount'),
+                        form: $('#form-amount')
+                    });
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+            funs["btnRefundConfirm"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+
+                    if (row.returnType === @(ReturnGoodType.Change)) {
+                        abp.message.warn("换货不能退款!");
+                        return;
+                    }
+                    if (row.returnState === @(ReturnGoodStateDefinition.New) ||
+                        row.returnState === @(ReturnGoodStateDefinition.Check)) {
+                        abp.message.warn("检验处理未完成，不能操作!");
+                        return;
+                    } else if (row.returnState === @(ReturnGoodStateDefinition.RefundConfirm) ||
+                        row.returnState === @(ReturnGoodStateDefinition.End)) {
+                        abp.message.warn("已经退款完成，请勿重复操作!");
+                        return;
+                    }
+                    MsgConfirm("确定审核通过退款？",
+                        "审核退款",
+                        function() {
+                            $('#modal-amount #auditAmount').addClass('required ').closest('.form-group-sm ').show();
+                            OpenModal({
+                                url: url,
+                                data: row,
+                                disabled: "",
+                                modal: $('#modal-amount'),
+                                form: $('#form-amount')
+                            });
+                        });
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+            funs["btnExportReturn"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.returnType === @(ReturnGoodType.Change)) {
+                        abp.message.warn("换货不能导出退货申请单!");
+                        return;
+                    }
+                    SaveAjax({
+                        url: url,
+                        data: { Id: row.id },
+                        isAlert: false,
+                        isValidate: false,
+                        success: function (res) {
+                            window.location.href = '/'+res;
+                        }
+                    });
+                }else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+        });
+
+        function ChangeReturnType(that) {
+            var value = $(that).val();
+            $('.type1').hide();
+            $('.type2').hide();
+            if (value == 1) {
+                $('.type1').fadeIn();
+                $('.type2 input,.type2 select').removeClass('required ');
+
+            } else if (value == 2) {
+                $('.type2').fadeIn();
+                $('.type2 #customerSendId').addClass('required ');
+                $('.type2 #wareHouse').addClass('required ');
+                $('.type2 #orderDate').addClass('required ');
+            }
+        }
+
+        function Submit_query_send_modal(row) {
+            var $modal = $("#query_send_modal");
+            row = row || $modal.find("table").bootstrapTable("getSelections")[0];
+            if (targetDom !== "#modal") {
+                $("#KeyWords-1").val(row.customerId);
+                $modal.modal("hide");
+                return;
+            }
+            if (row) {
+                $("#modal #customerId").val(row.customerId);
+                $("#modal #customerName").val(row.customerName);
+                $("#modal #productionOrderNo").val(row.productBatchNum);
+                $("#modal #sendOrderNo").val(row.orderSendBillNo);
+                $("#modal #orderNo").val(row.orderNo);
+                $("#modal #orderItemNo").val(row.orderItemId);
+                $("#modal #productNo").val(row.productNo);
+                $("#modal #productName").val(row.productName);
+                $("#modal #quantity").val(row.sendQuantity).attr("max", row.sendQuantity);
+                $("#modal #stockNo").val(row.stockNo);
+                abp.ajax({
+                    url: window.appUrl + "CustomerSends/GetCustomerSendDtoByCustomerId",
+                    async: true,
+                    type: "Post",
+                    data: { customerId: row.customerId },
+                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                    isValidate: false,
+                    dataType: "json",
+                    success: function(res) {
+                        if (res && res.length > 0) {
+                            $("#customerSendId").empty();
+                            var options = "";
+                            //$("#saleType").val(row.saleType).select2();
+
+                            res.forEach(function(value, index) {
+                                console.log(value, index);
+                                if (index === 0) {
+                                    options += '<option value=\"' +
+                                        value.id +
+                                        '\" selected=\"selected\">' +
+                                        value.customerSendName +
+                                        '</option>';
+                                } else {
+                                    options += '<option value=\"' +
+                                        value.id +
+                                        '\">' +
+                                        value.customerSendName +
+                                        '</option>';
+                                }
+                            });
+                            $("#customerSendId").html(options);
+                            $("#customerSendId").trigger("change");
+                        }
+                    }
+                });
+                $("#modal input").trigger("blur");
+
+                $modal.modal("hide");
+            } else
+                abp.message.warn("选择一项再确认！");
+        }
+
+        function ChangeCustomerSend() {
+
+            var customerSendId = $("#customerSendId").val();
+            if (!customerSendId) {
+                customerSendId = 0;
+            }
+            abp.ajax({
+                url: window.appUrl + "Query/GetCustomerSendInfo",
+                async: false,
+                type: "Post",
+                data: { Id: customerSendId },
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function(res) {
+                    if (res) {
+                        $("#linkName").val(res.linkMan);
+                        $("#fax").val(res.fax);
+                        $("#telephone").val(res.telephone);
+                        $("#sendAddress").val(res.sendAdress);
+                    }
+                }
+            });
+        }
+    </script>
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function TypeFormatter(v) {
+            var name = $('#hid-type option[value="' + v + '"]').text();
+            switch (v) {
+            case 0:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+
+        function ReturnTypeFormatter(v) {
+            var name = $('#hid-returnType option[value="' + v + '"]').text();
+            console.log(v);
+            switch (v) {
+            case 1:
+                return '<span class="label label-danger">' + name + '</span>';
+            case 2:
+                return '<span class="label label-warning">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+
+        function ReturnStateFormatter(v, r) {
+            var name = $('#hid-returnState option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-info">' + name + '</span>';
+            case 2:
+                return '<span class="label label-warning">' + name + '</span>';
+            case 3:
+                return '<span class="label label-success">' + name + '</span>';
+            case 4:
+                return '<span class="label label-iwb">' + name + '</span>';
+            case 5:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+        }
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @Html.DropDownList("hid-returnType", returnType)
+    @Html.DropDownList("hid-returnState", returnState)
+</section>

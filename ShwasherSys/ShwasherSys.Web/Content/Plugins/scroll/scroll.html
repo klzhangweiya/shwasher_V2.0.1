@@ -1,0 +1,33 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="../scroll/css/scrollBar.css" rel="stylesheet" type="text/css">
+    <link href="../scroll/css/commen.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div class="scrollBox" id="box1" paddingr="10px" paddingb="10px" style="padding-right: 15px; padding-bottom: 10px; overflow: hidden; position: relative;">
+        <div class="zl-scrollContentDiv">
+            <div class="contentBox1">
+            </div>
+        </div>
+        <div class="zl-scrollBarBox" style="height:100%;top:0;width:5px;right:0;">
+            <div class="zl-scrollBar zl-verticalBar" style="width: 5px; border-radius: 2.5px; height: 38.7433px;"></div>
+        </div>
+    </div>
+
+
+    <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+    <script src="https://libs.baidu.com/jquery/1.10.2/jquery.min.js"></script>
+    <script src="../scroll/js/scrollBar.js"></script>
+    <script>
+        $(function() {
+            $(".scrollBox").scrollBar();
+        })
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,110 @@
+﻿@using Microsoft.Ajax.Utilities
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSemiProductStoreInfoCurrentSemiStoreQueryMg; //The menu item will be active for this page.
+    ViewBag.Title = "半成品库存信息查询";
+    //List<SelectListItem> semiApplyStatus = ViewBag.SemiApplyStatus;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("semiProductName","产品名称"),
+new SearchItem("model","规格"),
+new SearchItem("material","材质"),
+    new SearchItem("surfaceColor","表色"),
+    new SearchItem("rigidity","硬度"),
+    new SearchItem("id","半成品编号").SetSearchIcon("query_semiProduct_modal"),
+
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+
+}
+<div id="exportCss">
+    <style>
+        .trProduct td {
+            text-align: left !important;
+            background: #c0c0c0;
+            font-size: 1.5rem !important;
+        }
+
+            .trProduct td span {
+                color: #632d32;
+                margin-left: 15px;
+            }
+    </style>
+</div>
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table" data-url="/api/services/app/StoreStatistics/QuerySemiCurrentStoreTotal"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row">
+                <th data-align="center" data-field="id">产品编码</th>
+                <th data-align="center" data-field="semiProductName">产品名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="allPreMonthQuantity">上月结算库存(千件)</th>
+                <th data-align="center" data-field="allQuantity">当前库存数量(千件)</th>
+                <th data-align="center" data-field="allFreezeQuantity">库存冻结数量(千件)</th>
+                <th data-align="center" data-formatter="ActionsFormatter"></th>
+            </tr>
+        </thead>
+    </table>
+</div>
+@section modal{
+    @Html.Partial("Modals/Query/_SemiProduct", "KeyWords-6")
+}
+@section scripts
+{
+    <script src="~/Content/Scripts/MyScript/ExportExcel.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4,
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function () {
+            $("#tableTool").css("min-height", "40px");
+            LoadTable();
+            funs["btnPrint"] = function (url) {
+                BtnPrint(url);
+            }
+        });
+        function BtnPrint(url) {
+            window.open("@Url.Action("StoreListReport")", "_blank");
+        }
+        function ActionsFormatter(v, r) {
+            return '<span class="table-action" onclick="ShowEnterOutDetail(\'' +
+                r.id +
+                '\')"><i class="iconfont icon-right"></i>查看进出货明细信息</span>';
+        }
+        function ShowEnterOutDetail(id) {
+            window.open("@Url.Action("ProductStoreDetail")?id="+id, "_blank");
+        }
+    </script>
+
+}

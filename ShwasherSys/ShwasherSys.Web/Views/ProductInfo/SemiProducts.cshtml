@@ -1,0 +1,312 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductInfoSemiProducts; //The menu item will be active for this page.
+    ViewBag.Title = "半成品信息维护";
+    List<SelectListItem> IsstandardSelect = new List<SelectListItem>()
+{
+new SelectListItem()
+{
+    Text = "是",
+    Value = "Y"
+},
+new SelectListItem()
+{
+    Text = "否",
+    Value = "N"
+}
+};
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("id","编号"),
+    new SearchItem("model","半成品规格"),
+new SearchItem("partNo","零件号"),
+new SearchItem("semiProductName","半成品名称"),
+new SearchItem("surfaceColor","表色"),
+new SearchItem("material","材质"),
+}, false);
+}
+@section css
+{
+    <link href="~/Content/Plugins/viewer/viewer.min.css" rel="stylesheet" />
+    <style>
+        #picContent {
+            list-style-type: none;
+            padding: 0px;
+            margin: 0px;
+        }
+        #picContent li {
+            float: left;
+            width: 30px;
+            height: 30px;
+        }
+
+        #picContent li > img {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+        .picList {
+            list-style-type: none;
+            padding: 0px;
+            margin: 0px;
+        }
+        .picList li > img {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+        .picList li > img:hover {
+            width: 50px; 
+            transform:scale(1.5) rotateZ(0);
+            box-shadow:5px 10px 5px #eee;
+            transition: all .3s ease-in;
+        }    
+    </style>
+}
+<div style="position: absolute; top: 50px; right: 500px; width: 100px; height: 30px; background: red; z-index: 1000;">
+    <button onclick="exportExcel()">导出</button>
+</div>
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <input type="hidden" id="IsLock" value="N" />
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/SemiProducts/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post" 
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">半成品编号</th>
+                <th data-align="center" data-field="semiProductName">名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="isStandard" data-formatter="IsStandardFormatter">是否标件</th>
+                <th data-align="center" data-field="tranUnitValue">千件/公斤</th>
+                <th data-align="center" data-field="operator" data-formatter="OperatorFormatter">操作</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("半成品"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                                    {
+                                                                                        new InputViewModel("id", displayName: "半成品编码"),
+                                                                                        new InputViewModel("semiProductName", displayName: "名称"),
+                                                                                        new InputViewModel("model", displayName: "规格").SetNotRequired(),
+                                                                                        new InputViewModel("material", displayName: "材质").SetNotRequired(),
+                                                                                        new InputViewModel("rigidity", displayName: "硬度").SetNotRequired(),
+                                                                                        new InputViewModel("surfaceColor", displayName: "表色").SetNotRequired(),
+                                                                                        new InputViewModel("partNo", displayName: "零件号").SetNotRequired(),
+                                                                                        new InputViewModel("tranUnitValue", displayName: "千件/公斤",@class:"number").SetNotRequired(),
+                                                                                        new InputViewModel("isStandard",InputTypes.List,  displayName: "是否标准件").SetSelectOptions(IsstandardSelect),
+                                                                                        new InputViewModel("productDesc",InputTypes.Textarea, "描述").SetNotRequired(),
+                                                                                        new InputViewModel("sequence",hide:true, displayName:"排序"),
+                                                                                        new InputViewModel("pagePic",InputTypes.File, displayName:"图纸").SetNotRequired(),
+                                                                                    };
+                        var specials = new List<SpecialInputModel> {
+                                    new SpecialInputModel()
+                                {
+                                    Id= "pagePic",
+                                    InputStr = "<div class=\"col-md-10\"><input class=\"form-control\" name=\"fileInfo\" id=\"fileInfo\" type=\"hidden\"><input class=\"form-control\" name=\"fileName\" id=\"fileName\" type=\"hidden\"><input class=\"form-control\" name=\"fileExt\" id=\"fileExt\" type=\"hidden\"><div class=\"custom-file\"><input class=\"custom-file-input\" id=\"customFile-1\" type=\"file\" onchange=\"FileCheck(this,\'fileInfo\')\" onclick=\"OpenUploadWindow()\"><label class=\"custom-file-label\" for=\"customFile-1\">选择文件</label></div></div>"
+                                }
+                                };
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs, specials: specials))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div id="modalImport" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("半成品导入", ""))
+                    @{
+                                var inputs2 = new List<InputViewModel>
+                                {
+                                    new InputViewModel("importExcel",InputTypes.File, displayName:"上传Excel").SetNotRequired(),
+                                    new InputViewModel("downloadFile",InputTypes.Text, displayName:" ").SetNotRequired(),
+                                };
+                                var specials2 = new List<SpecialInputModel> {
+                                    new SpecialInputModel()
+                                    {
+                                        Id= "importExcel",
+                                        InputStr = "<div class=\"col-md-10\"><input class=\"form-control\" name=\"fileInfo\" id=\"fileInfo2\" type=\"hidden\"><input class=\"form-control\" name=\"fileName\" id=\"fileName2\" type=\"hidden\"><input class=\"form-control\" name=\"fileExt\" id=\"fileExt2\" type=\"hidden\"><input class=\"form-control\" name=\"constraintExt\" value=\"xls,xlsx\" type=\"hidden\"><div class=\"custom-file\"><input class=\"custom-file-input\" id=\"customFile-2\" type=\"file\" onchange=\"FileCheck(this,\'fileInfo2\')\" onclick=\"OpenUploadWindow()\"><label class=\"custom-file-label\" for=\"customFile-2\">选择文件</label></div></div>"
+                                    },
+                            new SpecialInputModel()
+                            {
+                                Id="downloadFile",
+                                InputStr = "<div class=\"col-md-10\"><button id=\"download\" type=\"button\" class=\"btn btn-success waves-effect\"  style=\"min-width: 100px; background-color: #678ceb;border: 1px solid #678ceb;\" data-url=\"../Download/Excel/SemiProduct.xls\" onclick=\"DownloadFile(this)\">下载导入文件模板</button><span style=\"color:red;\">*导入数据会清空原有记录，请谨慎使用</span></div>"
+                            }
+                                };
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs2, specials: specials2))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/viewer/viewer.min.js"></script>
+    <script type="text/javascript">
+
+        $(function () {
+            //show完毕前执行
+
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () {
+                BtnUpdate({ readonly: "id" });
+                $(".custom-file-label").text("");
+                /*var row = $("#table").bootstrapTable("getSelections")[0];
+                SaveAjax({
+                    url: window.appUrl + "Common/GetAttachFile",
+                    data: { TableName: "SemiProducts", ColName: "SemiProductNo", Key: row.id },
+                    isAlert: false,
+                    isValidate: false,
+                    success: function (res) {
+                        $("#imagePanel").remove();
+                        if (res) {
+                            var addHtml = '<div class="form-group-sm" id="imagePanel">';
+                            addHtml += ' <label class="iwb-label col-md-2 control-label " ></label>';
+                            addHtml += '<div class="col-md-10">';
+                            addHtml += '<ul id="picContent">';
+                            res.forEach(function (v, index) {
+                                addHtml += '<li><img src="' + v.filePath + '" data-original="' + v.filePath+'" alt="'+v.fileName+'"/></li>';
+                            });
+                            addHtml += '</ul>';
+                            addHtml += '</div>';
+                            addHtml += '</div>';
+                            $("#form").append(addHtml);
+                            $("#picContent").viewer({ url: "data-original" });
+                        }
+                    }
+                });*/
+            };
+            funs["btnCreate"] = function () {
+                BtnCreate({ data: { sequence: 0, isStandard: "Y" } });
+                $("#imagePanel").remove();
+                $(".custom-file-label").text("");
+            }
+            funs["btnImport"] = function(url) {
+                OpenModal(url, { modal: $("#modalImport"), modaltitle: "半成品导入", data: { constraintExt:"xls,xlsx"} });
+                
+            }
+        });
+       
+        function IsStandardFormatter(v, r) {
+            if (v === "Y") {
+                return '<span class="label label-success">标准件</span>';
+            } else if (v === "N") {
+                return '<span class="label label-primary">非标件</span>';
+            }
+            return v;
+        }
+        function OperatorFormatter(v, r) {
+          
+            return '<span class="table-action" onclick="showImage(this,\''+r.id+'\')"><i class="iconfont icon-right"></i>查看图纸</span>';
+
+        }
+        function showImage(that,id) {
+           
+            SaveAjax({
+                url: window.appUrl + "Common/GetAttachFile",
+                data: { TableName: "SemiProducts", ColName: "SemiProductNo", Key: id },
+                isAlert: false,
+                isValidate: false,
+                success: function (res) {
+                    if (res&&res.length>0) {
+                        
+                        /*$("#picList" + id).remove();
+                        var addHtml = '<ul style="display:none;" class="picList" id="picList' + id + '" >';
+                        var path = "";
+                        res.forEach(function (v, index) {
+                            addHtml += '<li><img src="' + v.filePath + '" data-original="' + v.filePath + '" alt="' + v.fileName + '"/></li>';
+                            path = v.filePath;
+                        });
+                        addHtml += '</ul>';
+                       
+                        $(that).closest("td").append(addHtml);
+                       
+                        $("#picList" + id).viewer({ url: "data-original" });
+                        $("#picList" + id).viewer("show");*/
+
+                        var fileExt = res[0].fileExt;
+                        if (officeFileExt.indexOf(fileExt) > 0) {
+                            OpenFile(res[0].filePath, 'office', {height:800});
+                        } else {
+                            OpenFile(res[0].filePath,null, { height: 800 });
+                        }
+                        
+
+                    }
+                }
+            });
+        }
+        function FileCheck(that, id) {
+            var $fileName = $(that).closest(".col-md-10").find('input[name=fileName]');
+            var $fileExt = $(that).closest(".col-md-10").find('input[name=fileExt]');
+            var $fileConstraintExt = $(that).closest(".col-md-10").find('input[name=constraintExt]');
+            FileInputCheck(that, id, false, 100, function (fileName) {
+                var name = fileName.substring(0, fileName.lastIndexOf("."));
+                var ext = fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length);
+                $fileName.val(name);
+                $fileExt.val(ext);
+            }, function(fileName) {
+                var name = fileName.substring(0, fileName.lastIndexOf("."));
+                var ext = fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length);
+                if ($fileConstraintExt) {
+                    var fileConstraintExt = $fileConstraintExt.val();
+                    if (fileConstraintExt&&fileConstraintExt.indexOf(ext) === -1) {
+                        abp.message.warn("只能选择" + fileConstraintExt + "为后缀的文件类型");
+                        $(".custom-file-label").text("");
+                        return false;
+                    }
+                }
+            });
+        }
+        function exportExcel() {
+            SaveAjax({
+                url: window.appUrl + "SemiProducts/ExportExcel",
+                isAlert: false,
+                isValidate: false,
+                success: function (res) {
+                    if (res && res.length > 0) {
+                        window.location.href = "/" + res;
+                    }
+                }
+            });
+        }
+    </script>
+
+
+}

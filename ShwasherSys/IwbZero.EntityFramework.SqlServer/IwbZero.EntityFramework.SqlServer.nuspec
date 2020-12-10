@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>IwbZero.EntityFramework.SqlServer</id>
+    <version>1.0.0</version>
+    <title>Iwb后台管理系统基础框架Zero-EF.SqlServer</title>
+    <authors>Yue</authors>
+    <owners>Yue</owners>
+    <licenseUrl>http://120.25.240.119/LICENSE.txt</licenseUrl>
+    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
+    <iconUrl>http://120.25.240.119/iwb-logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Iwb后台管理系统基础框架Zero-EF框架（SqlServer）</description>
+    <releaseNotes>Iwb Base System </releaseNotes>
+    <copyright>Copyright 2019</copyright>
+    <tags>Iwb ZeroEF IwbEF EF Sql SqlServer</tags>
+    <dependencies>
+        <dependency id="IwbZero" version="1.0.0" />
+    </dependencies>
+  </metadata>
+  <files> 
+    <!-- 当 Package 包含多个依赖项目时，在此添加内部的依赖项目 --> 
+    <file src="bin\Release\IwbZero.Yue.dll" target="lib/net461" /> 
+</files>
+</package>

@@ -1,0 +1,86 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSystemSysSetting; //The menu item will be active for this page.
+    ViewBag.Title = "系统基础配置";
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+        new SearchItem("settingName","配置名称"),
+        new SearchItem("code","配置代码" ),
+        new SearchItem("description","配置描述")
+    }, false);
+}
+
+<div class="table-box mr-4 iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table" class=""
+           data-url="/api/services/app/Settings/GetAll" data-id-field="id" data-unique-id="id"
+           data-striped="true" data-click-to-select="true" data-single-select="true"
+           data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false" data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]"
+           data-pagination-h-align="left" data-pagination-detail-h-align="right" 
+           data-query-params="QueryParams" data-response-handler="ResponseHandler">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true" data-width="300"></th>
+                @*<th data-align="center" data-field="settingNo"></th>*@
+                <th data-align="center" data-field="settingName" data-width="500">配置名称</th>
+                @*<th data-align="center" data-field="settingType"></th>*@
+                <th data-align="center" data-field="code" data-width="500">配置代码</th>
+                <th data-align="center" data-field="value" data-width="500">配置值</th>
+                <th data-align="center" data-field="description" data-width="500">配置描述</th>
+      
+                @*<th data-align="center" data-field=""></th>*@
+                
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <!--Main Modal-->
+    <section>
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("配置"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                        {
+                                            new InputViewModel("id", hide: true),
+                                            //new InputViewModel("settingNo", hide: true),
+                                            new InputViewModel("settingName", displayName: "配置名称"),
+                                            new InputViewModel("settingType", hide: true),
+                                            new InputViewModel("code", displayName: "配置代码"),
+                                            new InputViewModel("value", displayName: "配置值"),
+                                            new InputViewModel("description", InputTypes.Textarea,"配置描述")
+
+                                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(function () {
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "code" }); };
+            funs["btnCreate"] = function () { BtnCreate({ data: { settingType:"0"} }); };
+            funs["btnRefresh"] = function (url) { SaveAjax({ url: url, isValidate: false }) };
+        });
+
+
+    </script>
+}

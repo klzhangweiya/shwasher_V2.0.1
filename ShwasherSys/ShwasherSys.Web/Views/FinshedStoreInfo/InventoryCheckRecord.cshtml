@@ -1,0 +1,455 @@
+﻿@using Microsoft.Ajax.Utilities
+@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@using ShwasherSys.ProductStoreInfo
+@using ShwasherSys.ProductStoreInfo.Dto
+@functions
+{
+
+
+
+}
+
+@{
+    /**/
+    // ViewBag.ActiveMenu = PermissionNames.PagesFinshedStoreInfoCurrentFinshedStoreHouseMg; //The menu item will be active for this page.
+    ViewBag.Title = "成品库存盘点单详情";
+    //List<SelectListItem> semiApplyStatus = ViewBag.SemiApplyStatus;
+    string AddEnterAuth = PermissionNames.PagesFinshedStoreInfoCurrentFinshedStoreHouseMgAddEnter;
+    string AddOutAuth = PermissionNames.PagesFinshedStoreInfoCurrentFinshedStoreHouseMgAddOut;
+    //string AddEnterSemiAuth = PermissionNames.PagesSemiProductStoreInfoCurrentSemiStoreHouseMgAddEnter;
+    //string AddOutSemiAuth = PermissionNames.PagesSemiProductStoreInfoCurrentSemiStoreHouseMgAddOut;
+
+    string canCreateAuth =  PermissionNames.PagesInventoryCheckInfoInventoryCheckCreateCreate;//可创建盘点的权限（暂时认定拥有创建盘点任务的人可看到实际的库存）
+    string canCheckDateAuth1 =  PermissionNames.PagesInventoryCheckInfoInventoryCheckCreateCheckData;//可变更盘点数据权限
+    string canCheckDateAuth2 =  PermissionNames.PagesInventoryCheckInfoInventoryCheckCheckData;//可变更盘点数据权限
+    Boolean isCanCreateAuth = IsGranted(canCreateAuth);
+    //Boolean isCanCheckDateAuth1 = IsGranted(canCheckDateAuth1);
+    //Boolean isCanCheckDateAuth2 = IsGranted(canCheckDateAuth2);
+    InventoryCheckDto inventoryCheck = ViewBag.InventoryCheck;
+    List<SelectListItem> storeHouseList =  ViewBag.StoreHouseList;
+    List<SelectListItem> checkStateList =  ViewBag.CheckState;
+    bool isCreateTaskUser = inventoryCheck.CreatorUserId == AbpSession.UserId;  //是否盘点任务创建人
+    bool isCheckUser = inventoryCheck.CheckUser == AbpSession.EmployeeNo;       //是否是盘点任务的执行人
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+    new SearchItem("productionOrderNo","流转单编号"),
+    new SearchItem("productNo","成品编号").SetSearchIcon("query_Product_modal"),
+    new SearchItem("model","规格"),
+    new SearchItem("surfaceColor","表色"),
+    new SearchItem("material","材质"),
+    new SearchItem("rigidity","硬度")
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/InventoryCheck/GetCheckRecordProduct"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">批次号</th>
+                <th data-align="center" data-field="productNo">成品编号</th>
+                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatter">仓库</th>
+                <th data-align="center" data-field="storeLocationNo">库位</th>
+                <th data-align="center" data-field="productName">产品名称</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="productDesc">成品备注</th>
+                @if (isCanCreateAuth)
+                {
+                    <th data-align="center" data-field="quantity">实际库存</th>
+                    <th data-align="center" data-field="freezeQuantity">冻结库存</th>
+                    <th data-align="center" data-field="checkQuantity" data-formatter="checkQuantityFormatter">盘点数量</th>
+                }
+                else
+                {
+                    <th data-align="center" data-field="checkQuantity" >盘点数量</th>
+                }
+                <th data-align="center" data-formatter="ActionFormatter"></th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+
+    <section>
+        <!--Main Modal-->
+       
+
+        <div class="modal fade" id="addEnterModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("入库平衡", ""))
+                    @{
+
+                        var inputs3 = new List<InputViewModel>
+                                    {
+                                //new InputViewModel("freezeQuantity", hide:true),
+                                //new InputViewModel("currentProductStoreHouseNo", hide:true),
+                                new InputViewModel("storeHouseId", hide:true),
+                                new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                                new InputViewModel("productNo", displayName: "成品编码").SetSearchIcon("query_Product_modal","addEnterModal"),
+                                //new InputViewModel("quantity", displayName:"入库数量",@class:"number",other:"min=0.001"),
+                                new InputViewModel("packageSpecification", displayName:"包装规格(千件/包)",@class:"number",other:"min=0.001"),
+                                new InputViewModel("packageCount", displayName:"包数",@class:"number",other:"min=0.001"),
+                                new InputViewModel("storeLocationNo",  hide:true)
+                                //new InputViewModel("storeLocationNo", displayName:"库位").SetSearchIcon("query_storeHouseLocation_modal","addEnterModal"),
+
+                            };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs3))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addOutModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("出库平衡", ""))
+                    @{
+
+                        var inputs4 = new List<InputViewModel>
+                            {
+                        //new InputViewModel("freezeQuantity", hide:true),
+                        new InputViewModel("currentProductStoreHouseNo", hide:true),
+                        new InputViewModel("storeHouseId", hide:true),
+                        new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                        new InputViewModel("productNo", displayName: "成品编码"),
+                        new InputViewModel("quantity", displayName:"出库数量",@class:"number",other:"min=0.001"),
+
+                    };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs4))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="checkDataModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("盘点数量", ""))
+                    @{
+
+                        var inputs5 = new List<InputViewModel>
+                        {
+                            //new InputViewModel("freezeQuantity", hide:true),
+                            new InputViewModel("id", hide:true),
+                           
+                         
+                            new InputViewModel("checkQuantity", displayName:"实际数量",@class:"number",other:"min=0.001"),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs5))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+
+  
+
+    @Html.Partial("Modals/Query/_Product", "KeyWords-2|productNo")
+    @Html.Partial("Modals/Query/_StoreHouseLocation", "storeLocationNo")
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4,
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+
+        $(function() {
+            $("#tableTool").css("min-height", "40px");
+            var stateNameCss = CheckStateFormatter(@inventoryCheck.CheckState);
+            var btnComplete = '';
+            @if (isCheckUser&&inventoryCheck.CheckState==InventoryCheckState.Checking)  //盘点任务的执行人才可完成盘点
+            {
+                <text>
+                    btnComplete =
+                        '<button type="button" id="submitCheck" class="btn btn-default menu-btn" data-type="N_btnUpdateState" data-url="/api/services/app/InventoryCheck/ChangeState"' +
+                        ' onclick="UpdateState(this)"> <i class="iconfont icon-edit"></i> 完成盘点 </button>';
+                </text>
+            }
+            $("#Tool1").append(
+                btnComplete +
+                '<span style="color: white;font-size: 18px;padding-left: 5px;">编号:@inventoryCheck.CheckNo  盘点人员:@inventoryCheck.CheckUserName </span> <span id="stateId">'+stateNameCss+'</span>');
+            LoadTable();
+           
+        });
+        function UpdateState(that) {
+            var url = $(that).data('url');
+            var state = @inventoryCheck.CheckState;
+            if (state === 2) {
+                abp.message.confirm("确认完成盘点任务？",
+                    "提交盘点",
+                    function() {
+                        SaveAjax({
+                            url: url,
+                            data: { Id: '@inventoryCheck.Id', CheckState: 3 },
+                            isValidate: false,
+                            success: function() {
+                                var stateNameCss = CheckStateFormatter(3);
+                                $("#stateId").html(stateNameCss);
+                                $('.checkDateBtn').fadeOut();
+                                window.location.href = '/FinshedStoreInfo/InventoryCheck';
+                            }
+                        });
+                    });
+            } else {
+                abp.message.warn('盘点未开始或者已经结束！');
+            }
+           
+        }
+        function BtnAddEnter(productionOrderNo,
+            productNo,
+            quantity,
+            packageSpecification,
+            packageCount,
+            storeLocationNo) {
+
+            if (productionOrderNo&&(!storeLocationNo || storeLocationNo === 'null')){
+                abp.message.warn('请补全库位信息！');
+                return;
+            }
+            OpenModal(window.appUrl + "CurrentFinshedStoreHouse/AddEnter",
+                {
+                    data: { quantity: 0, storeHouseId: 1 },
+                    readonly: "productionOrderNo,productNo,storeLocationNo",
+                    modal: $("#addEnterModal"),
+                    success: function() { $("#addEnterModal").modal("hide"); }
+                });
+            if (!productionOrderNo) {
+                SaveAjax({
+                    url: window.appUrl + "CurrentFinshedStoreHouse/GetVirtualBlanceProOrderNo",
+                    isAlert: false,
+                    isValidate: false,
+                    success: function(res) {
+                        $("#addEnterModal #productionOrderNo").val(res);
+                    }
+                });
+                $("#addEnterModal").find("#productNo").siblings(".input-group-addon").css("display", "table-cell");
+            } else {
+                $("#addEnterModal #productionOrderNo").val(productionOrderNo);
+                $("#addEnterModal").find("#productNo").siblings(".input-group-addon").css("display", "none");
+            }
+
+            $("#addEnterModal #productNo").val(productNo);
+            $("#addEnterModal #quantity").val(quantity);
+            $("#addEnterModal #packageSpecification").val("");
+            $("#addEnterModal #packageCount").val("");
+            if (!storeLocationNo) {
+                storeLocationNo = '';
+            }
+            $("#addEnterModal #storeLocationNo").val(storeLocationNo);
+        }
+
+        function BtnAddOut(currentProductStoreHouseNo, productionOrderNo, productNo, quantity, storeLocationNo) {
+            if (!storeLocationNo || storeLocationNo === 'null'){
+                abp.message.warn('请补全库位信息！');
+                return;
+            }
+            OpenModal(window.appUrl + "CurrentFinshedStoreHouse/AddOut",
+                {
+                    data: {
+                        quantity: quantity,
+                        storeHouseId: 1,
+                        currentProductStoreHouseNo: currentProductStoreHouseNo,
+                        productionOrderNo: productionOrderNo,
+                        productNo: productNo
+                    },
+                    readonly: "productionOrderNo,productNo",
+                    modal: $("#addOutModal"),
+                    success: function() { $("#addOutModal").modal("hide"); }
+                });
+        }
+        
+      
+     
+       
+
+        function ActionFormatter(v, r) {
+            var str = '';
+            @if (isCreateTaskUser)
+            {
+                <text>
+            if (abp.auth.isGranted('@AddEnterAuth')) {
+                str = '<span class="table-action" onclick="BtnAddEnter(\'' +
+                    r.productionOrderNo +
+                    '\',\'' +
+                    r.productNo +
+                    '\',\'' +
+                    r.quantity +
+                    '\',\'' +
+                    r.packageSpecification +
+                    '\',\'' +
+                    r.packageCount +
+                    '\',\'' +
+                    r.storeLocationNo +
+                    '\')"><i class="iconfont icon-right"></i>入库平衡</span>';
+            }
+            if (abp.auth.isGranted('@AddOutAuth')) {
+                str += '<span class="table-action" onclick="BtnAddOut(\'' +
+                    r.currentProductStoreHouseNo +
+                    '\',\'' +
+                    r.productionOrderNo +
+                    '\',\'' +
+                    r.productNo +
+                    '\',\'' +
+                    r.quantity +
+                    '\',\'' +
+                    r.storeLocationNo +
+                    '\')"><i class="iconfont icon-right"></i>出库平衡</span>';
+            }
+                </text>
+            }
+            if (abp.auth.isGranted('@canCheckDateAuth1') || abp.auth.isGranted('@canCheckDateAuth2')) {
+                @if (isCheckUser)
+                {
+                     <text>
+                var state = @inventoryCheck.CheckState;
+                if (state === 2) {
+                    str += '<span class="table-action checkDateBtn" onclick="CheckData(\'' +
+                        r.id +
+                        '\')"><i class="iconfont icon-right"></i>盘点</span>';
+                }
+                     </text>
+                }
+
+            }
+           
+
+            return str;
+        }
+        function CheckData(id) {
+            OpenModal(window.appUrl + "InventoryCheck/CheckData",
+                {
+                    data: {id:id},
+                    modal: $("#checkDataModal"),
+                    success: function () {
+                        $("#checkDataModal").modal("hide");
+                        RefreshTable();
+                    }
+                });
+        }
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [
+                {
+                    KeyWords: '@inventoryCheck.CheckNo',
+                    KeyField: 'CheckNo',
+                    FieldType: '0',
+                    ExpType: '0'
+                }];
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+
+
+    </script>
+    
+    
+    <script>
+
+        function StoreHouseIdFormatter(v,r) {
+            var name = $('#hid-storeHouse option[value="' + r.storeHouseId + '"]').text();
+            if (name) {
+                return '<span class="label label-info">' + name + '</span>';
+            }
+            return '';
+        }
+        function CheckStateFormatter(v) {
+            var name = $('#hid-checkState option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-info checkStateCss">' + name + '</span>';
+            case 2:
+                return '<span class="label label-danger checkStateCss">' + name + '</span>';
+            default:
+                return '<span class="label label-info checkStateCss">' + name + '</span>';
+            }
+        }
+
+        function checkQuantityFormatter(v,r) {
+            if (r.quantity > v) {
+                return '<span class="label label-danger">' + v + '</span>';
+            } else if (r.quantity < v) {
+                return '<span class="label label-warning">' + v + '</span>';
+            } else {
+                return '<span class="label label-success">' + v + '</span>';
+            }
+        }
+    </script>
+    @*<script>
+            function DownLoadFile(filepath) {
+                var downLoadId = "downLoad";
+                var nameStart = filepath.lastIndexOf("\/");
+                var downName = filepath.substr(nameStart + 1, filepath.length);
+                $(document.body).append('<a id="' + downLoadId + '" download="' + downName + '" href="' + filepath + '"  ><span></span></a>');
+                $("#" + downLoadId + " span").click();
+                $("#" + downLoadId).remove();
+            }
+        </script>*@
+      
+}
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @*@Html.DropDownList("hid-du", duty)
+        @Html.DropDownList("hid-de", depart)
+        @Html.DropDownList("hid-gender", gender)*@
+    @Html.DropDownList("hid-storeHouse", storeHouseList)
+    @Html.DropDownList("hid-checkState", checkStateList)
+</section>

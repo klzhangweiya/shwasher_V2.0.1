@@ -1,0 +1,972 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@{
+    /**/
+
+    ViewBag.ActiveMenu = PermissionNames.PagesPackInfoPackInfoMg; //The menu item will be active for this page.
+    ViewBag.Title = "产品包装信息";
+    string employee = ViewBag.Employee;
+    List<SelectListItem> productApplyStatus = ViewBag.ProductApplyStatus;
+    List<SelectListItem> applyStatus = ViewBag.ApplyStatus;
+    int hsRate = ViewBag.HsRate;
+    List<SelectListItem> closeStatus = new List<SelectListItem>()
+{
+new SelectListItem(){Text = @"未关闭",Value = "false",Selected = true},
+new SelectListItem(){Text = @"已关闭",Value = "true"}
+};
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("productionOrderNo","排产单号"),
+
+    new SearchItem("productName","产品名称"),
+    new SearchItem("model","规格"),
+   new SearchItem("material","材质"),
+    new SearchItem("applyDate", "申请日期",FiledType.Dnull,ExpType.GreaterOrEqual),
+    new SearchItem("applyDate", "到",FiledType.Dnull,ExpType.LessOrEqual),
+    new SearchItem("semiProductNo","半成品编码").SetSearchIcon("query_semiProduct_modal"),
+new SearchItem("applyStatus","申请状态" )
+.SetSearchItem(applyStatus),
+new SearchItem("isClose","关闭状态" ,FiledType.B,ExpType.Equal)
+.SetSearchItem(closeStatus),
+
+
+
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+}
+<section style="display: none">
+    @Html.DropDownList("hide-ApplyStatus", applyStatus)
+
+    @Html.DropDownList("hide-ProductApplyStatus", productApplyStatus)
+</section>
+<style>
+    .tool-radio {
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+        padding-left: 25px;
+        font-size: 1.5rem;
+        color: #dad9db;
+    }
+
+    .package-unit {
+        border: 1px solid #583d9c;
+        border-radius: 3px;
+        padding: 10px 0 0;
+        display: table;
+        width: 96%;
+        margin-left: 2%;
+    }
+
+        .package-unit:not(:last-of-type) {
+            margin-bottom: 5px;
+        }
+
+        .package-unit .form-group-sm > div {
+            margin-bottom: 10px;
+
+        }
+
+    #showZoreCheckBox + label::before, #showZoreCheckBox:not(.filled-in) + label::after {
+        top: -10px;
+        left: -5px;
+        width: 18px;
+        height: 18px;
+       
+    }
+   
+    #showZoreCheckBox:checked + label::before {
+        top: -10px;
+        left: -8px;
+        width: 11px;
+        height: 15px;
+        border-top: 2px solid transparent;
+        border-left: 2px solid transparent;
+        border-right: 2px solid #26a69a;
+        border-bottom: 2px solid #26a69a;
+        transform: rotate(40deg);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-transform-origin: 100% 100%;
+        transform-origin: 100% 100%;
+    }
+  
+</style>
+<div class="table-box iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/PackInfoApply/GetAll" data-id-field="id" data-unique-id="id"
+           data-striped="true" data-click-to-select="true" data-single-select="true"
+           data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false" data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]"
+           data-pagination-h-align="left" data-pagination-detail-h-align="right"
+           data-query-params="QueryParams" data-response-handler="ResponseHandler">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">流转单编号</th>
+                <th data-align="center" data-field="" data-formatter="PackageProductNoFormatter">包装前产品编码</th>
+                <th data-align="center" data-field="applyQuantity">申请包装数量</th>
+                <th data-align="center" data-field="remainApplyQuantity">待包装数量</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="productName">产品名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="processingNum" data-formatter="ProcessingNumFormatter">待处理明细</th>
+                <th data-align="center" data-field="applyDate" data-formatter="DateFormatter">申请时间</th>
+                <th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">申请状态</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+<div class="table-box mr-4  iwb-bootstrap-table" id="pakeageitem" style="display: none;">
+    @Html.Action("ToolMenu", "Layout", new { pageName = PermissionNames.PagesPackInfoPackInfoMgPackageInfoMg })
+    <table id="tablePakeageItem"
+           data-url="/api/services/app/PackInfoApply/GetFinishedEnterStoreApply"
+           data-id-field="id" data-unique-id="id"
+           data-striped="true" data-click-to-select="true" data-single-select="true"
+           data-method="post" data-side-pagination="server" data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false" data-pagination="true" data-page-size="10" data-page-number="1" data-page-list="[10,30,50,100]"
+           data-pagination-h-align="left" data-pagination-detail-h-align="right"
+           data-query-params="QueryItemParams" data-response-handler="ResponseHandler">
+        <thead>
+        <tr class="row">
+            <th data-field="state" data-checkbox="true"></th>
+            <th data-align="center" data-field="packageEnterNum">包装入库号</th>
+            <th data-align="center" data-field="productNo">成品编号</th>
+            <th data-align="center" data-field="packageProductNo">包装前产品编码</th>
+            <th data-align="center" data-field="applyQuantity">申请总重量(kg)</th>
+            <th data-align="center" data-field="kgWeight">千件重</th>
+            <th data-align="center" data-field="applyQuantity2">申请总件数(千件)</th>
+            <th data-align="center" data-field="packageSpecification">包装规格(千件/包)</th>
+            <th data-align="center" data-field="packageCount">包数</th>
+            @*<th data-align="center" data-field="quantity">申请数量</th>*@
+            <th data-align="center" data-field="creatorUserId">申请人</th>
+            <th data-align="center" data-field="enterStoreUser">入库人</th>
+            <th data-align="center" data-field="applyStatus" data-formatter="ProductApplyStatusFormatter">申请状态</th>
+            <th data-align="center" data-formatter="ActionFormatter">操作</th>
+        </tr>
+        </thead>
+        
+    </table>
+ 
+</div>
+@section modal{
+    <!--Main Modal-->
+    <section>
+        <div class="modal fade" id="modal" role="dialog"  aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 700px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("包装产品"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                    {
+        new InputViewModel("id", hide: true),
+        new InputViewModel("packageApplyNo", hide: true),
+        //new InputViewModel("semiProductNo",hide:true),
+        new InputViewModel("packType",hide: true),
+        new InputViewModel("packageProductNo",hide:true),
+        new InputViewModel("productionOrderNo",displayName:"流转单编号"),
+        new InputViewModel("productNo",displayName:"成品编号").SetSearchIcon("query_Product_modal"),
+        new InputViewModel("productName",displayName:"成品名称"),
+        new InputViewModel("packageSpecification",displayName:"包装规格").SetOuterBefore("<div class=\"package-unit init-unit\" data-index=\"1\">"),
+        new InputViewModel("packageCount",displayName:"包数"),
+        new InputViewModel("kgWeight",displayName:"千件重"),
+        new InputViewModel("actualQuantity2",displayName:"总件(千件)"),
+                new InputViewModel("packageEnterNum",displayName:"包装入库号"),
+        new InputViewModel("actualQuantity",displayName:"总重(Kg)"),
+                new InputViewModel("man1",displayName:"核件人"),
+        new InputViewModel("man2",displayName:"包装负责人").SetOuterAfter("<div class=\"col-md-4\" style=\"float: right;\"><button type=\"button\" class=\"btn btn-sm btn-info\" style=\"width:100%; background-color: #583d9c;border-color: #583d9c;margin-bottom:5px;\" onclick=\"AddPackageUnit()\">增加包装明细</button>" +
+                                                                     "</div></div>"),
+
+
+                                                        };
+                        var specials = new List<SpecialInputModel>()
+                {
+    new SpecialInputModel(){Id="actualQuantity2",InputStr = "<div class=\"col-md-4\"><input id=\"actualQuantity2\" class=\"form-control required number\" min=\"0.001\" name=\"actualQuantity2\" placeholder=\"请输入总件(千件)...\" disabled=\"disabled\" type=\"text\"></div>"},
+    new SpecialInputModel(){Id="actualQuantity",InputStr = "<div class=\"col-md-4\"><input  id=\"actualQuantity\" class=\"form-control  required number\" min=\"0.001\" name=\"actualQuantity\" placeholder=\"请输入总重(Kg)...\" disabled=\"disabled\" type=\"text\"></div>"},
+    new SpecialInputModel(){Id="packageSpecification",InputStr = "<div class=\"col-md-4\"><input class=\"form-control  required number\" min=\"0.001\" name=\"packageSpecification\" placeholder=\"请输入包装规格(千件/包)...\" type=\"text\"></div>"},
+    new SpecialInputModel(){Id="packageCount",InputStr = "<div class=\"col-md-4\"><input class=\"form-control  required digits\" min=\"1\" name=\"packageCount\" placeholder=\"请输入包数...\"  type=\"text\"></div>"},
+    new SpecialInputModel(){Id="packageEnterNum",InputStr = "<div class=\"col-md-4\"><input class=\"form-control required \"  name=\"packageEnterNum\" placeholder=\"请输入包装入库号...\"  type=\"text\"></div>"},
+    new SpecialInputModel(){Id="kgWeight",InputStr = "<div class=\"col-md-4\"><input  id=\"kgWeight\" class=\"form-control required  number\"  name=\"kgWeight\" placeholder=\"请输入千件重...\" min=\"0.001\" disabled=\"disabled\"  type=\"text\"></div>"},
+    new SpecialInputModel(){Id="man1",InputStr = "<div class=\"col-md-4\"><select class=\"form-control  required \" style=\"width:100%\" name=\"man1\" > <option value=\"\" selected>请选择核件人</option>"+employee+"</select></div>"},
+    new SpecialInputModel(){Id="man2",InputStr = "<div class=\"col-md-4\"><select class=\"form-control required \" style=\"width:100%\" name=\"man2\" ><option value=\"\" selected>请选择包装负责人</option>"+employee+"</select></div>"},
+        };
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs, specials: specials))
+                    @*@Html.Partial("Modals/_ModalFooter", "0")*@
+                    <div class="modal-footer" style="text-align: center;">
+                        <button type="button" class="btn btn-default waves-effect" data-dismiss="modal" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;">取消</button>
+                        <button type="button" class="btn btn-success save-btn waves-effect" style="min-width:100px;background-color: #678ceb;border: 1px solid #678ceb;">保存</button>
+                        <input name="showZoreCheckBox" type="checkbox" id="showZoreCheckBox" value="" checked="checked"/>&nbsp;&nbsp;<label for="showZoreCheckBox" style="color:#000;padding-left: 15px; font-size: 1.5rem;">允许包装损耗</label>
+                    </div>
+
+                    </div>
+                </div>
+        </div>
+    </section>
+    @Html.Partial("Modals/Query/_SemiProduct", "KeyWords-6")
+    @Html.Partial("Modals/Query/_Product", "productNo,productName")
+
+    <section>
+        <div class="modal fade" id="package_modal" role="dialog"  aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 700px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("包装明细"))
+                    @{
+                        var packageInputs = new List<InputViewModel>
+                                {
+                            new InputViewModel("id", hide: true),
+                            new InputViewModel("packageApplyNo", hide: true),
+                            new InputViewModel("packageProductNo",hide: true),
+                            new InputViewModel("packType",hide: true),
+                            //new InputViewModel("semiProductNo",hide: true),
+
+                            new InputViewModel("productionOrderNo", displayName: "流转单编号"),
+                            new InputViewModel("productNo", displayName: "成品编号"),
+                           // new InputViewModel("semiProductNo", displayName: "半成品编码"),
+                            new InputViewModel("packageEnterNum", displayName: "包装入库号"),
+                            new InputViewModel("packageSpecification", displayName: "包装规格",@class:"number",other:"min=0.001"),
+                            new InputViewModel("packageCount", displayName: "包数",@class:"digits",other:"min=1"),
+                            new InputViewModel("quantity", displayName: "总件(千件)",@class:"number",other:"min=0.001"),
+                            new InputViewModel("kgWeight", displayName: "千件重",@class:"number",other:"min=0.001"),
+                            new InputViewModel("quantity2", displayName: "总重(Kg)",@class:"number",other:"min=0.001"),
+                            new InputViewModel("verifyUser", InputTypes.List,"包装核件人").SetSelectOptions(employee),
+                            new InputViewModel("packageUser", InputTypes.List,"包装负责人").SetSelectOptions(employee),
+                        };
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(packageInputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        var quantity, packageTable = $("#tablePakeageItem");
+
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            var packType = $('input[name="packType"]:checked').val();
+            if (packType) {
+                window._searchList.push({ KeyWords: packType, KeyField: "PackType", FieldType: "1", ExpType: "0" });
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    window._searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+
+        $(function() {
+            //$("#KeyWords-5").datetimepicker(datePickerOpt);
+            //$("#KeyWords-6").datetimepicker(datePickerOpt);
+            $("#KeyWords-9").val("false").select2();
+
+            $("#Tool1").append(
+                //'<div  class="tool-radio"><input name="proType" type="radio" id="allProduction" checked value=""/><label for="allProduction">全部</label></div>' +
+                '<div  class="tool-radio"><input name="packType" type="radio" id="sProduct" checked value="1"/><label for="sProduct">半成品包装</label></div>' +
+                '<div  class="tool-radio"><input name="packType" type="radio" id="fProduct" value="2"/><label for="fProduct">成品包装</label></div>');
+
+            $(".tool-radio input[type='radio']").on('click',
+                function(e) {
+                    //document.getElementById("SearchForm").reset();
+                    GetSearchList();
+                    RefreshTable();
+                    //packageTable.bootstrapTable("destroy");
+                    $("#pakeageitem").css("display", "none");
+                    $("#table").bootstrapTable('resetView', { height: 800 });
+                });
+            LoadTable({
+                onCheck: PackageApplyOnCheck,
+                onUncheck: PackageApplyOnUnCheck
+            });
+            $("#pakeageitem").find("#Tool1").before(
+                '<div style="float: left;font-size: 16px;color: #fff;padding: 2px;margin-right: 20px;font-weight: 600;">包装明细:</div>');
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            packageTable.closest(".table-box").find("#tableTool .btn").on('click',
+                function() {
+                    var type = $(this).data('type').replace("_", "");
+                    var url = $(this).data('url') || "";
+                    funs[type] ? funs[type].call(this, url) : funs["none"].call(this);
+                });
+
+            function getHasExistProductionOrderNo(pOrderNo, data) {
+                SaveAjax({
+                    url: window.appUrl + `PackInfoApply/GetHasExistProductionOrderNoView?pcProductionOrderNo=${pOrderNo}`,
+                    // data: { pcProductionOrderNo: pOrderNo },
+                    isValidate: false,
+                    async :false,
+                    isAlert: false,
+                    success: function(r) {
+                        if (r) {
+                            $("#modal #productNo + .input-group-addon").fadeOut();
+                            data.productNo = r.productNo;
+                            data.productName = r.productName;
+                        }
+                    }
+                });
+            }
+
+            //确认申请，创建包装明细
+            funs["btnCreate"] = function(url) {
+                var row = config.table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.applyStatus !== "1") {
+                        abp.message.warn("申请已处理，不能再操作！");
+                        return;
+                    }
+                    $("#modal #productNo + .input-group-addon").fadeIn();
+                    quantity = row.applyQuantity;
+                    $(".add-unit").remove();
+                    var packType = $('input[name="packType"]:checked').val();
+                    var data = {
+                        id: row.id,
+                        packageApplyNo: row.packageApplyNo,
+                        productionOrderNo: row.productionOrderNo,
+                        packType: packType,
+                        kgWeight: row.kgWeight,
+                        packageProductNo: row.productNo,
+                        actualQuantity2: quantity,
+                        actualQuantity: row.kgWeight ? quantity / row.kgWeight : 0,
+                    }
+                    if (packType === "1") {
+                        data.packageProductNo = row.semiProductNo;
+                        data.actualQuantity = quantity;
+                        data.actualQuantity2 = row.kgWeight ? quantity * row.kgWeight : 0;
+                        //getHasExistProductionOrderNo(row.productionOrderNo, data);
+                    }
+                    if (packType === "2") {
+                        data.productNo = row.productNo;
+                        data.productName = row.productName;
+                        //$("#modal #productNo + .input-group-addon").fadeOut();
+                    }
+                    BtnCreate({
+                        readonly:
+                            "productionOrderNo,semiProductNo,productNo,productName,actualQuantity,actualQuantity2",
+                        data: data,
+                        save: function() { SavePackages(url) }
+                    });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+            //拒绝申请申请
+            funs["btnRefuse"] = function(url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].applyStatus !== "1") {
+                        abp.message.warn("申请已确认(或拒绝),不能再操作！");
+                        return;
+                    }
+                    var packType = $('input[name="packType"]:checked').val();
+                    abp.message.confirm("确认拒绝包装申请？",
+                        "拒绝申请",
+                        function() {
+                            SaveAjax({ url: url, data: { Id: rows[0].id, PackType: packType }, isValidate: false });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+            //关闭
+            funs["btnClose"] = function(url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].applyStatus === "1") {
+                        abp.message.warn("申请未确认(或拒绝),不能操作！");
+                        return;
+                    }
+                    abp.message.confirm("确认关闭申请？",
+                        "关闭申请",
+                        function() {
+                            SaveAjax({ url: url, data: { Id: rows[0].id }, isValidate: false });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+            //一键入库
+            funs["btnEnterBatch"] = function(url) {
+                var row = packageTable.bootstrapTable("getData")[0];
+                //console.log(row);
+                if (row) {
+                    abp.message.confirm("未入库的批量入库申请，确认一键入库？",
+                        "一键入库",
+                        function() {
+                            SaveAjax({
+                                url: url + "?applyNo=" + row.packageApplyNo,
+                                isValidate: false,
+                                success: function() {
+                                    RefreshTable(packageTable);
+                                }
+                            });
+                        });
+                } else
+                    abp.message.warn("请先确认包装后再入库!");
+            };
+            //添加明细
+            funs["btnAdd"] = function(url) {
+                var row = packageTable.bootstrapTable("getData")[0];
+                //console.log(row);
+                if (row) {
+                    var data = row;
+                    var packType = $('input[name="packType"]:checked').val();
+                    data.packageSpecification = "";
+                    data.packageCount = "";
+                    data.quantity = "";
+                    data.quantity2 = "";
+                    data.kgWeight = row.kgWeight,
+                        data.packType = packType;
+                    data.packageProductNo = row.packageProductNo;
+                    data.packageEnterNum = row.packageEnterNum;
+                    BtnCreate({
+                        url: url,
+                        modal: $("#package_modal"),
+                        data: data,
+                        readonly: "productionOrderNo,semiProductNo,productNo",
+                        table: packageTable
+                    });
+                } else
+                    abp.message.warn("请先确认包装后再添加明细!");
+            };
+            //修改明细
+            funs["btnUpdate"] = function(url) {
+                var row = packageTable.bootstrapTable("getSelections")[0];
+                //console.log(row);
+                if (row) {
+                    if (row.isClose) {
+                        abp.message.warn("申请已关闭，不能再修改！");
+                        return;
+                    }
+                    if (row.applyStatus === 1 || row.applyStatus === 2) {
+                        abp.message.warn("入库申请已被处理，不能再修改！请取消申请后再修改！");
+                        return;
+                    }
+                    if (row.applyStatus === 5) {
+                        abp.message.warn("申请已入库，不能再修改！");
+                        return;
+                    }
+                    BtnUpdate({
+                        url: url,
+                        modal: $("#package_modal"),
+                        data: row,
+                        readonly: "productionOrderNo,semiProductNo,productNo",
+                        table: packageTable
+                    });
+                } else
+                    abp.message.warn("请先确认包装后再添加明细!");
+            };
+            //删除明细
+            funs["btnDelete"] = function(url) {
+
+                var row = packageTable.bootstrapTable("getSelections")[0];
+
+                if (row) {
+
+                    if (row.applyStatus !== 0) {
+                        abp.message.warn("入库申请已被处理，不能再删除！");
+                        return;
+                    }
+                    var rows = packageTable.bootstrapTable("getData");
+                    if (rows.length === 1) {
+                        abp.message.warn("最后一条明细不能再删除！");
+                        return;
+                    }
+                    abp.message.confirm("入库申请删除后不可恢复，确认删除申请？",
+                        "删除申请",
+                        function() {
+                            SaveAjax({
+                                url: url,
+                                data: { Id: row.id },
+                                isValidate: false,
+                                success: function() {
+                                    RefreshTable(packageTable);
+                                }
+                            });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+            BindChangeEvent();
+        });
+        var packageApplyNo = "";
+
+        function PackageApplyOnCheck(row) {
+            $("#table").bootstrapTable('resetView', { height: 500 });
+            $("#pakeageitem").css("display", "block");
+            packageApplyNo = row.packageApplyNo;
+            packageTable.bootstrapTable("destroy");
+            LoadTable({
+                table: packageTable,
+                queryParams: QueryItemParams,
+                onAll: function(eName, eData) {
+                    OnAll(eName, eData, "tablePakeageItem");
+                },
+                onLoadSuccess: function(data) {
+                    OnLoadSuccess(data, "tablePakeageItem");
+                },
+                onPostBody: function(data) {
+                    OnPostBody(data, "tablePakeageItem");
+                }
+            });
+            packageTable.bootstrapTable('resetView');
+        }
+
+        function PackageApplyOnUnCheck() {
+            $("#pakeageitem").css("display", "none");
+            packageTable.bootstrapTable("destroy");
+            $("#table").bootstrapTable('resetView', { height: 800 });
+        }
+
+        function QueryItemParams(params) {
+            return {
+                MaxResultCount: params.limit,
+                SkipCount: params.offset,
+                sort: params.sort,
+                sortOrder: params.order,
+                SearchList: [{ KeyWords: packageApplyNo, KeyField: "PackageApplyNo", FieldType: "0", ExpType: "0" }]
+            };
+        }
+
+        function BindChangeEvent() {
+            $('.package-unit input').off("change.package").on("change.package",
+                function() {
+                    var $this = $(this).closest('.package-unit');
+                    var k = Number($this.find("input[name='kgWeight']").val()),
+                        s = Number($this.find("input[name='packageSpecification']").val()),
+                        c = Number($this.find("input[name='packageCount']").val());
+                    if (k && c && s) {
+                        var q2 = s * c, q = k * q2;
+                        $this.find("input[name='actualQuantity']").val(q.toFixed(3)).trigger("blur");
+                        $this.find("input[name='actualQuantity2']").val(q2.toFixed(3)).trigger("blur");
+                    }
+                });
+        }
+    </script>
+    <script>
+        function GetInitUnitData() {
+            var initData = {
+                actualQuantity: $('.package-unit.init-unit input[name="actualQuantity"]').val(),
+                actualQuantity2: $('.package-unit.init-unit input[name="actualQuantity2"]').val(),
+                packageSpecification: $('.package-unit.init-unit input[name="packageSpecification"]').val(),
+                packageCount: $('.package-unit.init-unit input[name="packageCount"]').val(),
+                packageEnterNum: $('.package-unit.init-unit input[name="packageEnterNum"]').val(),
+                kgWeight: $('.package-unit.init-unit input[name="kgWeight"]').val(),
+                verifyUserId: $('.package-unit.init-unit select[name="man1"]').val(),
+                packageUserId: $('.package-unit.init-unit select[name="man2"]').val(),
+                verifyUser: $('.package-unit.init-unit select[name="man1"] option:selected').text(),
+                packageUser: $('.package-unit.init-unit select[name="man2"] option:selected').text()
+            };
+            if (!initData.kgWeight) {
+                initData.kgWeight = "0";
+            }
+            return initData;
+        }
+        function AddPackageUnit() {
+            //$("#form").append(
+            //    '<div class="package-unit add-unit"><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="packageSpecification">包装规格</label><div class="col-md-4"><input class="form-control number" min="0" name="packageSpecification" required="" placeholder="请输入包装规格(千件/包)..." type="text"></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="packageCount">包数</label><div class="col-md-4"><input class="form-control number"  min="0" name="packageCount" required="" placeholder="请输入包数..." type="text"></div> </div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="actualQuantity">产品数量</label><div class="col-md-4"><input class="form-control number"  min="0" name="actualQuantity" value="' + actualQuantity + '" required="" placeholder="请输入产品数量(公斤 | 千件)..." type="text"></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="actualQuantity">包装入库号</label><div class="col-md-4"><input class="form-control"  name="packageEnterNum" value="" required="" placeholder="请输入包装入库号" type="text"></div></div><div class="col-md-4" style="float: right;"><button type="button" class="btn btn-sm btn-danger" style="width:100%;margin-bottom:5px;" onclick="RemovePackageUni(this)">删除此包装规格</button></div></div>');
+            var initUnit = GetInitUnitData();
+            var str =
+                '<div class="package-unit add-unit" data-index="1" data-select2-id="17"><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">包装规格</label><div class="col-md-4"><input class="form-control number required" min="0.001" name="packageSpecification"  placeholder="请输入包装规格(千件/包)..." type="text"></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">包数</label><div class="col-md-4"><input class="form-control digits required" min="1" name="packageCount"  placeholder="请输入包数..." type="text"></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">千件重</label><div class="col-md-4"><input class="form-control number required" name="kgWeight"  placeholder="请输入千件重..." value="' + initUnit.kgWeight+'" type="text" ></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">总件(千件)</label><div class="col-md-4"><input class="form-control number required" min="0.001" name="actualQuantity2"  disabled placeholder="请输入总件(千件)..." type="text"></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">包装入库号</label><div class="col-md-4"><input class="form-control required" name="packageEnterNum"  placeholder="请输入包装入库号..." type="text"></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">总重(Kg)</label><div class="col-md-4"><input class="form-control number required" min="0.001" name="actualQuantity" required=""disabled placeholder="请输入总重(Kg)..." type="text"></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">核件人</label><div class="col-md-4" data-select2-id="15"><select class="form-control required" style="width:100%" name="man1"> <option value="" selected>请选择核件人</option>@(Html.Raw(employee))</select></div></div><div class="form-group-sm"><label class="iwb-label col-md-2 control-label iwb-label-required" for="">包装负责人</label><div class="col-md-4" data-select2-id="24"><select class="form-control required" style="width:100%" name="man2" ><option value="" selected>请选择包装负责人</option>@(Html.Raw(employee))</select></div></div><div class="col-md-4" style="float: right;"><button type="button" class="btn btn-sm btn-danger" style="width:100%;margin-bottom:5px;" onclick="RemovePackageUni(this)">删除此包装规格</button></div></div>';
+
+            $("#form").append(str).find("select").select2();
+            BindChangeEvent();
+
+            var topHeight = $(window).height() - $("#modal").find('.modal-dialog').height() - 50;
+            if (topHeight < 30) {
+                topHeight = 30;
+            }
+            $("#modal").find('.modal-dialog').animate({ 'marginTop': topHeight / 2 + "px" });
+        }
+
+        function RemovePackageUni(that) {
+            $(that).closest(".package-unit").remove();
+        }
+
+        function CheckActualQuantity(url) {
+            var actualQuantity = quantity, unit = "";
+            var hs = (actualQuantity * (Number(@hsRate) / 100).toFixed(3)).toFixed(3);
+            if ($('input[name="packType"]:checked').val() === "1") {
+                $("input[name='actualQuantity']").each(function(i, v) {
+                    var q = Number($(v).val());
+                    if (q) {
+                        actualQuantity -= q;
+                    }
+                });
+                unit = "Kg";
+            } else {
+                $("input[name='actualQuantity2']").each(function(i, v) {
+                    var q = Number($(v).val());
+                    if (q) {
+                        actualQuantity -= q;
+                    }
+                });
+                unit = "千件";
+            }
+            var str;
+            actualQuantity = actualQuantity.toFixed(3);
+            if (actualQuantity > 0) {
+                var isShowZoreCheckBox = $("#showZoreCheckBox").is(':checked') ? "1" : "0";
+                if (isShowZoreCheckBox === "1") {
+                    if (actualQuantity < hs) {
+                        SaveAjax({
+                            form: $('#form'),
+                            url: url,
+                            data: GetCreatePackageDate(),
+                            success: function() {
+                                $("#modal").modal("hide");
+                                RefreshTable();
+                                RefreshTable(packageTable);
+                            }
+                        });
+                        return true;
+                    }
+                }
+                str = '还有[ {0}{1} ]产品还未进行包装，剩余数量是否直接进行打包处理？'.format(actualQuantity, unit);
+                abp.message.confirm(str,
+                    "确认剩余数量行打包处理",
+                    function () {
+                        let data = GetCreatePackageDate();
+                        let initUnit = GetInitUnitData();
+                        initUnit.packageSpecification = actualQuantity;
+                        initUnit.packageCount = 1;
+                        initUnit.packageEnterNum = initUnit.packageEnterNum + '-1';
+                        if (unit == "千件") {
+                            initUnit.actualQuantity2 = actualQuantity;
+                            initUnit.actualQuantity = (initUnit.kgWeight * initUnit.actualQuantity2).toFixed(3);
+                        } else {
+                            initUnit.actualQuantity = actualQuantity;
+                            initUnit.actualQuantity2 = (initUnit.actualQuantity / initUnit.kgWeight).toFixed(3);
+                        }
+                        data.packageInfos.push(initUnit);
+                        SaveAjax({
+                            form: $('#form'),
+                            url: url,
+                            data: data,
+                            success: function() {
+                                $("#modal").modal("hide");
+                                RefreshTable();
+                                RefreshTable(packageTable);
+                            }
+                        });
+                    });
+            } else if (actualQuantity < 0) {
+                actualQuantity = Math.abs(actualQuantity);
+                str = '您多包装了[ {0}{1} ]产品，请检查后再操作！'.format(actualQuantity, unit);
+                abp.message.warn(str, "", true);
+                return false;
+            } else {
+                SaveAjax({
+                    form: $('#form'),
+                    url: url,
+                    data: GetCreatePackageDate(),
+                    success: function() {
+                        $("#modal").modal("hide");
+                        RefreshTable();
+                        RefreshTable(packageTable);
+                    }
+                });
+                return true;
+            }
+            //if (str) {
+            //    abp.message.warn(str, "", true);
+            //    return false;
+            //}
+            //return true;
+        }
+
+        function SavePackages(url) {
+            //var actualQuantity = quantity - GetActualQuantity();
+            //if (actualQuantity > 0) {
+            //    abp.message.warn('还有 [' + actualQuantity + ' ] 产品还未进行包装，请检查后再操作！');
+            //    return;
+            //} else if (actualQuantity < 0) {
+            //    actualQuantity = Math.abs(actualQuantity);
+            //    abp.message.warn('您多包装了 [' + actualQuantity + ' ] 产品，请检查后再操作！');
+            //    return;
+            //}
+            if (CheckActualQuantity(url)) {
+                //SaveAjax({
+                //    form: $('#form'),
+                //    url: url,
+                //    data: GetCreatePackageDate(),
+                //    success: function() {
+                //        $("#modal").modal("hide");
+                //        RefreshTable();
+                //        RefreshTable(packageTable);
+                //    }
+                //});
+            }
+
+
+        }
+
+        function GetCreatePackageDate() {
+            var data = {
+                packageApplyNo: $("#modal #packageApplyNo").val(),
+                productionOrderNo: $("#modal #productionOrderNo").val(),
+                packageProductNo: $("#modal #packageProductNo").val(),
+                productNo: $("#modal #productNo").val(),
+                packType: $("#modal #packType").val(),
+                packageInfos: []
+            }
+            $(".package-unit").each(function(i, v) {
+                var q = $(v).find("input[name='actualQuantity']").val();
+                var q2 = $(v).find("input[name='actualQuantity2']").val();
+                var s = $(v).find("input[name='packageSpecification']").val();
+                var c = $(v).find("input[name='packageCount']").val();
+                var p = $(v).find("input[name='packageEnterNum']").val();
+                var k = $(v).find("input[name='kgWeight']").val();
+                var vu = $(v).find("select[name='man1']").val();
+                var pu = $(v).find("select[name='man2']").val();
+                var vn = $(v).find("select[name='man1'] option:selected").text();
+                var pn = $(v).find("select[name='man2'] option:selected").text();
+                data.packageInfos.push({
+                    actualQuantity: q,
+                    actualQuantity2: q2,
+                    packageSpecification: s,
+                    packageCount: c,
+                    packageEnterNum: p,
+                    kgWeight: k,
+                    verifyUserId: vu,
+                    packageUserId: pu,
+                    verifyUser: vn,
+                    packageUser: pn
+                });
+            });
+            return data;
+        }
+    </script>
+
+    <script>
+
+        function f_enterApply(id) {
+            console.log("cancelApply", id);
+            abp.message.confirm("确认申请入库?",
+                "申请入库",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'PackInfoApply/CreateProductApply',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable(packageTable);
+                        }
+                    });
+                });
+        }
+
+        function f_cancelApply(id) {
+            console.log("cancelApply", id);
+            abp.message.confirm("确认取消申请?",
+                "取消申请",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'PackInfoApply/CancelProductApply',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable(packageTable);
+                        }
+                    });
+                });
+        }
+
+        function f_confirmEnterApply(id) {
+            console.log("cancelApply", id);
+            abp.message.confirm("确认产品入库数量正确吗?",
+                "确认入库数量",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'PackInfoApply/ConfirmProductApply',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable(packageTable);
+                        }
+                    });
+                });
+        }
+
+        function f_closeApply(id) {
+            console.log("recoveryApply", id);
+            abp.message.confirm("入库申请关闭后不可恢复，确认关闭申请?",
+                "关闭申请",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'PackInfoApply/CloseProductApply',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable(packageTable);
+                        }
+                    });
+                });
+        }
+
+        function f_recoveryApply(id) {
+            console.log("recoveryApply", id);
+            abp.message.confirm("确认恢复申请?",
+                "恢复申请",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'PackInfoApply/RecoveryProductApply',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable(packageTable);
+                        }
+                    });
+                });
+        }
+
+    </script>
+    <script>
+        function PackageProductNoFormatter(v, r) {
+            var packType = $('input[name="packType"]:checked').val();
+
+            if (packType === "1") {
+                return '<span class="label label-info">' + r.semiProductNo + '</span>';
+            } else {
+                return '<span class="label label-danger">' + r.productNo + '</span>';
+            }
+
+        }
+
+        function ProcessingNumFormatter(v, r) {
+
+            if (v === 0) {
+                //return '<span class="label label-info">' + v+ '</span>';
+                return '';
+            } else {
+                return '<span class="label label-danger">待处理:' + v + '</span>';
+            }
+
+        }
+
+        function ApplyStatusFormatter(v, r) {
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            var name = $("#hide-ApplyStatus option[value='" + v + "']").text();
+            if (v === "1") {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === "2") {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === "3") {
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+
+        function ProductApplyStatusFormatter(v, r) {
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            var name = $("#hide-ProductApplyStatus option[value='" + v + "']").text();
+            if (v === 1) {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === 2) {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === 3) {
+                return '<span class="label label-warning">' + name + '</span>';
+            } else if (v === 4) {
+                return '<span class="label label-danger">' + name + '</span>';
+            } else if (v === 5) {
+                return '<span class="label label-info">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+
+        function ActionFormatter(v, r) {
+            var str;
+            if (r.isClose) {
+                return '<span class="table-action">暂无操作</span>';
+            }
+            if (r.applyStatus === 0) {
+                str = '<span class="table-action" onclick="f_enterApply(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>申请入库</span>';
+            } else if (r.applyStatus === 1) {
+                str = '<span class="table-action" onclick="f_cancelApply(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>取消申请</span>';
+            } else if (r.applyStatus === 2) {
+                str = '<span class="table-action" onclick="f_confirmEnterApply(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>确认入库</span>';
+            } else if (r.applyStatus === 3 || r.applyStatus === 4) {
+                str = '<span class="table-action" onclick="f_recoveryApply(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>恢复申请</span><span class="table-action" onclick="f_closeApply(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>关闭申请</span>';
+            } else if (r.applyStatus === 5) {
+                str = '<span class="table-action" onclick="f_closeApply(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>关闭申请</span>';
+            } else {
+                str = '<span class="table-action">暂无操作</span>';
+            }
+            return str;
+        }
+    </script>
+}

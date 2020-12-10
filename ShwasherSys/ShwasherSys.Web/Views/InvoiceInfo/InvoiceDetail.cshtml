@@ -1,0 +1,396 @@
+﻿@using Abp.Authorization
+@using IwbZero.Setting
+@using NPOI.SS.Formula.Functions
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.CustomerInfo
+@using ShwasherSys.Invoice
+@using ShwasherSys.OrderSendInfo
+@using ShwasherSys.OrderSendInfo.Dto
+
+@{
+    Layout = null;
+    ViewBag.Title = "InvoiceBillDetail";
+    Customer customerInfo = ViewBag.CustomerInfo;
+    OrderSendBillDto sendBill = ViewBag.SendBill;
+    string sendStickBillNo = ViewBag.SendStickBillNo;
+    List<ViewOrderSendStickBill> orderSends = ViewBag.OrderSends;
+    /*string sendTitle = SettingManager.GetSettingValue("SysUserCop") + SettingManager.GetSettingValue("SENDBILLTITLE");
+    string sendAddress = SettingManager.GetSettingValue("SENDADDRESS");
+    string sendTel = SettingManager.GetSettingValue("SENDTELEPHONE");*/
+    string tddate = "日期: " + DateTime.Now.Year + " 年 " + DateTime.Now.Month + " 月 " + DateTime.Now.Day + " 日 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+    bool isCanViewPrice = PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderMgQueryOrderPrice);
+
+}
+<html>
+<head>
+    <title>发票详情</title>
+    <link href="~/Content/Css/PrintPage.css" rel="stylesheet" media="all" />
+    <link href="~/Content/Plugins/PrintPreView/print-preview.css" rel="stylesheet" />
+    @*<link href="~/Content/Plugins/jquery-print-preview/src/css/print-preview.css" rel="stylesheet" media="screen" />
+        <script src="https://cdn.bootcss.com/jquery-tools/1.2.7/jquery.tools.min.js"></script>
+        <script src="~/Content/Plugins/jquery-print-preview/src/jquery.print-preview.js"></script>*@
+
+    @*<script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>*@
+
+    <style>
+    </style>
+</head>
+
+<body>
+    <div id="exportCss">
+        <style>
+            .table-body {
+                width: 800px;
+                border-collapse: collapse;
+                font-size: 12px;
+                border-width: thin;
+                table-layout: fixed;
+                WORD-BREAK: break-all;
+                WORD-WRAP: break-word;
+            }
+
+                .table-body tr {
+                    height: 18px;
+                    border-top: 1px solid #888383
+                }
+
+                    .table-body tr:last-of-type td {
+                        border-bottom: 1px solid #000
+                    }
+
+                    .table-body tr td {
+                        height: 18px;
+                        padding: 3px 2px;
+                        text-align: center;
+                        border-left: 1px solid #888383
+                    }
+
+                        .table-body tr td:last-of-type {
+                            height: 18px;
+                            border-right: 1px solid #000;
+                        }
+
+            .trColor:nth-child(even) {
+                background: #efe7e7
+            }
+
+            .trColor:nth-child(odd) {
+                background: #FFF
+            }
+        </style>
+    </div>
+    <header style="height: 40px;">
+        <div style="position: absolute;left: calc(50% - 100px)">
+            <input type="button" value="打印" class="btn" id="printBtn" />
+            <input type="button" value="导出Excel" class="btn" id="exportReport" />
+        </div>
+        <hr class="hr01" />
+    </header>
+    <div id="printContent" style="">
+        @{
+                var colspan = isCanViewPrice ? 15 : 11;
+      var col3 = colspan/5;
+      var col4 = colspan/4+1;
+      var col5 = colspan/5;
+      var col6 = colspan/3;
+      var col7 = colspan/2+1;
+      var col8 = colspan / 7;
+        }
+        <table style="width: 900px; margin: 0 auto" id="tableHeader">
+            <tr style="height: auto">
+                <td colspan="@col8"></td>
+                @{
+        var col2 = colspan - 2;
+                }
+                <td style="height: auto; text-align: left; padding: 10px 0px 10px 50px" colspan="@col2">
+                    <img src="~/Content/Images/excle/report.png" style="width: 650px; height: 100px;" />
+                </td>
+            </tr>
+            <tr style="height: auto">
+                <td style="height: auto; text-align: center; padding: 5px; font-size: 25px;" colspan="@colspan">
+                    <strong><span>开票前对账(发票)</span></strong>
+                </td>
+            </tr>
+            <tr style="height: auto">
+                @{
+
+                }
+                <td style="width: 15%; text-align: right;" colspan="@col3">
+                    <strong><span>客户：</span></strong>
+                </td>
+                <td style="width: 25%; font-size: 13px; font-family: 黑体;" id="tdcustormer" colspan="@col4">
+                    
+                    @customerInfo.CustomerName
+                </td>
+                <td style="width: 20%; text-align: right;" colspan="@col5">
+                    <strong><span>地址：</span></strong>
+                </td>
+                <td style="width: 60%; font-size: 13px; font-family: 黑体;" id="tdsendaddr" colspan="@col6">
+                    @if (sendBill != null)
+                    {
+                        @sendBill.SendAddress
+                    }
+                </td>
+            </tr>
+            <tr style="height: auto">
+                <td style="width: 15%; text-align: right;" colspan="@col3">
+                    <strong><span>联系电话：</span></strong>
+                </td>
+                <td style="width: 25%; font-size: 13px; font-family: 黑体;" id="tdtel" colspan="@col4">
+                     @if (sendBill != null)
+                     {
+                         @sendBill.ContactTels
+                     }                     
+                </td>
+                <td style="width: 20%; text-align: right;" colspan="@col5">
+                    <strong><span>联系人：</span></strong>
+                </td>
+                <td style="width: auto; font-size: 13px; font-family: 黑体;" id="tdlinkman" colspan="@col6">
+                    @if (sendBill != null)
+                    {
+                        @sendBill.ContactMan
+                    }  
+                   
+                </td>
+            </tr>
+            <tr style="height: auto;">
+                <td align=right colspan="@col5">
+                    <strong>单号：</strong>
+                </td>
+                <td id="tddanhao" colspan="@col4" style="font-size: 13px; font-family: 黑体;">
+                    @sendStickBillNo
+                </td>
+                <td style="width: auto; text-align: right; font-family: 黑体;" id="tddate" colspan="@col7">
+                    @Html.Raw(tddate)
+                </td>
+            </tr>
+            <tr>
+
+                <td colspan="@colspan">
+                    <table style="width: 1000px; table-layout: auto;" class="table-body">
+                        <tr>
+                            <td style="width: 35px; text-align: center;">
+                                <strong>序号</strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    客户订单号
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    送货单号
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    送货日期
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    零件号
+                                </strong>
+                            </td>
+
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    规格
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    产品名
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    硬度
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    表色
+                                </strong>
+                            </td>
+
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    数量
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    单位
+                                </strong>
+                            </td>
+                            @if (isCanViewPrice)
+                {
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    含税单价
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    不含税单价
+                                </strong>
+                            </td>
+                            <td style="text-align: center; font-size: 14px;">
+                                <strong>
+                                    含税总价
+                                </strong>
+                            </td>
+                            <td style="text-align: center; border-right: 1px solid #888383;">
+                                <strong>
+                                    不含税总价
+                                </strong>
+                            </td>
+                }
+                        </tr>
+                        @{
+                int index = 1;
+                decimal ldAccontTotal = 0;
+                decimal ldNoTaxTotal = 0;
+                string currencyId = "CNY";
+                foreach (var orderSend in orderSends)
+                {
+                    var sendQuantity = string.Format("{0:N3}", orderSend.SendQuantity ?? 0);
+                    var price = string.Format("{0:N3}", orderSend.Price);
+                    var noTaxprice = string.Format("{0:N3}", orderSend.AfterTaxPrice);
+                    var totalprice = string.Format("{0:N3}", orderSend.totalprice);
+                    var totalNoTaxprice = string.Format("{0:N3}", (orderSend.SendQuantity ?? 0) * orderSend.AfterTaxPrice);
+                    var sendDate = string.Format("{0:yyyy-MM-dd}", orderSend.SendDate);
+                    currencyId = orderSend.CurrencyId;
+                    string tmp = "";
+                            <tr class="trColor">
+                                @if (index == orderSends.Count)
+                        {
+                            tmp = "border-bottom: 1px solid #888383;";
+                        }
+                                <td style="@tmp">@index</td>
+                                @if (string.IsNullOrEmpty(orderSend.StockNo))
+                        {
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.OrderNo</td>
+                        }
+                        else
+                        {
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.StockNo</td>
+                        }
+
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.OrderSendBillNo</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@sendDate</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.PartNo</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.Model</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.ProductName</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.Rigidity</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.SurfaceColor</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@sendQuantity</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@orderSend.OrderUnitName</td>
+                                @if (isCanViewPrice)
+                        {
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@price</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@noTaxprice</td>
+                                <td style="font-family: 黑体; font-size: 13px; @tmp">@totalprice</td>
+                                <td style="text-align: center; border-right: 1px solid #888383; @tmp">@totalNoTaxprice</td>
+                        }
+                            </tr>
+                    ldAccontTotal += orderSend.totalprice;
+                    ldNoTaxTotal += (orderSend.SendQuantity ?? 0) * orderSend.AfterTaxPrice;
+
+                    index++;
+                }
+
+                string lcAccontTotal = string.Format("{0:N3}", ldAccontTotal);
+                string lcNoTaxTotal = string.Format("{0:N3}", ldNoTaxTotal);
+                        }
+                    </table>
+                </td>
+            </tr>
+            @if (isCanViewPrice)
+{
+            <tr>
+                <td style="text-align: right;" colspan="13">
+                    <strong>总金额(@currencyId)：</strong>
+                </td>
+                <td style="text-align: right;" colspan="2">@lcAccontTotal&nbsp;&nbsp;&nbsp;@lcNoTaxTotal</td>
+            </tr>
+}
+        </table>
+    </div>
+    <script src="~/Content/Scripts/Jquery/jquery-3.3.1.min.js"></script>
+    @*<script src="~/Content/Plugins/printThis/printThis.js"></script>*@
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+    <script src="~/Content/Scripts/MyScript/ExportExcel.js"></script>
+    <script src="~/Abp/Framework/scripts/abp.js"></script>
+    <script src="~/Abp/Framework/scripts/libs/abp.jquery.js"></script>
+    <script src="~/Content/Scripts/MyScript/UtilJs.js"></script>
+    <script>
+        $(function () {
+            /*$("#printBtn").on('click',
+                function () {
+                    $("#printContent").printThis({
+                        debug: false, // show the iframe for debugging
+                        importCSS: true, // import page CSS
+                        importStyle: false, // import style tags
+                        printContainer: true, // grab outer container as well as the contents of the selector
+                        //loadCSS: "path/to/my.css",  // path to additional css file - use an array [] for multiple
+                        pageTitle: "", // add title to print page
+                        removeInline: false, // remove all inline styles from print elements
+                        printDelay: 333, // variable print delay
+                        header: null, // prefix to html
+                        footer: null, // postfix to html
+                        base: false, // preserve the BASE tag, or accept a string for the URL
+                        formValues: true, // preserve input/form values
+                        canvas: false, // copy canvas elements (experimental)
+                        //doctypeString: "...",       // enter a different doctype for older markup
+                        removeScripts: false, // remove script tags from print content
+                        copyTagClasses: false // copy classes from the html & body tag#1#
+                    });
+                });*/
+
+            $("#printBtn").printPreview({
+                printBody: "#printContent",
+                modalWidth: 1000
+            })
+            //$("#exportReport").on('click',
+            //    function (e) {
+            //        var urlPath = window.document.location.href; //浏览器显示地址 http://10.15.5.83:5555/ISV/demo.aspx?a=1&b=2
+            //        var docPath = window.document.location.pathname; //文件在服务器相对地址 /ISV/demo.aspx
+            //        var index = urlPath.indexOf(docPath);
+            //        var serverPath = urlPath.substring(0, index); //服务器地址 http://10.15.5.83:5555
+
+            //        var imgTr = $("#tableHeader").find('tr:first').clone();
+            //        $("#tableHeader").find('tr:first img')
+            //            .attr("src", serverPath + "/Content/Images/excle/report2.png");
+            //        $("#tableHeader").find('tr:first td')
+            //            .css({ "height": "120px" });
+            //        $("#tableHeader").find('tr:first td img').css({ "width": "800px" });
+            //        ExportExcel('printContent', '发票明细', 'exportCss');
+            //        $("#tableHeader").find('tr:first').remove();
+            //        $("#tableHeader").prepend(imgTr);
+            //        //var imgTr = $("#tableHeader").find('tr:first').clone();
+            //        //$("#tableHeader").find('tr:first').remove();
+            //        //ExportExcel('printContent', '发票明细', 'exportCss');
+            //        //$("#tableHeader").prepend(imgTr);
+            //    });
+            $("#exportReport").on('click',
+                function(e) {
+                    SaveAjax({
+                        url: "/api/services/app/OrderStickBill/ExportInvoice",
+                        isValidate: false,
+                        isAlert: false,
+                        data: { id: '@sendStickBillNo' },
+                        success: function (res) {
+                            var urlPath = window.document.location.href; //浏览器显示地址 http://10.15.5.83:5555/ISV/demo.aspx?a=1&b=2
+                            var docPath = window.document.location.pathname; //文件在服务器相对地址 /ISV/demo.aspx
+                            var index = urlPath.indexOf(docPath);
+                            var serverPath = urlPath.substring(0, index); //服务器地址 http://10.15.5.83:5555
+                            window.location.href = serverPath+"/" + res;
+                        }
+                    });
+                });
+        })
+    </script>
+</body>
+</html>

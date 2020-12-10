@@ -1,0 +1,1326 @@
+﻿@using System.Web.UI.HtmlControls
+@using Abp.Authorization
+@using IwbZero.Session
+@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesOrderInfoOrderStatusMg; //The menu item will be active for this page.
+    ViewBag.Title = "订单状态维护";
+    List<SelectListItem> OrderStatusList = ViewBag.OrderStatus;
+    List<SelectListItem> OrderItemStatusList = ViewBag.OrderItemStatus;
+    List<SelectListItem> emergencyLevelList = ViewBag.EmergencyLevel;
+    Boolean isCanChangeOrderItemStatus = IsGranted(PermissionNames.PagesOrderInfoOrderStatusMgChangeStatus);
+    Boolean isCanViewPrice = IsGranted(PermissionNames.PagesOrderInfoOrderStatusMgQueryOrderPrice);
+    string startDate = DateTime.Now.AddMonths(-3).ToString("yyyy-MM-dd");
+    string endDate = DateTime.Now.AddDays(7).ToString("yyyy-MM-dd");
+
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+            new SearchItem("id", "流水号"),
+            new SearchItem("orderDate", "订单日期",FiledType.D,ExpType.GreaterOrEqual,value:startDate),
+            new SearchItem("orderDate", "到",FiledType.D,ExpType.LessOrEqual,value:endDate),
+            new SearchItem("customerId", "客户编号").SetSearchIcon("query_customer_modal"),
+            new SearchItem("stockNo", "客户订单号"),
+            new SearchItem("orderStatusId", "状态",FiledType.I,ExpType.Equal).SetSearchItem(OrderStatusList)
+
+},false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet"/>
+    <link href="~/Content/Plugins/bootstrap-table-fixd-columns/bootstrap-table-fixed-columns.css" rel="stylesheet" />
+    <style>
+        .form-panel {
+            margin-bottom: 5px;
+        }
+
+        .form-panel-header {
+            padding: 3px 10px;
+        }
+
+        .query-label {
+            margin-bottom: 1px;
+        }
+
+        .query-form-control {
+            padding: 1px 12px;
+            height: 25px;
+        }
+
+        .query-form-group {
+            margin-bottom: 5px;
+        }
+
+        .item-tool-col {
+            padding: 10px;
+            color: azure
+        }
+        .sendQuantity {
+        }
+        .box {
+            border: 2px solid #938f9a;
+            border-radius: 10px;
+            padding: 0px 0px;
+        }
+        .box .box-header {
+            height: 50px;
+            background: #938f9a;
+          
+        }
+        .form-input-send {
+            height: 30px;
+        }
+
+    </style>
+}
+<style>
+    label.error {
+           
+        bottom: 12px;
+        right: 15px;
+    }
+</style>
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu,searchForm })
+  
+    <table id="table"
+           data-url="/api/services/app/OrderHeaders/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true"
+           data-show-jumpto="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">流水号</th>
+                <th data-align="center" data-field="orderStatusId" data-formatter="OrderStatusFormatter">订单状态</th>
+                <th data-align="center" data-field="isLock" data-formatter="IsLockFormatter">是否删除</th>
+                <th data-align="center" data-field="customerId">客户编号</th>
+                <th data-align="center" data-field="stockNo">客户订单号</th>
+                <th data-align="center" data-field="orderDate" data-formatter="DateFormatter">订单日期</th>
+                <th data-align="center" data-field="linkName">联系人</th>
+                <th data-align="center" data-field="telephone">电话</th>
+                <th data-align="center" data-field="saleManName">订单业务员</th>
+                <th data-align="center" data-field="saleTypeName">外销/内销</th>
+                <th data-align="center" data-field="timeCreated">创建日期</th>
+                @*
+        <th data-align="center" data-formatter="ActionsFormatter"></th>
+                *@
+
+            </tr>
+        </thead>
+    </table>
+</div>
+<div class="table-box mr-4  iwb-bootstrap-table" id="orderItemDiv" style="display: none;">
+    <div class="btn-toolbar row" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="col-sm-2 col-lg-2 item-tool-col" >
+            <span style=""><strong>流水号:</strong></span><span id="orderHeaderNo"></span>
+        </div>
+        <div class="col-sm-2 col-lg-2 item-tool-col">
+            <span><strong>客户订单号:</strong></span><span id="stockNo"></span>
+        </div>
+        <div class="col-sm-2 col-lg-2 item-tool-col">
+            @if (isCanChangeOrderItemStatus)
+            {
+                <button class="btn btn-info" style="height: 20px; padding: 0px 12px;border-radius: 50px;" id="BtnChangeOrderItemStatus" onclick="f_ChangeOrderItemStatus()"><i class="iconfont icon-edit"></i>修改订单明细状态</button>
+            }
+        </div>
+        <div class="col-sm-3 col-lg-3 item-tool-col">
+            @if (IsGranted(PermissionNames.PagesOrderInfoOrderStatusMgAuditItem))
+            {
+                <button class="btn btn-warning" style="height: 20px; padding: 0px 12px; border-radius: 50px;" id="BtnAuditNewOrderItems" onclick="f_AuditNewOrderItems()"><i class="iconfont icon-shenhe"></i>审核全部新建订单</button>
+            }
+        </div>
+        <div class="col-sm-3 col-lg-3 item-tool-col">
+            <span><strong>当前订单是否已全部完成发货:</strong></span><span id="isAllSend" style="color: red">未完成</span>
+        </div>
+    </div>
+    <table id="tableOrderItem"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="false" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-click-to-select="true"
+           data-single-select="false" data-show-footer="true" >
+        <thead>
+            <tr class="row">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="orderStatusName" data-formatter="OrderItemStatusFormatter" data-footer-formatter="合计：">当前状态</th>
+                <th data-align="center" data-field="id">明细流水号</th>
+                <th data-align="center" data-field="productNo">产品编号</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="productName">型号</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="emergencyLevel" data-formatter="EmergencyLevelFormatter">紧急程度</th>
+                @if (isCanViewPrice)
+                {
+                    @*<th data-align="center" data-field="currencyId">货币</th>*@
+                    @*<th data-align="center" data-field="currencyPrice" data-formatter="CurrencyPriceFormatter">货币价格(含税)</th>*@
+                    <th data-align="center" data-field="price" data-formatter="PriceFormatter">含税价格</th>
+                    <th data-align="center" data-field="afterTaxPrice" data-formatter="TaxPriceFormatter">不含税价格</th>
+                }
+                <th data-align="center" data-field="quantity" data-formatter="QuantityFormatter">总数</th>
+                <th data-align="center" data-field="isSendQuantity">已发数</th>
+                <th data-align="center" data-field="remainingQuantity">剩余数</th>
+                @if (isCanViewPrice)
+                {
+                    <th data-align="center" data-field="totalPrice" data-footer-formatter="AllTotalPriceFormatter" data-formatter="TotalPriceFormatter">含税总金额</th>
+                    <th data-align="center" data-field="afterTaxTotalPrice" data-footer-formatter="AllAfterTaxTotalPriceFormatter" data-formatter="TotalPriceFormatter">不含税总金额</th>
+                }
+                <th data-align="center" data-field="sendDate" data-formatter="SendDateFormatter">送货日期</th>
+                @*<th data-align="center" data-field="isReport" data-formatter="IsReportFormatter">检验报告</th>*@
+                <th data-align="center" data-field="operatorAction" data-formatter="ActionsItemFormatter"></th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+@section modal{
+   
+    <section>
+        <div class="modal fade" id="modalSendOrder" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true" >
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 850px; ">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <input type="hidden" id="totalQuantity" />
+                        <input type="hidden" id="isSendQuantity" />
+                        <input type="hidden" id="canSendQuantity" />
+                        <input type="hidden" id="orderItemNo_ForSend" />
+                        <div class="box-title" style="line-height: 25px; color: #f9f9f9;display: block;">
+                            @*<span id="productId"></span>*@
+                            @*<input type="text" name="productId" id="productId" />*@
+                            <label class="iwb-label col-md-2 control-label iwb-label-required" for="productId" style="padding: 3px 3px;">产品编号</label>
+                            <div class="col-md-4" style="margin-left: -30px;">
+                                <div class="input-group">
+                                    <input class="form-control" Required id="productId" disabled="disabled" name="productId" placeholder="请输入..." value="" style="width:100%;" type="text" />
+                                    @if(PermissionChecker.IsGranted(PermissionNames.PagesOrderInfoOrderStatusMgReplaceSendItem))
+                                    {
+                                        <div class="input-group-addon" onclick="ShowModal('query_Product_modal');">
+                                            <i class="iconfont icon-search"></i>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            &nbsp;&nbsp;
+                            <div class="col-md-5">已发/总数:<span id="IsSendQuantity" style="text-decoration: underline"></span>&nbsp;&nbsp;被定量:<span id="IsLockQuantity" style="text-decoration: underline"></span></div>
+                        </div>
+
+                        <div style="position: absolute; right: 5px; top: 8px">
+                            <button class="btn btn-info" onclick="SendOrderAction()">确认发货</button>
+                            <button class="btn btn-default" onclick="$('#modalSendOrder').modal('hide')">取消</button>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formSend">
+                            @*<input type="number" class="form-control number sendQuantity form-input-send" id="ffffff" name="ffffff" required min="0" />*@
+                            <table class="table table-striped fahuo">
+                                <tbody>
+                                <tr>
+                                    <th style="width: 150px">批次号</th>
+                                    <th style="width: 150px">库位</th>
+                                    @*<th style="width: 125px">包装(每包千件数)</th>*@
+                                    <th style="width: 150px">可用数量(千件)</th>
+                                    <th style="width: 200px">发货数量</th>
+                                    <th style="width: 200px">千件/每包</th>
+
+                                </tr>
+
+                                </tbody>
+                            </table>
+                        </form>
+                
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modalChangePrice" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("价格变更",""))
+                    @{
+                        var inputs = new List<InputViewModel>
+                        {
+                            new InputViewModel("orderItemNo",displayName:"订单明细编号",name:"orderItemNo").SetDisabled(),
+                            new InputViewModel("oldPrice",displayName:"原价格",@class:"number",other:"min=0.001").SetReadOnly(),
+                            new InputViewModel("newPrice", displayName:"修改的价格",@class:"number",other:"min=0.001"),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+
+                    @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modalChangePrice", "ChangePrice()"))
+
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalChangeAfterTaxPrice" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("税后价格变更",""))
+                    @{
+                        var inputs5 = new List<InputViewModel>
+                        {
+                            new InputViewModel("orderItemNo5",displayName:"订单明细编号",name:"orderItemNo").SetDisabled(),
+                            new InputViewModel("oldPrice2",displayName:"原税后价格",@class:"number",name:"oldPrice",other:"min=0").SetReadOnly().SetNotRequired(),
+                            new InputViewModel("newAfterTaxPrice", displayName:"修改的价格",@class:"number",other:"min=0"),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs5))
+
+                    @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modalChangeAfterTaxPrice", "ChangeAfterTaxPrice()"))
+
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalChangeQuantity" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("数量变更",""))
+                    @{
+                        var inputs2 = new List<InputViewModel>
+                        {
+                            new InputViewModel("orderItemNo2",displayName:"订单明细编号",name:"orderItemNo").SetDisabled(),
+                            new InputViewModel("oldQuantity",displayName:"原数量",@class:"number",other:"min=0.001").SetReadOnly(),
+                            new InputViewModel("newQuantity", displayName:"修改的数量",@class:"number",other:"min=0.001"),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs2))
+
+                    @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modalChangeQuantity", "ChangeQuantity()"))
+
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalChangeSendDate" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("发货日期变更",""))
+                    @{
+                        var inputs3= new List<InputViewModel>
+                        {
+                            new InputViewModel("orderItemNo3",displayName:"订单明细编号",name:"orderItemNo").SetDisabled(),
+                            new InputViewModel("oldSendDate",displayName:"原发货日期",@class:"date").SetDisabled(),
+                            new InputViewModel("newSendDate", displayName:"修改日期",@class:"date"),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs3))
+
+                    @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modalChangeSendDate", "ChangeSendDate()"))
+
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal fade" id="modalChangeStatus" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("订单明细状态变更", ""))
+                    @{
+                        var inputs4 = new List<InputViewModel>
+                                {
+                            new InputViewModel("orderItemStatusId",InputTypes.List,"变更状态").SetSelectOptions(OrderItemStatusList)
+                        };
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs4))
+                    @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modalChangeStatus", "ChangeOrderItemStatus()"))
+                </div>
+            </div>
+           
+        </div>
+    </section>
+    <section>
+        @Html.Partial("Modals/Query/_Customer", "KeyWords-4")
+        @Html.Partial("Modals/Query/_Product", "productId")
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="~/Content/Plugins/bootstrap-table-fixd-columns/bootstrap-table-fixed-columns.js"></script>
+    <script src="http://apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        var customerNo;
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function() {
+            //show完毕前执行
+            $("#KeyWords-2").datetimepicker(datePickerOpt).on('show',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            $("#KeyWords-3").datetimepicker(datePickerOpt).on('show',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            $("#newSendDate").datetimepicker(datePickerOpt).on('show',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            $.extend(funs, { btnAudit: function(url) { BtnAudit(url); } });
+            funs["btnPrint"] = function(url) {
+                BtnPrint(url);
+            }
+            funs["btnQuery"] = function(url) {
+                BtnShow(url);
+            }
+            //$(".sendQuantity").on('change',
+            //    function() {
+            //        var quantity = Number($(this).val());
+            //        var max = Number($(this).data("maxquantity"));
+            //        if (quantity > max) {
+            //            $(this).val(max);
+            //        }
+            //    });
+            $(".modal-dialog").draggable();
+        });
+
+        function BtnPrint(url) {
+            var rows = config.table.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                window.open("@Url.Action("OrderPrint")/" + rows[0].id, "_blank");
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+
+        }
+
+        function BtnShow(url) {
+            var rows = config.table.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                window.open("@Url.Action("OrderDetail")/" + rows[0].id, "_blank");
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+
+        }
+
+        function OnLoadSuccess() {
+            $(".bs-checkbox").find("input").addClass("filled-in").after("<label></label>");
+            _isSearching = false;
+            abp.ui.clearBusy();
+            setTimeout(function() {
+                    var alldata = $("#table").bootstrapTable('getData');
+                    console.log(alldata);
+                if (alldata.length > 0) {
+                    console.log(alldata);
+                    $("#table").bootstrapTable('check', 0);
+                } else {
+                    $("#orderItemDiv").css("display", "none");
+                }
+                },
+                500);
+        }
+
+        function BtnAudit(url) {
+            var rows = $("#table").bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                abp.message.confirm("确认审核通过？",
+                    "订单审核",
+                    function() {
+                        if (rows[0].orderStatusId !== 2) {
+                            abp.message.warn("非新建的订单,无法进行审核！");
+                            return;
+                        }
+                        SaveAjax({
+                            url: url,
+                            dataType: "json",
+                            data: { id: rows[0].id },
+                            isAlert: false,
+                            isValidate: false,
+                            success: function(res) {
+                                if (res) {
+                                    $("#table").bootstrapTable("updateCellById", { id: rows[0].id, field: "orderStatusId", value: 3 });
+                                    RefreshOrderItemTable(rows[0].id, rows[0].orderStatusId, rows[0].saleType);
+                                }
+                            }
+                        });
+                    });
+
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+
+        }
+
+        function OnCheck(row, $element) {
+            RefreshOrderItemTable(row.id, row.orderStatusId,row.saleType);
+            $("#orderHeaderNo").html(row.id);
+            $("#stockNo").html(row.stockNo);
+            //$("#isAllSend")
+            customerNo = row.customerId;
+            console.log(customerNo);
+        }
+
+        function OnUnCheck(row, $element) {
+            $("#table").bootstrapTable('resetView');
+            $orderItemDiv.css("display", "none");
+            customerNo = "";
+            $("#table").bootstrapTable('resetView', { height: 800 });
+        }
+
+
+        function OrderStatusFormatter(v, r) { //danger
+            if (r.orderStatusId === 2) {
+                return '<span class="label label-success">新建</span>';
+            } else if (r.orderStatusId === 3) {
+                return '<span class="label label-danger">已审核</span>';
+            } else if (r.orderStatusId === 12) {
+                return '<span class="label label-primary">完成</span>';
+            }
+            return v;
+        }
+
+
+        //item
+        var $tableOrderItem = $("#tableOrderItem");
+        var $orderItemDiv;
+        function RefreshOrderItemTable(orderNo, orderStatusId, saleType) {
+            $orderItemDiv = $("#orderItemDiv");
+            if (orderNo) {
+                $("#table").bootstrapTable('resetView', { height: 300 });
+                $orderItemDiv.css("display", "block");
+                SaveAjax({
+                    url: window.appUrl + "OrderItems/GetOrderItemsByOrderNo?pcOrderNo=" + orderNo,
+                    dataType: "json",
+                    isAlert: false,
+                    isValidate: false,
+                    success: function(res) {
+                        console.log(res);
+                        if (res && res.orderItems.length > 0) {
+                            if (res.isAllSend) {
+                                $('#isAllSend').html("完成");
+                            } else {
+                                $('#isAllSend').html("未完成");
+                            }
+                            $tableOrderItem.bootstrapTable("destroy");
+                            $tableOrderItem.bootstrapTable({
+                                data: res.orderItems,
+                                onPostBody: OnPostBody,
+                                onAll: OnAllItem
+                            });
+                            if (orderStatusId === 2) {
+                                $tableOrderItem.bootstrapTable("hideColumn", "operatorAction");
+                            } else {
+                                $tableOrderItem.bootstrapTable("showColumn", "operatorAction");
+                            }
+                            if (saleType === 2) {
+                                $tableOrderItem.bootstrapTable("hideColumn", "afterTaxPrice");
+                                $tableOrderItem.bootstrapTable("hideColumn", "afterTaxTotalPrice");
+                            }
+                            $tableOrderItem.bootstrapTable('resetView');
+                            $(".bs-checkbox").find("input").addClass("filled-in").after("<label></label");
+                            $("#tableOrderItem thead th.bs-checkbox ").off("click.checkOnTable").on(
+                                "click.checkOnTable",
+                                function() {
+                                    $(this).find("input").click();
+                                });
+                        } else {
+                            $orderItemDiv.css("display", "none");
+                            $tableOrderItem.bootstrapTable("destroy");
+                            $tableOrderItem.bootstrapTable({ data: "", onPostBody: OnPostBody });
+                            $("#table").bootstrapTable('resetView', { height: 800 });
+                        }
+                    }
+                });
+            } else {
+                $orderItemDiv.css("display", "none");
+                $tableOrderItem.bootstrapTable("destroy");
+                $tableOrderItem.bootstrapTable({ data: "", onPostBody: OnPostBody });
+                $("#table").bootstrapTable('resetView', { height: 800 });
+            }
+
+        }
+
+        function OnAllItem() {
+            $("#BtnChangeOrderItemStatus")
+                .prop('disabled', $tableOrderItem.bootstrapTable('getSelections').length < 1);
+        }
+
+    </script>
+
+    <script>
+        function Submit_query_Product_modal(row) {
+            if (row) {
+                var productNo = row.id;
+                $("#productId").val(productNo);
+                reloadSendTable(productNo);
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+            $("#query_Product_modal").modal('hide');
+        }
+
+        function reloadSendTable(productNo) {
+            var $tbody = $(".table.table-striped.fahuo > tbody");
+            $tbody.find("tr:not(:first)").remove();
+            var customerId = $("#table").bootstrapTable("getSelections")[0].customerId;
+            SaveAjax({
+                url: window.appUrl + "Query/QueryStoreFilter?productNo=" + productNo+'&customerId='+customerId,
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    //console.log(res);
+                    if (res && res.length > 0) {
+
+                        res.forEach(function(r) {
+                            var sTr = '<tr>';
+                            sTr += '<td class="currentProductStoreHouseNo" style="display:none;">' +
+                                r.currentProductStoreHouseNo +
+                                '</td>';
+                            sTr += '<td class="productionOrderNo">' + r.productionOrderNo + '</td>';
+                            sTr += '<td class="storeLocationNo">' + r.storeLocationNo + '</td>';
+                            var isCanUser = formatNum(Number(r.quantity), Number(r.freezeQuantity), 3);
+                            sTr += '<td>' + isCanUser + '</td>';
+                            sTr +=
+                                '<td style="position:relative"><input type="text"  name="SendQuantity" class="form-control number sendQuantity form-input-send"  min="0"  max="' +
+                                isCanUser +
+                                '"/></td>';
+                            sTr +=
+                                '<td style="position:relative"><input type="text"  name="AvgSendQuantity" class="form-control number avgQuantity form-input-send"  min="0"/></td>';
+                            sTr += '</tr>';
+                            $tbody.append(sTr);
+
+                        });
+                    }
+                }
+            });
+            SaveAjax({
+                url: window.appUrl + "OrderItems/GetCurrentProductLock?productNo=" + productNo+'&orderNo='+$("#orderHeaderNo").text(),
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    if (res) {
+                        $("#IsLockQuantity").html(res.quantity);
+                    }
+                }
+            });
+        }
+
+        function f_SendOrderItem(id, quantity, isSendQuantity, productNo) {
+            $("#productId").val(productNo);
+            $("#orderItemNo_ForSend").val(id);
+            if (!isSendQuantity || !(isSendQuantity > 0)) {
+                isSendQuantity = 0;
+            }
+           
+            $("#IsSendQuantity").html('' + isSendQuantity + '/' + quantity);
+            var totalQuantity = Number(quantity);
+            isSendQuantity = Number(isSendQuantity);
+
+            var canSendQuantity = formatNum(totalQuantity, isSendQuantity, 3);
+            $("#canSendQuantity").val(canSendQuantity);
+            $("#isSendQuantity").val(isSendQuantity);
+            $("#totalQuantity").val(totalQuantity);
+            reloadSendTable(productNo);
+            $("#modalSendOrder").modal("show");
+        }
+
+        function SendOrderAction() {
+            var orderItemId = $("#orderItemNo_ForSend").val();
+            console.log("orderItemId" + orderItemId);
+            var productId = $("#productId").val();
+            var $tbody = $(".table.table-striped.fahuo > tbody");
+            var trDatas = $tbody.find("tr:not(:first)");
+            var sendAll = 0;
+            var dataParam = {
+                ProductNo: productId,
+                CustomerNo:customerNo,
+                SendItems: [],
+                Id: orderItemId,
+                SendAllQuantity: 0
+            };
+            if (trDatas) {
+                for (var i = 0; i < trDatas.length; i++) {
+                    var sendItem = {};
+                    var sendQuantity = $(trDatas[i]).find(".sendQuantity").val();
+                    if (!sendQuantity || Number(sendQuantity) <= 0) {
+                        continue;
+                    }
+                    sendItem.SendQuantity = Number(sendQuantity);
+
+                    var avgQuantity = $(trDatas[i]).find(".avgQuantity").val();
+                    if (!avgQuantity || Number(avgQuantity) <= 0) {
+                        avgQuantity = sendQuantity;
+                    }
+                    sendItem.AvgQuantity = Number(avgQuantity);
+
+                    var currentProductStoreHouseNo = $(trDatas[i]).find(".currentProductStoreHouseNo").text();
+                    if (currentProductStoreHouseNo) {
+                        sendItem.CurrentProductStoreHouseNo = currentProductStoreHouseNo;;
+                    }
+
+                    var productionOrderNo = $(trDatas[i]).find(".productionOrderNo").text();
+                    if (productionOrderNo) {
+                        sendItem.ProductBatchNum = productionOrderNo;
+                    } else {
+                        sendItem.ProductBatchNum = "00000000000";
+                    }
+
+                    var storeLocationNo = $(trDatas[i]).find(".storeLocationNo").text();
+                    if (storeLocationNo) {
+                        sendItem.StoreLocationNo = storeLocationNo;
+                    }
+                    dataParam.SendItems.push(sendItem);
+                    sendAll += Number(sendQuantity);
+                }
+
+            }
+            if (sendAll <= 0) {
+                abp.message.warn("发货总量需要大于0千件！");
+                return;
+            }
+            var canSendQuantity = Number($("#canSendQuantity").val());
+            dataParam.SendAllQuantity = sendAll;
+           var save= function () {
+               SaveAjax({
+                   url: window.appUrl + "OrderItems/SendOrderAction",
+                   //contentType: 'application/json',
+                   dataType: "json",
+                   form: $("#formSend"),
+                   data: dataParam,
+                   isAlert: false,
+                   isValidate: true,
+                   success: function(res) {
+                       if (res) {
+                           RefreshOrderItemTable(res.orderNo);
+                           $("#modalSendOrder").modal("hide");
+                       }
+                   }
+               });
+            }
+
+            if (sendAll > canSendQuantity) {
+              var isSendQuantity=  $("#isSendQuantity").val(),totalQuantity= $("#totalQuantity").val();
+              var temp = formatNum (Number(sendAll) + Number(isSendQuantity),Number(totalQuantity) + Number(totalQuantity * 0.05),3);
+                if (temp>0) {
+                    abp.message.warn("发货总量已超出订单发货量5%,不能继续操作！");
+                    return;
+                }
+                abp.message.confirm("发货总量已超出订单发货量，是否要继续发货？","确认发货",
+                    function(isConfirmed) {
+                        if (isConfirmed) {
+                            save();
+                        }
+                    });
+            } else {
+                save();
+            }
+
+            
+        }
+
+        var formatNum = function(f1, f2, digit) {
+            //var m = Math.pow(10, digit); 
+            //return parseInt(f1*m-f2*m, 10) / m; 
+            var z = f1 - f2;
+            return z.toFixed(digit);
+        }
+
+        function DateFormatter(v, r) {
+            var sendDate = new Date(v);
+            return '<span style="text-decoration:underline;" >' + sendDate.Format('yyyy-MM-dd') + '</span>';
+        }
+
+        function f_AuditOrderItem(id) {
+
+            abp.message.confirm("确认审核通过？",
+                "订单明细审核",
+                function() {
+                    SaveAjax({
+                        url: window.appUrl + "OrderItems/Audit",
+                        dataType: "json",
+                        data: { id: id },
+                        isAlert: false,
+                        isValidate: false,
+                        success: function(res) {
+                            if (res) {
+                                RefreshOrderItemTable(res.orderNo);
+                            }
+                        }
+                    });
+                });
+        }
+
+        function f_CloseOrderItem(id) {
+           
+            SaveAjax({
+                url: window.appUrl + "OrderItems/End",
+                dataType: "json",
+                data: { id: id },
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    if (res) {
+                        RefreshOrderItemTable(res.orderItem.orderNo);
+                        //$("#table").bootstrapTable("refresh", { silent: true });
+                        /*setTimeout(function() {
+                                $("#table").bootstrapTable("checkBy", { field: "id", value: res.orderNo });//updateCellById
+                            },
+                            500);*/
+                        if (res.isAllEnd) {
+                            $("#table").bootstrapTable("updateCellById",
+                                {
+                                    id: res.orderItem.orderNo,
+                                    field: "orderStatusId",
+                                    value: '<span class="label label-primary">完成</span>'
+                                });
+                            $("#table").bootstrapTable("checkBy", { field: "id", value: res.orderItem.orderNo });
+                        }
+
+                    }
+                }
+            });
+        }
+
+        function f_ChangeOrderItemStatus() {
+            var rows = $tableOrderItem.bootstrapTable("getSelections");
+            if (rows.length > 0) {
+                if (rows[0].isLock === 'Y') {
+                    abp.message.warn("订单已删除,不能变更明细！");
+                    return;
+                }
+                $("#modalChangeStatus").modal("show");
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+        }
+
+        function f_AuditNewOrderItems() {
+            var headRow = config.table.bootstrapTable("getSelections");
+            if (headRow[0].isLock === 'Y') {
+                abp.message.warn("订单已删除,不能审核明细！");
+                return;
+            }
+            if (headRow[0].orderStatusId === 2) {
+                abp.message.warn("订单未审核,不能审核明细！");
+                return;
+            }
+            var datas = $tableOrderItem.bootstrapTable("getData");
+            if (datas.length > 0) {
+                var newDataId = [];
+                datas.forEach(function(r) {
+                    if (r.orderItemStatusId === 2) {
+                        newDataId.push(r.id);
+                    }
+                });
+                if (newDataId.length > 0) {
+                    var nd = newDataId.join(',');
+                    abp.message.confirm("确认审核通过全部新建订单？",
+                        "订单明细审核",
+                        function() {
+                            SaveAjax({
+                                url: window.appUrl + "OrderItems/AuditAllItems",
+                                data: { Id: nd },
+                                isAlert: false,
+                                isValidate: false,
+                                success: function(res) {
+                                    RefreshOrderItemTable(res[0].orderNo);
+                                }
+                            });
+                        });
+                } else {
+                    abp.message.warn("没有可审核的订单明细！");
+                }
+
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+        }
+
+        function ChangeOrderItemStatus() {
+            var rows = $tableOrderItem.bootstrapTable("getSelections");
+            if (rows.length > 0) {
+                var ids = "";
+                rows.forEach(function(r) {
+                    ids += "," + r.id;
+                });
+                ids = ids.substr(1);
+                abp.message.confirm("确认变更选中明细的状态？",
+                    "订单明细状态变更",
+                    function() {
+                        SaveAjax({
+                            url: window.appUrl + "OrderItems/ChangeOrderItemStatusOnHeader",
+                            dataType: "json",
+                            data: { id: ids, orderItemStatusId: $("#orderItemStatusId").val() },
+                            isAlert: false,
+                            isValidate: false,
+                            success: function(res) {
+                                if (res) {
+                                    RefreshOrderItemTable(res.orderItems[0].orderNo);
+                                    if (res.isAllEnd) {
+                                        $("#table").bootstrapTable("updateCellById",
+                                            {
+                                                id: res.orderItems[0].orderNo,
+                                                field: "orderStatusId",
+                                                value: '<span class="label label-primary">完成</span>'
+                                            });
+                                        $("#table").bootstrapTable("checkBy",
+                                            { field: "id", value: res.orderItems[0].orderNo });
+                                    }
+                                    $("#modalChangeStatus").modal("hide");
+                                }
+
+                            }
+                        });
+                    });
+            } else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+        }
+
+        function ActionsItemFormatter(v, r) {
+            var str = "";
+            if (r.orderItemStatusId === 15) {
+                str = '<span class="table-action" onclick="f_SendOrderItem(\'' +
+                    r.id +
+                    '\',\'' +
+                    r.quantity +
+                    '\',\'' +
+                    r.isSendQuantity +
+                    '\',\'' +
+                    r.productNo +
+                    '\')"><i class="iconfont icon-right"></i>发货</span>';
+            } else if (r.orderItemStatusId === 9) {
+                str = '<span class="table-action" onclick="f_CloseOrderItem(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>结束</span>';
+            } else if (r.orderItemStatusId === 2) {
+                str = '<span class="table-action" onclick="f_AuditOrderItem(' +
+                    r.id +
+                    ')"><i class="iconfont icon-right"></i>完成审核</span>';
+            }
+            //else if (r.orderItemStatusId !== 15 && r.orderItemStatusId !== 9 && r.orderItemStatusId !== 11) {
+            //    str = '<span class="table-action" onclick="f_AuditOrderItem(' +
+            //        r.id +
+            //        ')"><i class="iconfont icon-right"></i>完成审核</span>';
+            //}
+            return str;
+        }
+
+        function OrderItemStatusFormatter(v, r) {
+            if (r.orderItemStatusId === 15) {
+                return '<span class="label label-success">完成审核</span>';
+            } else if (r.orderItemStatusId === 9) {
+                return '<span class="label label-danger">发货</span>';
+            } else if (r.orderItemStatusId === 11) {
+                return '<span class="label label-primary">结束</span>';
+            } else if (r.orderItemStatusId === 2) {
+                return '<span class="label label-primary">新建</span>';
+            } else if (r.orderItemStatusId === 20) {
+                return '<span class="label label-primary">协商完成</span>';
+            }
+            return v;
+        }
+
+
+        function IsReportFormatter(v, r) {
+            var str = "";
+            if (v === "Y") {
+                str = '<span class="table-action">需要</span>';
+            } else if (v === "N") {
+                str = '<span class="table-action">不需要</span>';;
+            }
+            return str;
+        }
+
+        function SendDateFormatter(v, r) {
+            var dataNow = abp.clock.now();
+            var sendDate = new Date(v);
+            var s1 = dataNow.getTime(), s2 = sendDate.getTime();
+            var span = (s2 - s1) / 1000;
+            var dayspan = parseInt(span / (24 * 60 * 60));
+            if (dayspan < 0) {
+                return '<span style="text-decoration:underline;color:#ff0000" onclick="f_showChangeSendDate(' +
+                    r.id +
+                    ',\'' +
+                    r.sendDate +
+                    '\','+r.orderItemStatusId +')">' +
+                    sendDate.Format('yyyy-MM-dd') +
+                    '</span>';
+            }
+            if (dayspan > -1 && dayspan < 4) {
+                return '<span style="text-decoration:underline;color:#dd4b39" onclick="f_showChangeSendDate(' +
+                    r.id +
+                    ',\'' +
+                    r.sendDate +
+                    '\','+r.orderItemStatusId +')">' +
+                    sendDate.Format('yyyy-MM-dd') +
+                    '</span>';
+            }
+            return '<span style="text-decoration:underline;" onclick="f_showChangeSendDate(' +
+                r.id +
+                ',\'' +
+                r.sendDate +
+                '\','+r.orderItemStatusId +')">' +
+                sendDate.Format('yyyy-MM-dd') +
+                '</span>';
+        }
+
+        function f_showChangeSendDate(id, sendDate,s) {
+            if (s != @OrderItemStatusEnum.NewCreate.ToInt() && s != @OrderItemStatusEnum.Audited.ToInt()) {
+                abp.message.warn("已发货(或已结束)，不能操作!");
+                return;
+            }
+            $("#orderItemNo3").val(id);
+            $("#oldSendDate").val(sendDate);
+            $("#newSendDate").val("");
+            $("#modalChangeSendDate").modal("show");
+        }
+
+        function ChangeSendDate() {
+            var form = $("#modalChangeSendDate").find("form");
+            SaveAjax({
+                url: window.appUrl + "OrderItems/ChangeSendDate",
+                data: formUtil.Serialize(form),
+                modal: $("#modalChangeSendDate"),
+                dataType: "json",
+                isAlert: false,
+                isValidate: true,
+                success: function(res) {
+                    if (res) {
+                        RefreshOrderItemTable(res.orderNo);
+                        $("#modalChangeSendDate").modal("hide");
+                    }
+                }
+
+            });
+        }
+
+        function PriceFormatter(v, r) {
+            var str = "0.00";
+            if (v && v > 0) {
+                v = (v * 10000) / 10000;
+                str = _formatAmount(v, 4);
+            }
+            str = '<span style="text-decoration:underline;color:red;" onclick="f_showChangePrice(' +
+                r.id +
+                ',' +
+                r.price +
+                ','+r.orderItemStatusId +')">' +
+                str +
+                ' ' +
+                r.currencyId +
+                '</span>';
+            return str;
+        }
+
+        function CurrencyPriceFormatter(v, r) {
+            var str = "0.00";
+            if (v && v > 0) {
+                v = (v * 10000) / 10000;
+                str = _formatAmount(v, 4);
+            }
+            str = '<span style="text-decoration:underline;color:red;">' +
+                str +
+                ' ' +
+                r.currencyId +
+                '</span>';
+            return str;
+        }
+
+        function TaxPriceFormatter(v, r) {
+            var str = "0.00";
+            if (v && v > 0) {
+                v = (v * 10000) / 10000;
+                str = _formatAmount(v, 4);
+            }
+            str = '<span style="text-decoration:underline;color:red;" onclick="f_showChangeAfterTaxPrice(' +
+                r.id +
+                ',' +
+                r.afterTaxPrice +
+                ','+r.orderItemStatusId +')">' +
+                str +
+                ' ' +
+                r.currencyId +
+                '</span>';
+            return str;
+        }
+
+        function f_showChangePrice(id, price,s) {
+            if (s != @OrderItemStatusEnum.NewCreate.ToInt() && s != @OrderItemStatusEnum.Audited.ToInt()) {
+                abp.message.warn("已发货(或已结束)，不能操作!");
+                return;
+            }
+          
+            $("#orderItemNo").val(id);
+            $("#oldPrice").val(price);
+            $("#newPrice").val("");
+            $("#modalChangePrice").modal("show");
+        }
+
+        function ChangePrice() {
+            var form = $("#modalChangePrice").find("form");
+            SaveAjax({
+                url: window.appUrl + "OrderItems/ChangePrice",
+                data: formUtil.Serialize(form),
+                modal: $("#modalChangePrice"),
+                dataType: "json",
+                isAlert: false,
+                isValidate: true,
+                success: function(res) {
+                    if (res) {
+                        RefreshOrderItemTable(res.orderNo);
+                        $("#modalChangePrice").modal("hide");
+                    }
+                }
+
+            });
+        }
+
+        function f_showChangeAfterTaxPrice(id, price,s) {
+            if (s != @OrderItemStatusEnum.NewCreate.ToInt() && s != @OrderItemStatusEnum.Audited.ToInt()) {
+                abp.message.warn("已发货(或已结束)，不能操作!");
+                return;
+            }
+            $("#orderItemNo5").val(id);
+            if (price <= 0) {
+                price = 0;
+            }
+            $("#oldPrice2").val(price);
+            $("#newAfterTaxPrice").val("");
+            $("#modalChangeAfterTaxPrice").modal("show");
+        }
+
+        function ChangeAfterTaxPrice() {
+            var form = $("#modalChangeAfterTaxPrice").find("form");
+            SaveAjax({
+                url: window.appUrl + "OrderItems/ChangeAfterTaxPrice",
+                data: formUtil.Serialize(form),
+                modal: $("#modalChangeAfterTaxPrice"),
+                dataType: "json",
+                isAlert: false,
+                isValidate: true,
+                success: function(res) {
+                    if (res) {
+                        RefreshOrderItemTable(res.orderNo);
+                        $("#modalChangeAfterTaxPrice").modal("hide");
+                    }
+                }
+
+            });
+        }
+
+        function QuantityFormatter(v, r) {
+            var str = '<span style="text-decoration:underline;" onclick="f_showChangeQuantity(' +
+                r.id +
+                ',' +
+                r.quantity +
+                ','+r.orderItemStatusId +')">' +
+                v +
+                '</span>';
+            return str;
+        }
+
+        function f_showChangeQuantity(id, quantity,s) {
+            if (s != @OrderItemStatusEnum.NewCreate.ToInt() && s != @OrderItemStatusEnum.Audited.ToInt()) {
+                abp.message.warn("已发货(或已结束)，不能操作!");
+                return;
+            }
+            $("#orderItemNo2").val(id);
+            $("#oldQuantity").val(quantity);
+            $("#newQuantity").val("");
+            $("#modalChangeQuantity").modal("show");
+        }
+
+        function ChangeQuantity() {
+            var form = $("#modalChangeQuantity").find("form");
+            SaveAjax({
+                url: window.appUrl + "OrderItems/ChangeQuantity",
+                data: formUtil.Serialize(form),
+                modal: $("#modalChangeQuantity"),
+                dataType: "json",
+                isAlert: false,
+                isValidate: true,
+                success: function(res) {
+                    if (res) {
+                        RefreshOrderItemTable(res.orderNo);
+                        $("#modalChangeQuantity").modal("hide");
+                    }
+                }
+
+            });
+        }
+
+        function TotalPriceFormatter(v, r) {
+            var str = "0.00";
+            if (v && v > 0) {
+                v = (v * 10000) / 10000;
+                str = _formatAmount(v, 4);
+            }
+            str = '<span style="text-decoration:underline;">' + str + '' + r.currencyId + '</span>';
+            return str;
+        }
+
+        function AllTotalPriceFormatter(data) {
+            console.log(data);
+            var count = 0;
+            var currencyId = "CNY";
+            data.forEach(function(e) {
+                currencyId = e.currencyId;
+                count += e.totalPrice;
+            });
+            if (count && count > 0) {
+                count = (count * 10000) / 10000;
+                count = _formatAmount(count, 4);
+            }
+            return '<strong>' + count + ' ' + currencyId + '<strong>';
+        }
+
+        function AllAfterTaxTotalPriceFormatter(data) {
+            var count = 0;
+            var currencyId = "CNY";
+            data.forEach(function(e) {
+                currencyId = e.currencyId;
+                count += e.afterTaxTotalPrice;
+            });
+            if (count && count > 0) {
+                count = (count * 10000) / 10000;
+                count = _formatAmount(count, 4);
+            }
+            return '<strong>' + count + currencyId + '<strong>';
+        }
+        function EmergencyLevelFormatter(v, r) {
+            var name = $('#hid-emergencyLevel option[value="' + v + '"]').text();
+            if (v === '1') {
+                return '<span class="label label-success">' + name + '</span>';
+            } else {
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+        }
+        function IsLockFormatter(v, r) {
+
+            if (v === 'Y') {
+                return '<span class="label label-danger">已删除</span>';
+
+            } else {
+                return '<span class="label label-success">-</span>';
+            }
+        }
+    </script>
+    <script>
+
+
+        //将数字转换成金额显示 n是小数点后位数
+        function toNumber(num, n) {
+            var re = String(num);
+            var dotfront = "";
+            var dotlast = "";
+            if (re.indexof('.') > -1) {
+                var sarr = re.spilt('.');
+                dotfront = sarr[0];
+                dotlast = sarr[1];
+                var dotlastlength = strlen(dotlast);
+                if (dotlastlength < n) {
+                    for (var j = 0; j < n - dotlastlength; j++) {
+                        dotlast += "0";
+                    }
+                }
+                if (dotlastlength > n) {
+                    dotlast = dotlast.substr(0, n);
+                }
+            } else {
+                dotfront = re;
+                for (var i = 0; i < n; i++) {
+                    dotlast += "0";
+                }
+            }
+            num = dotfront + '.' + dotlast;
+            return num;
+        }
+
+        function _formatAmount(strData, n) {
+            var CurrencyAndAmountRegExp =
+                /^(\d{1,18})|(\d{1,18}\.)|(\d{1,17}\.\d{0,1})|(\d{1,16}\.\d{0,2})|(\.\d{1,2})$/;
+            var _result = CurrencyAndAmountRegExp.test(strData);
+            if (_result == false) {
+                return strData;
+            } // 一般来说最多就6位吧，当然如果有特殊需求可自行更改(｀・∀・´)
+            n = n > 0 && n <= 6 ? n : 2;
+            var formatData = parseFloat((strData + '').replace(/[^\d\.-]/g, '')).toFixed(n) + '';
+            var l = formatData.split('.')[0].split('').reverse();
+            var r = formatData.split('.')[1];
+            var t = '';
+            for (i = 0; i < l.length; i ++) {
+                t += l[i] + ((i + 1) % 3 == 0 && (i + 1) != l.length ? ',' : '');
+            }
+            return t.split('').reverse().join('') + '.' + r;
+        }
+
+        function strlen(str) {
+            var len = 0;
+            for (var i = 0; i < str.length; i++) {
+                var c = str.charCodeAt(i);
+                //单字节加1 
+                if ((c >= 0x0001 && c <= 0x007e) || (0xff60 <= c && c <= 0xff9f)) {
+                    len++;
+                } else {
+                    len += 2;
+                }
+            }
+            return len;
+        }
+    </script>
+
+}
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @Html.DropDownList("hid-emergencyLevel", emergencyLevelList);
+
+</section>

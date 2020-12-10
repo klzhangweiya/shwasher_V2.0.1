@@ -1,0 +1,172 @@
+﻿@using IwbZero.Setting
+@using NPOI.SS.Formula.Functions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.CustomerInfo
+@using ShwasherSys.Models.OrderInfo
+@using ShwasherSys.Order.Dto
+@using ShwasherSys.OrderSendInfo
+@using ShwasherSys.OrderSendInfo.Dto
+@using ShwasherSys.ProductInfo
+@using ShwasherSys.ProductStoreInfo
+
+@{
+    Layout = null;
+    ViewBag.Title = "ProductStoreDetail";
+    List<ViewEnterOutProductStore> enterOutList = ViewBag.EnterOutList;
+
+    List<StoreHouse> storeHouses = ViewBag.StoreHouseList;
+    ViewCurrentStoreTotal productStore = ViewBag.ProductStore;
+
+}
+<html>
+<head>
+    <title>产品出入库明细</title>
+    <link href="~/Content/Css/PrintPage.css" rel="stylesheet" media="all" />
+    <link href="~/Content/Plugins/PrintPreView/print-preview.css" rel="stylesheet" />
+    @*<link href="~/Content/Plugins/jquery-print-preview/src/css/print-preview.css" rel="stylesheet" media="screen" />
+        <script src="https://cdn.bootcss.com/jquery-tools/1.2.7/jquery.tools.min.js"></script>
+        <script src="~/Content/Plugins/jquery-print-preview/src/jquery.print-preview.js"></script>*@
+
+    @*<script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>*@
+</head>
+
+<body style="font-size: 10px;">
+
+    <header style="height: 40px;">
+        <div style="position: absolute;left: calc(50% - 100px)">
+            <input type="button" value="打印" class="btn" id="printBtn" />
+            <input type="button" value="导出excel" class="btn" onclick='ExportExcel("printContent", "库存出入库记录", "exportCss");' />
+        </div>
+        <hr class="hr01" />
+    </header>
+    <div id="printContent">
+        <div id="exportCss">
+            <style>
+                .tb_header {
+                    margin: auto;
+                    width: 900px;
+                    height: 30px;
+                    text-align: center;
+                    border: 1px solid #000000;
+                    font-size: 1.1rem;
+                    line-height: 30px;
+                    background: #8caae7;
+                }
+
+                    .tb_header.header_son {
+                        border-top: 0;
+                        text-align: left;
+                        height: 40px;
+                        line-height: 20px;
+                        font-size: .9rem;
+                        background: #fff;
+                    }
+
+                #table {
+                    width: 900px;
+                    border: 0;
+                    margin: auto;
+                    border-collapse: collapse;
+                    border-spacing: 0;
+                }
+
+                    #table tr:nth-of-type(3) td {
+                        background: #8caae7;
+                        font-weight: bold;
+                    }
+
+                    #table td {
+                        padding: 0;
+                        border: 1.1px solid #000;
+                        text-align: center;
+                    }
+            </style>
+        </div>
+
+        <table id="table">
+            <tr>
+                <td colspan="7">
+                    <div class="tb_header">
+                        产品 @productStore.Id 出入库明细清单
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7">
+                    <div class="tb_header header_son">
+                        产品名称: @productStore.ProductName &nbsp; &nbsp;&nbsp;  规格: @productStore.Model  &nbsp; &nbsp;&nbsp;  材质: @productStore.Material  &nbsp; &nbsp;&nbsp;  硬度: @productStore.Rigidity  &nbsp; &nbsp;&nbsp;  表色: @productStore.SurfaceColor<br />
+                        当前库存量为: @productStore.AllQuantity &nbsp; &nbsp;&nbsp; 冻结库存量:@productStore.AllFreezeQuantity
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>序号</td>
+                <td>出/入库</td>
+                <td>数量(千件)</td>
+                <td>日期</td>
+                <td>仓库</td>
+                <td>备注</td>
+                <td>操作人</td>
+            </tr>
+            @{
+            if (enterOutList!=null&&enterOutList.Any())
+            {
+                int index = 1;
+                foreach (var eo in enterOutList)
+                {
+                    StoreHouse house = null;
+                    string houseName = "";
+                    foreach (var i in storeHouses)
+                    {
+                        if (i.Id == eo.StoreHouseId)
+                        {
+                            house = i;
+                            break;
+                        }
+                    }
+                    if (house != null)
+                    {
+                        houseName = house.StoreHouseName;
+                    }
+                <tr>
+                    <td>@index</td>
+                    <td>
+                        @if (eo.EnterOutFlag == 1)
+                            {
+                        @Html.Raw("入库")
+                            }
+                            else if (eo.EnterOutFlag == -1)
+                            {
+                        @Html.Raw("出库")
+                            }
+                    </td>
+                    <td>@eo.Quantity</td>
+                    <td>@eo.DateTiem</td>
+                    <td>@houseName</td>
+                    <td>@eo.Remark</td>
+                    <td>@eo.UserIDLastMod</td>
+                </tr>
+                    index++;
+                }
+            }
+
+            }
+        </table>
+    </div>
+
+    <script src="~/Content/Scripts/MyScript/ExportExcel.js"></script>
+    <script src="~/Content/Scripts/Jquery/jquery-3.3.1.min.js"></script>
+    @*<script src="~/Content/Plugins/printThis/printThis.js"></script>*@
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+
+    <script>
+        $(function () {
+
+            $("#printBtn").printPreview({
+                printBody: "#printContent",
+                modalWidth:900
+            });
+        })
+    </script>
+</body>
+</html>

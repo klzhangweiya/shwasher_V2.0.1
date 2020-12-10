@@ -1,0 +1,106 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+@using InputTypes = ShwasherSys.Views.Shared.New.Modals.InputTypes
+@using ModalBodyViewModel = ShwasherSys.Views.Shared.New.Modals.ModalBodyViewModel
+@using ModalHeaderViewModel = ShwasherSys.Models.Modal.ModalHeaderViewModel
+@using SpecialInputModel = ShwasherSys.Views.Shared.New.Modals.SpecialInputModel
+
+@{
+    ViewBag.Title = "废品入库信息维护";
+    string activeMenu = PermissionNames.PagesScrapStoreScrapStoreEnterMg; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<SelectListItem> productType = ViewBag.ProductType;
+    List<SelectListItem> scrapSource = ViewBag.ScrapSource;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+        new SearchItem("productNo","产品编码"),
+        new SearchItem("productName","名称"),
+        new SearchItem("model","规格"),
+        
+        new SearchItem("applyEnterDate","申请时间",FiledType.Dnull,ExpType.GreaterOrEqual),
+        new SearchItem("applyEnterDate","至",FiledType.Dnull,ExpType.LessOrEqual),
+        //new SearchItem("applyStatus","申请状态",FiledType.I,ExpType.Equal).SetSearchItem(applyStatus)
+    });
+
+    var table = new TableViewModel("/api/services/app/ScrapEnterStore/GetViewAll", activeMenu, searchForm)
+    .SetFields(new List<FieldItem>()
+    {
+        new FieldItem("productType", "产品类别",formatter:"productTypeFormatter"),
+        new FieldItem("productNo", "产品编码"),
+        new FieldItem("productName", "名称"),
+        new FieldItem("productionOrderNo", "流转单号"),
+        new FieldItem("material", "材质"),
+        new FieldItem("model", "规格"),
+        new FieldItem("applyQuantity","申请数量"),
+        new FieldItem("applyEnterDate","申请入库时间","DateFormatter"),
+        new FieldItem("quantity","入库数量"),
+        new FieldItem("storeLocationNo", "库区"),
+        new FieldItem("scrapSource", "报废来源",formatter:"scrapSourceFormatter"),
+        //new FieldItem("auditDate","审核时间","DateFormatter"),
+        //new FieldItem("applyStatus","状态","ApplyStatusFormatter"),
+    });
+}
+@section css{
+
+}
+
+@Html.Partial("New/Table/_Table", table)
+
+
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $table = $('#table');
+        $(function() {
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+         
+        });
+
+
+    </script>
+
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function productTypeFormatter(v, r) {
+            var name = $("#hid-productType option[value='" + v + "']").text();
+            if (v === 1) {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === 2) {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === 3) {
+                return '<span class="label label-warning">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+
+        function scrapSourceFormatter(v, r) {
+            var name = $("#hid-scrapSource option[value='" + v + "']").text();
+            if (v === 1) {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === 2) {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === 3) {
+                return '<span class="label label-warning">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+    @Html.DropDownList("hid-productType", productType)
+    @Html.DropDownList("hid-scrapSource", scrapSource)
+    @*@Html.DropDownList("hid-du", duty)
+        @Html.DropDownList("hid-de", depart)
+        @Html.DropDownList("hid-gender", gender)*@
+</section>

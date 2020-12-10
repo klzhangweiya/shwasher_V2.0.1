@@ -1,0 +1,128 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@model List<ShwasherSys.BaseSysInfo.SysHelp>
+@{
+    ViewBag.ActiveMenu = PermissionNames.PagesSysHelpPreview;
+    ViewBag.Title = "系统帮助说明";
+}
+@section css
+{
+    <style>
+        .i_category {
+            z-index: 9999;
+            position: fixed !important;
+            right: 10px;
+            top: 20vh;
+        }
+    </style>
+}
+<div class="content-header">
+   
+</div>
+<div class="content">
+    <div class="i_category">
+        <div class="box box-solid">
+            <div class="box-header with-border">
+                <h3 class="box-title">帮助目录</h3>
+
+                <div class="box-tools">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body no-padding">
+                <ul class="nav nav-pills nav-stacked">
+                 
+                    @{
+                        foreach (var help in Model)
+                        {
+                            <li><a href="#syshelp_@help.Id"><i class="fa fa-envelope-o"></i> @help.HelpTitle</a></li>
+                        }
+                    }
+                </ul>
+            </div>
+            <!-- /.box-body -->
+        </div>
+    </div>
+    <div class="row">
+        @*<div class="col-md-3">
+
+
+            <div class="box box-solid">
+                <div class="box-header with-border">
+                    <h3 class="box-title">帮助目录</h3>
+
+                    <div class="box-tools">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body no-padding">
+                    <ul class="nav nav-pills nav-stacked">
+                        $1$<li class="active">
+                            <a href="#">
+                                <i class="fa fa-inbox"></i> Inbox
+                               
+                            </a>
+                        </li>
+                        <li><a href="#"><i class="fa fa-envelope-o"></i> Sent</a></li>
+                        <li><a href="#"><i class="fa fa-file-text-o"></i> Drafts</a></li>
+                        <li>
+                            <a href="#"><i class="fa fa-filter"></i> Junk </a>
+                        </li>
+                        <li><a href="#"><i class="fa fa-trash-o"></i> Trash</a></li>#1#
+                        @{
+                            foreach (var help in Model)
+                            {
+                                <li><a href="#syshelp_@help.Id"><i class="fa fa-envelope-o"></i> @help.HelpTitle</a></li>
+                            }
+                        }
+                    </ul>
+                </div>
+                <!-- /.box-body -->
+            </div>
+
+            <!-- /.box -->
+        </div>*@
+        <!-- /.col -->
+        <div class="col-md-12">
+            <div class="box box-primary">            
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="table-responsive mailbox-messages">
+                        @{
+                            foreach (var h in Model)
+                            {
+                                <div id="syshelp_@h.Id">
+                                    @Html.Raw(h.HelpContent);
+                                </div>
+                            }
+                        }
+                        <!-- /.table -->
+                    </div>
+                    <!-- /.mail-box-messages -->
+                </div>
+                <!-- /.box-body -->
+
+            </div>
+            <!-- /. box -->
+        </div>
+        <!-- /.col -->
+
+    </div>
+</div>
+@section script
+{
+    <script>
+        $(function() {
+            $(".nav.nav-pills.nav-stacked >li").on("click",
+                function() {
+                    var $other = $(this).siblings();
+                    $other.removeClass("active");
+                    $(this).addClass("active");
+                });
+            $(".nav.nav-pills.nav-stacked >li:first").trigger("click");
+        })
+    </script>
+}

@@ -1,0 +1,37 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "productBatchNum,rmProductNo,productName,quantity,storeHouseId,canUseQuantity,id",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems=new List<QueryItem>()
+    {
+        new QueryItem("productBatchNum","批次号"),
+        new QueryItem("rmProductNo","原材料编码",true),
+        new QueryItem("productName","名称",true),
+        new QueryItem("canUserQuantity","可用数量",formatter:"CanUserQuantityFormatter"),
+        new QueryItem("quantity","库存"),
+        new QueryItem("storeHouseName","仓库"),
+        new QueryItem("freezeQuantity","冻结"),
+        new QueryItem("model","规格",true),
+        new QueryItem("material","材质"),
+    };
+
+
+    QueryModalModel qmModel = new QueryModalModel("原材料当前库存", "/api/services/app/Query/GetRmCurrentStore", queryItems, originFiled, targetFiled, modalId: "query_rmCurrentStore_modal",modalWidth:1000);
+}
+
+@Html.Partial("Modals/Query/_QueryModal",qmModel)
+
+@using (Html.BeginScripts())
+{
+    <script>
+        function CanUserQuantityFormatter(v, r) {
+            var count = r.quantity - r.freezeQuantity;
+            r.canUseQuantity = count;
+            return '<span class="label label-info">' + count+'</span>';
+        }
+    </script>
+}
+

@@ -1,0 +1,243 @@
+﻿@using ShwasherSys.Models.Modal
+@model ShwasherSys.Models.Modal.ShowQueryModelModal
+@{
+    var type = Model.QueryType;
+    string lcHeadMsg = "";
+    if (type == "semiProduct")
+    {
+        lcHeadMsg = "半成品信息";
+    }
+    else if (type == "product")
+    {
+        lcHeadMsg = "成品信息";
+    }
+    else if (type == "customer")
+    {
+        lcHeadMsg = "客户信息";
+    }else if (type == "semiCurrentStore")
+    {
+        lcHeadMsg = "半成品当前库存";
+    }
+
+}
+<section>
+    <div class="modal fade" id="@Model.ModelId" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 800px;">
+            <div class="modal-content">
+
+                @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel(@lcHeadMsg, ""))
+                <div class="modal-body container-fluid" style="padding: 0; padding-top: 15px;">
+                    <form class="pr-3 pl-3 form-horizontal" id="@Model.FormId">
+                        @if (type == "semiProduct")
+                        {
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-1 control-label" style="padding-top: 2px" for="querySemiProductNo">编码</label>
+                                <div class="col-md-2">
+                                    <input class="form-control" style="height: 20px; padding: 0 3px;" id="querySemiProductNo" name="querySemiProductNo" placeholder="请输入..." value="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-1 control-label" style="padding-top: 2px" for="quarySemiProductName">名称</label>
+                                <div class="col-md-2">
+                                    <input class="form-control" id="quarySemiProductName" style="height: 20px; padding: 0 3px;" name="quarySemiProductName" placeholder="请输入..." value="" type="text">
+                                </div>
+                                <div class="col-md-2 ">
+                                    <button type="button" class="btn btn-default" style="height: 20px; width: 150px; padding: 0 2px" onclick="SearchSemiProducts()">
+                                        <i class="iconfont icon-search">查询</i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else if (type == "semiCurrentStore")
+                        {
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label" style="padding-top: 2px" for="queryProductionOrderNo">编码</label>
+                                <div class="col-md-2">
+                                    <input class="form-control" style="height: 20px; padding: 0 3px;" id="queryProductionOrderNo" name="queryProductionOrderNo" placeholder="请输入..." value="" type="text">
+                                </div>
+                                <label class="iwb-label col-md-2 control-label" style="padding-top: 2px" for="querySemiProductNo_c">半成品编码</label>
+                                <div class="col-md-2">
+                                    <input class="form-control" id="querySemiProductNo_c" style="height: 20px; padding: 0 3px;" name="querySemiProductNo_c" placeholder="请输入..." value="" type="text">
+                                </div>
+                                <div class="col-md-2 ">
+                                    <button type="button" class="btn btn-default" style="height: 20px; width: 150px; padding: 0 2px" onclick="SearchSemiCurrentStore()">
+                                        <i class="iconfont icon-search">查询</i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                    </form>
+                </div>
+                <div class="table-box mr-4  iwb-bootstrap-table">
+                    @if (type == "semiProduct")
+                    {
+                        <table id="@Model.TableId"
+                               data-url="/api/services/app/SemiProducts/GetAll"
+                               data-striped="true" data-id-field="id" data-unique-id="id"
+                               data-method="post"
+                               data-side-pagination="server"
+                               data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                               data-cache="false"
+                               data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                               data-response-handler="ResponseHandler"
+                               data-click-to-select="true"
+                               data-single-select="true">
+                            <thead>
+                            <tr class="row">
+                                <th data-field="state" data-checkbox="true"></th>
+                                <th data-align="center" data-field="id">半成品编码</th>
+                                <th data-align="center" data-field="semiProductName">半成品名称</th>
+                                <th data-align="center" data-field="model">规格</th>
+                                <th data-align="center" data-field="material">材质</th>
+                                <th data-align="center" data-field="rigidity">硬度</th>
+                                <th data-align="center" data-field="surfaceColor">表色</th>
+
+                            </tr>
+                            </thead>
+                        </table>
+                    }else if (type == "semiCurrentStore")
+                    {
+                        <table id="@Model.TableId"
+                               data-url="/api/services/app/CurrentSemiStoreHouses/GetViewAll"
+                               data-striped="true" data-id-field="id" data-unique-id="id"
+                               data-method="post"
+                               data-side-pagination="server"
+                               data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                               data-cache="false"
+                               data-pagination="true" data-page-size="25" data-page-number="1" data-page-list="[25,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                               data-response-handler="ResponseHandler"
+                               data-click-to-select="true"
+                               data-single-select="true">
+                            <thead>
+                            <tr class="row">
+                                <th data-field="state" data-checkbox="true"></th>
+                                <th data-align="center" data-field="productionOrderNo">排产单编号</th>
+                                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                                <th data-align="center" data-field="actualQuantity">当前库存数量(kg)</th>
+                                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatte">仓库</th>
+                                <th data-align="center" data-field="freezeQuantity">被冻结数量</th>
+                                <th data-align="center" data-field="canUserQuantity"  data-formatter="CanUserQuantityFormatte">可用数量</th>
+                                <th data-align="center" data-field="surfaceColor">表色</th>
+                                <th data-align="center" data-field="model">规格</th>
+                                <th data-align="center" data-field="rigidity">硬度</th>
+                                <th data-align="center" data-field="material">材质</th>
+
+                            </tr>
+                            </thead>
+                        </table>
+                    }
+
+                </div>
+                <div class="modal-footer" style="text-align: center;">
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modalProduct" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;" onclick="$('#@Model.ModelId').modal('hide');">取消</button>
+                    <button type="button" class="btn btn-success save-btn waves-effect" style="min-width:100px;background-color: #678ceb;border: 1px solid #678ceb;" onclick="@Model.SubmitEvent">确定</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+@if (type == "semiProduct")
+{
+    <script>
+        $(function() {
+
+        });
+        function showSelectSemiProductDialog() {
+            document.getElementById("@Model.FormId").reset();
+            SearchSemiProducts();
+            $("#@Model.ModelId").modal("show");
+        }
+        var _searchSemiProductList = [];
+        function GetSemiProductSearchList() {
+            _searchSemiProductList = [];
+            var productNo = $("#querySemiProductNo").val();
+            var productName = $("#quarySemiProductName").val();
+            if (productNo) {
+                _searchSemiProductList.push({ KeyWords: productNo, KeyField: "Id", FieldType: "0", ExpType: "6" });
+            }
+            if (productName) {
+                _searchSemiProductList.push(
+                    { KeyWords: productName, KeyField: "SemiProductName", FieldType: "0", ExpType: "6" });
+            }
+        }
+        function SearchSemiProducts() {
+            GetSemiProductSearchList();
+            RefreshTable($("#@Model.TableId"));
+        }
+        function LoadTableQuerySemiProduct() {
+            GetSemiProductSearchList();
+            $("#@Model.TableId").bootstrapTable({
+                queryParams: function (params) {
+                    return {
+
+                        MaxResultCount: params.limit,
+                        SkipCount: params.offset,
+                        sort: params.sort, //排序列名
+                        sortOrder: params.order, //排位命令（desc，asc）
+                        SearchList: _searchSemiProductList
+                    };
+                },
+                onLoadSuccess: OnLoadSuccess,
+                onPostBody: OnPostBody
+            });
+        }
+    </script>
+
+}else if (type == "semiCurrentStore")
+{
+    <script>
+        
+        function showSelectSemiCurrentStoreDialog() {
+            document.getElementById("@Model.FormId").reset();
+            SearchSemiCurrentStore();
+            $("#@Model.ModelId").modal("show");
+        }
+        var _searchSemiCurrentStoreList = [];
+        function GetSemiProductSearchList() {
+            _searchSemiCurrentStoreList = [];
+            var productOrderNo = $("#queryProductionOrderNo").val();
+            var productNo = $("#querySemiProductNo_c").val();
+            if (productNo) {
+                _searchSemiProductList.push({ KeyWords: productNo, KeyField: "SemiProductNo", FieldType: "0", ExpType: "6" });
+            }
+            if (productOrderNo) {
+                _searchSemiProductList.push(
+                    { KeyWords: productOrderNo, KeyField: "ProductionOrderNo", FieldType: "0", ExpType: "6" });
+            }
+        }
+        function SearchSemiCurrentStore() {
+            GetSemiProductSearchList();
+            RefreshTable($("#@Model.TableId"));
+        }
+        function LoadTableQuerySemiCurrentStore() {
+            GetSemiProductSearchList();
+            $("#@Model.TableId").bootstrapTable({
+                queryParams: function (params) {
+                    return {
+
+                        MaxResultCount: params.limit,
+                        SkipCount: params.offset,
+                        sort: params.sort, //排序列名
+                        sortOrder: params.order, //排位命令（desc，asc）
+                        SearchList: _searchSemiCurrentStoreList
+                    };
+                },
+                onLoadSuccess: OnLoadSuccess,
+                onPostBody: OnPostBody
+            });
+        }
+        function StoreHouseIdFormatte(v,r) {
+            if (v === 1) {
+                return '<span class="label label-info">成品仓库</span>';
+            } else if (v === 2) {
+                return '<span class="label label-primary">半成品仓库</span>';
+            }
+            return v;
+        }
+        function CanUserQuantityFormatte(v, r) {
+            var count = r.actualQuantity - r.freezeQuantity;
+            return '<span class="label label-info">' + count+'</span>';
+        }
+    </script>
+
+}

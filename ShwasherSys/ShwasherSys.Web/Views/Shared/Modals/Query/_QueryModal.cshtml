@@ -1,0 +1,250 @@
+﻿@using System.Linq;
+@using IwbZero.AppServiceBase
+@using NPOI.SS.Formula.Functions
+@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model QueryModalModel
+@{
+    string modalId = Model.ModalId ?? "";
+    string submit = Model.SubmitEventName ?? "";
+    string click = Model.ItemClickEventName ?? "";
+    string dbClick = Model.ItemDbClickEventName ?? "";
+    string width = Model.ModalWidth > 0 ? "width:" + Model.ModalWidth + "px" : "";
+    string submitEx = Model.SubmitEx;
+    List<MultiSearchDto> searchDtos = Model.SearchList;
+}
+<style>
+    .query-modal .key.form-control, .query-modal .input-group-addon {
+        height: 25px;
+        line-height: 25px;
+        padding: 0 0 0 10px;
+        font-size: 12px;
+    }
+
+    .query-modal .input-group-addon {
+        line-height: 23px;
+        padding: 0 15px;
+        cursor: pointer;
+        position: relative
+    }
+    .query-modal .input-group-addon .icon-search {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+    }
+    .query-modal .btn-toolbar {
+        padding: 4px 5px 5px 2px;
+        background: #583d9c;
+        border: 1px solid #583d9c;
+    }
+</style>
+<section>
+    <div class="modal fade query-modal" id="@modalId" role="dialog" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered" role="document" style="@width">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <span>@Html.Raw(Model.ModalName)</span>
+                    </h4>
+                </div>
+                <div class="modal-body container-fluid" style="padding:5px ">
+                    <div class="table-box mr-4  iwb-bootstrap-table">
+                        <div class="btn-toolbar row" id="query_tableTool" role="toolbar" aria-label="Toolbar with button groups">
+                            <div class="col-sm-12 pull-left" style="padding: 0">
+                                <form>
+                                    @if (Model.QueryItems != null && Model.QueryItems.Any())
+                                    {
+                                        string spilter = Model.QueryItems.Count(a => a.IsSearch) > 2 ? "col-md-4" : "col-md-6";
+                                        int i = 0;
+                                        foreach (var item in Model.QueryItems)
+                                        {
+                                            if (item.IsSearch)
+                                            {
+                                                i++;
+                                                int filedType = (int) item.FiledType,expType = (int) item.ExpType;
+                                                <div class="@spilter"  @item.IsHidden >
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control key" id="Q-KeyWords-@i" name="KeyWords-@i" placeholder="请输入@(item.Name)">
+                                                        <input type="hidden" id="Q-KeyField-@i" name="KeyField-@i" value="@item.Key">
+                                                        <input type="hidden" id="Q-FieldType-@i" name="FieldType-@i" value="@filedType">
+                                                        <input type="hidden" id="Q-ExpType-@i" name="ExpType-@i" value="@expType">
+                                                        <span class="input-group-addon" onclick="@(modalId)Search()">
+                                                            <i class="iconfont icon-search"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    }
+                                </form>
+                            </div>
+                        </div>
+                        <table data-url="@Model.QueryUrl"
+                               data-striped="true" data-id-field="id" data-unique-id="id"
+                               data-method="post"
+                               data-side-pagination="server"
+                               data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+                               data-cache="false"
+                               data-pagination="true" data-page-size="10" data-page-number="1" data-page-list="[10,20,50]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+                               data-query-params="QueryParams_@(modalId)"
+                               data-response-handler="ResponseHandler"
+                               data-click-to-select="true"
+                               data-single-select="true">
+                            <thead>
+                                <tr class="row">
+                                    @if (Model.QueryItems != null && Model.QueryItems.Any())
+                                    {
+                                        <th data-field="state" data-checkbox="true"></th>
+                                        foreach (var item in Model.QueryItems)
+                                        {
+                                            var formatter = string.IsNullOrEmpty(item.Formatter) ? "" : "data-formatter=\"" + item.Formatter + "\"";
+                                            var sort = item.IsSort ? "data-sortable=\"true\"" : "";
+                                            <th data-align="center" data-field="@item.Key" @Html.Raw(formatter) @Html.Raw(sort)>@item.Name</th>
+
+                                        }
+                                    }
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center;padding-top: 10px">
+                    <button type="button" class="btn btn-default waves-effect" data-dismiss="modalProduct" style="min-width: 100px; background: #FFFFFF; border: 1px solid #DDDDDD;" onclick="$('#@modalId').modal('hide');">取消</button>
+                    <button type="button" class="btn btn-success waves-effect" style="min-width: 100px;background-color: #583d9c !important;border: 1px solid #583d9c !important;" onclick="Submit_@(modalId)()">确定</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+@using (Html.BeginScripts())
+{
+<script>
+    var $@(modalId)_table = $("#@modalId table"), _searchList_@modalId = [];
+    $("#@modalId").off('show.bs.modal').on('show.bs.modal', function () {
+        $("#@modalId form").find(".key").val("");
+        if ('@(Model.DefaultValueFunction)'!=='QueryDefaultValueFunction') {
+            @(Model.DefaultValueFunction) && @(Model.DefaultValueFunction)();
+        }
+        @(modalId)Search();
+    });
+
+    function @(modalId)Search() {
+        $@(modalId)_table.bootstrapTable("destroy");
+        SearchList_@(modalId)();
+        $@(modalId)_table.bootstrapTable({
+            onClickRow: ClickRow_@(modalId),
+            onDblClickRow: DbClickRow_@(modalId),
+            queryParams:QueryParams_@(modalId)
+        });
+    }
+    function QueryParams_@(modalId)(params) { //bootstrapTable自带参数
+        var sorting = '';
+        if (params.sort) {
+            sorting = params.sort;
+            if (params.order) {
+                sorting += ' ' + params.order;
+            }
+        }
+        return {
+            //limit: params.limit, //页面大小
+            //page: (params.offset / params.limit) + 1, //页码
+            MaxResultCount: params.limit,
+            SkipCount: params.offset,
+            Sorting: sorting, //排序列名
+            sortOrder: params.order, //排位命令（desc，asc）
+            SearchList: _searchList_@modalId
+        };
+    }
+    function SearchList_@(modalId)() {
+        var count = $("#@modalId form").find(".key").length;
+        _searchList_@modalId = [];
+        @if (searchDtos!=null&&searchDtos.Count>0)
+        {
+            foreach (var searchDto in searchDtos)
+            {
+                <text>
+                    _searchList_@(modalId).push({
+                        KeyWords: "@searchDto.KeyWords",
+                        KeyField: "@searchDto.KeyField",
+                        FieldType: @searchDto.FieldType,
+                        ExpType: @searchDto.ExpType
+                    });
+                </text>
+            }
+        }
+        for (var i = 1; i <= count; i++) {
+            var keyWords = $("#@modalId #Q-KeyWords-" + i).val();
+            if (keyWords) {
+                var keyField = $("#@modalId #Q-KeyField-" + i).val();
+                var fieldType = $("#@modalId #Q-FieldType-" + i).val();
+                var expType = $("#@modalId #Q-ExpType-" + i).val();
+                _searchList_@(modalId).push({
+                    KeyWords: keyWords,
+                    KeyField: keyField,
+                    FieldType: fieldType,
+                    ExpType: expType
+                });
+            }
+        }
+    }
+
+    function Submit_@(modalId)(row) {
+        //console.log('@(modalId)submit', row);
+        @{
+            string str;
+            if (string.IsNullOrEmpty(submit))
+            {
+                str = " var $target, row =row|| $" + modalId + "_table.bootstrapTable(\"getSelections\")[0];";
+                str += "if (row) {";
+                int i = 0;
+                foreach (var targetFileds in Model.TargetFileds)
+                {
+                    for (var j = 0; j < targetFileds.Length; j++)
+                    {
+                        str += @"$target = $(targetDom + ' "+ targetFileds[j] + "');\r\n";
+                        str += "if ($target) {\r\n";
+                        str += "var value = row." + Model.OriginFileds[i] + " ? row." + Model.OriginFileds[i] + ":'';\r\n";
+                        str += "$target.val(value);$target.change();$target.trigger('blur');\r\ntry{$target.select2();}catch (e){}}\r\n";
+                    }
+                    i++;
+                }
+
+                str += " } else{abp.message.warn(abp.localization.localize(\"ChooseOneToOp\"));}";
+
+            }
+            else
+            {
+                str = submit+ "(row);";
+            }
+        }
+        @Html.Raw(str)
+        @submitEx
+        $("#@modalId").modal('hide');
+    }
+
+    function DbClickRow_@(modalId)(row) {
+        //console.log('@(modalId)dbclick', row);
+        @{
+            str = string.IsNullOrEmpty(dbClick) ? "Submit_" + modalId+ "(row)" : dbClick + "();";
+        }
+        @Html.Raw(str)
+    }
+
+        function ClickRow_@(modalId)() {
+            console.log('@(modalId)click');
+            @{
+                str = "";
+                if (!string.IsNullOrEmpty(click))
+                {
+                    str = click + "();";
+                }
+            }
+            @Html.Raw(str)
+
+    }
+
+
+</script>
+}

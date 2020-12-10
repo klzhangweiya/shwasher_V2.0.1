@@ -1,0 +1,21 @@
+﻿@model ShwasherSys.Views.Shared.New.Modals.ModalViewModel
+@{
+    string width = Model.Width == null || Model.Width <= 500 ? "" : "max-width:" + Model.Width + "px";
+    string size = string.IsNullOrEmpty(Model.SizeClass) ? "" : "modal-" + Model.SizeClass;
+}
+<!-- MODAL  @(Model.ModalId)  START-->
+<section>
+    <div class="modal fade" id="@Model.ModalId">
+        <div class="modal-dialog @(size)" style="@width">
+            <div class="modal-content">
+                @Html.Partial("New/Modals/_ModalHeader", Model.Header)
+                @if (Model.Body != null)
+                {
+                    @Html.Partial("New/Modals/_ModalBody", Model.Body)
+                }
+                @Html.Partial("New/Modals/_ModalFooter", Model.Footer)
+            </div>
+        </div>
+    </div>
+</section>
+<!-- MODAL  @(Model.ModalId)  END-->

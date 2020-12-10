@@ -1,0 +1,358 @@
+﻿@using ShwasherSys
+@using ShwasherSys.NotificationInfo
+@model ShwasherSys.Models.Layout.MainHeaderViewModel
+@{
+    var userImagePath = string.IsNullOrEmpty(ViewBag.UserImage) ?"../../Content/Images/logo.png" : ViewBag.UserImage;
+    string userName = "";
+    ViewBag.UserName = ViewBag.UserName??"";
+    List<BulletinInfo> bulletinInfos = (List<BulletinInfo>)ViewBag.BulletinInfos;
+    int noticeCount = bulletinInfos.Count;
+}
+<style type="text/css">a.valid {color:inherit}</style>
+<header class="main-header">
+    <!-- Logo -->
+    @*<a href="http://v.youku.com/v_show/id_XMzk2OTY3NjEwNA==.html?spm=a2h4v.8841035.uerCenter.5!2~5~5!2~5~DL~DD~A"  target="_blank" class="logo">*@
+    <a href="/"  target="_blank" class="logo">
+        <!-- mini logo for sidebar mini 50x50 pixels -->
+        <span class="logo-mini">
+            <img src="~/Content/Images/logo.jpg" class="img-circle" style="height: 40px" />
+        </span>
+        <!-- logo for regular state and mobile devices -->
+        <span class="logo-lg">@ViewBag.SystemName</span>
+    </a>
+    <!-- Header Navbar: style can be found in header.less -->
+    <nav class="navbar navbar-static-top">
+        <!-- Sidebar toggle button-->
+        
+        <div class="navbar-custom-menu" style="width: 100%">
+            
+            <ul class="nav navbar-nav pull-left">
+                <li>
+                    <a href="#" class="sidebar-toggle iconfont" data-toggle="push-menu" role="button" style="width: 50px; text-align: center;border-right:1px solid #eee ">
+                        <span class="sr-only">Toggle navigation</span>
+                    </a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav pull-left">
+                <ol class="breadcrumb" id="pageName"></ol>
+            </ul>
+            <ul class="nav navbar-nav  pull-right pr">
+                <li class="dropdown notifications-menu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="iconfont icon-icon-notice"></i>
+                        <span class="label label-warning " id="alarmCount">0</span>
+                    </a>
+                    <ul class="dropdown-menu" id="alarmInfo">
+                       
+                    </ul>
+                </li>
+                <li class="dropdown notifications-menu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="iconfont icon-gonggao"></i>
+                        <span class="label label-warning noticeCount">@noticeCount</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <!-- inner menu: contains the actual data -->
+                            <ul class="menu">
+
+                                @{
+                                    if (bulletinInfos.Any())
+                                    {
+                                        foreach (var b in bulletinInfos)
+                                        {
+                                            string lcLevel = "color:{0}";
+                                            switch (b.BulletinType)
+                                            {
+                                                case "1":
+                                                    lcLevel = string.Format(lcLevel, "blue");
+                                                    break;
+                                                case "2":
+                                                    lcLevel = string.Format(lcLevel, "yellow");
+                                                    break;
+                                                case "3":
+                                                    lcLevel = string.Format(lcLevel, "red");
+                                                    break;
+                                                default:
+                                                    lcLevel = string.Format(lcLevel, "blue");
+                                                    break;
+                                            }
+                                            <li onclick="ShowNotice(@b.Id);">
+                                                <a href="#">
+                                                    <i class="iconfont icon-tixing" style="@lcLevel"></i> @b.Title
+                                                </a>
+                                            </li>
+                                        }
+                                    }
+
+                                }
+
+                            </ul>
+                        </li>
+                        @*<li class="footer"><a href="#">View all</a></li>*@
+                    </ul>
+                </li>
+                @{
+                    if (Model != null && Model.UserInfos != null)
+                    {
+                        userName = Model.UserInfos.UserName;
+
+                        <!-- User Account: style can be found in dropdown.less -->
+                        <li class="dropdown user user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="height: 50px">
+                                <img src="@userImagePath" class="user-image">
+                                <span class="hidden-xs">@Model.UserInfos.RealName</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- User image -->
+                                <li class="user-header">
+                                    <img src="@userImagePath" class="img-circle">
+                                    <p>
+                                        @Html.Raw(userName)<small>@Model.UserInfos.EmailAddress</small>
+                                    </p>
+                                </li>
+                                <!-- Menu Footer-->
+                                <li class="user-footer">
+                                    <div class="pull-left">
+                                        <span id="ChangePwd" class="btn btn-info btn-flat" onclick="ChangePassword()">@L("AccountChangePassword")</span>
+                                    </div>
+                                    <div class="pull-right">
+                                        <span id="LoginOut" class="btn btn-danger btn-flat" onclick="LoginOut();">@L("Logout")</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        @*@Html.Action("LanguageSelection", "Layout")*@
+                        <!-- Control Sidebar Toggle Button -->
+                        @*<li>
+                    <a href="#" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>
+                </li>*@
+                    }
+                    else
+                    {
+                        <li>
+                            <a href="/"><i class="fa fa-home"></i>游客，欢迎您</a>
+                        </li>
+                    }
+                }
+                <li>
+                    <a title="帮助工具" href="#" id="showLeft" style="padding: 0 8px;"><i class="iconfont icon-tab" style="font-size: 20px;line-height: 50px"></i></a>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+</header>
+<style>
+    #left-hidden .head_right {
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        top: 0px;
+        right: 0px;
+        background: #ccc;
+        border: 1px #000080 solid;
+        border-radius: 15px;
+        padding: 2px 5px;
+        cursor: pointer;
+    }
+    #left-hidden .head_right:hover {
+        background: #add8e6;
+    }
+    #left-hidden .content-wrapper {
+        position: absolute;
+        width: 98%;
+        height: 97%;
+        top: 26px;
+        right: 3px;
+        background: #eeeeee;
+        border: 1px #000080 solid;
+        border-radius: 10px;
+    }
+    .content-wrapper .head {
+        font-size: 25px;
+        color: #000080;
+        border-bottom: 1px solid #000080; 
+    }
+    .content-wrapper [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+        padding-left: 25px;
+        font-size: 1.5rem;
+        color: #dad9db;
+    }
+        .content-wrapper [type="radio"]:not(:checked) + label::before, .content-wrapper [type="radio"]:not(:checked) + label::after {
+            border: 2px solid #fff;
+        }
+</style>
+<div id="left-hidden">
+    <div class="head_right">
+        <i class="iconfont icon-close"></i>
+    </div>
+    <div class="content-wrapper">
+        <div class="head">
+            重量计算
+        </div>
+        <div class="body">
+            <form>
+                <div class="form-group">
+                    <label>外径</label>
+                    <input type="number" class="form-control " min="0" id="length" value="1" placeholder="外径" />
+                </div>
+                <div class="form-group">
+                    <label>内径</label>
+                    <input type="number" class="form-control" min="0" id="width" value="1" placeholder="内径" />
+                </div>
+                <div class="form-group">
+                    <label>厚度</label>
+                    <input type="number" class="form-control" min="0" id="height" value="1" placeholder="厚度" />
+                </div>
+                <div class="form-group">
+                    <label>计算公式:</label><br />
+                    <input type="radio" name="formula" id="formula1" value="1" checked="checked" /> <label for="formula1" style="color: #000080">(R1^2 – R2^2)×(π/4)×7.85×h÷1000</label>
+                    <input type="radio" name="formula" id="formula2" value="2" /><label for="formula2" style="color: #000080">(R1^2 – R2^2)×(π/4)×8.5×h÷1000</label>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-group-btn">
+                        <button type="button" class="btn btn-info" onclick="Formula()">计算</button>
+                    </div>
+                    <!-- /btn-group -->
+                    <input type="number" class="form-control" id="weight" readonly="readonly">
+                </div>
+            </form>
+        </div>
+        </div>
+</div>
+@using (Html.BeginScripts())
+{
+    <script type="text/javascript">
+        function LoginOut() {
+            abp.message.confirm("@L("AccountLoginOutConfirmMsg")","@L("AccountLoginOutConfirmTitle")", function() {
+                window.location.href = "@Url.Action("LogOut", "Account")";
+            });
+        }
+        function ChangePassword() {
+            $("#modal_Pwd").on('show.bs.modal',
+                function() {
+                    $("#form_Pwd").find("label.error").remove();
+                    $("#form_Pwd input").val("").removeClass("error valid");
+                    $('#LoginName').val("@userName").prop("readonly",true);
+                    $("#form_Pwd").validate();
+                });
+            $("#modal_Pwd").modal("show");
+            $("#Save_Pwd").off("click").on("click",
+                function() {
+                    SaveAjax("@Url.Action("UpdatePassword", "Account")",
+                        { form: $("#form_Pwd"), modal: $("#modal_Pwd"),success: function() {
+                                $("#modal_Pwd").modal("hide");
+                            }
+                        });
+                });
+        }
+        function ShowNotice(id) {
+            SaveAjax(window.appUrl +"Query/GetBulletinInfo",
+                {
+                    modal: $("#modal_tongzhi"),
+                    data: { Id: id },
+                    isValidate: false,
+                    isAlert:false,
+                    success: function (res) {
+                        if (res) {
+                            var color = "blue";
+                            if (res.bulletinType === "2") {
+                                color = "yellow";
+                            } else if (res.bulletinType === "3") {
+                                color = "red";
+                            }
+                            $(".box.box-primary").css("border-top-color", color);
+                            $("#bulletinTitle").html(res.title);
+                            $("#publicPerson").html(res.promulgator);
+                            $("#promulgatDate").html(res.promulgatTime);
+                            $("#bulletinContent").html(res.content);
+                            $("#modal_tongzhi").modal("show");
+                        }
+                       
+                    }
+                });
+            //$("#modal_tongzhi").modal("show");
+        }
+        function ShowMsg(id,detailId) {
+            SaveAjax(window.appUrl +"Query/GetShortMsgDetailInfo",
+                {
+                    modal: $("#modal_alarm"),
+                    data: { Id: detailId, MsgID:id },
+                    isValidate: false,
+                    isAlert:false,
+                    success: function (res) {
+                        if (res) {
+                            $("#msgTitle").html(res.title);
+                            $("#sendPerson").html(res.sendUserID);
+                            $("#sendDatetime").html(res.sendTime);
+                            $("#msgContent").html(res.content);
+                            $("#modal_alarm").modal("show");
+                            QueryShortMsg();
+                        }
+                       
+                    }
+                });
+            //$("#modal_tongzhi").modal("show");
+        }
+      
+        $(function() {
+            $("#pageName").empty().append(window.pageTitle);
+            QueryShortMsg();
+
+            $('#left-hidden').scrollBar({
+                barWidth: 3, //滚动条的宽度(这里根据需要写数值即可，不设置是10,即默认10px)
+                position: "x,y", //写“x”代表只出水平滚动条，写“y”表示只出垂直滚动条，写“x,y”则出水平和垂直滚动条（只有在内容超出容器时才出现滚动条）
+                wheelDis: 15 //滚轮滚动一次向下或向上滚动的距离，默认是15，可根据需要修改数值
+            });
+            $("#showLeft").on('click',
+                function(e) {
+                    var rightPosition = $('#left-hidden').css("right");
+                    if (rightPosition === "0px") {
+                        hideLeft();
+                    } else {
+                        showLeft();
+                    }
+                });
+            $("#left-hidden .head_right").on('click',
+                function (e) {
+                    hideLeft();
+                });
+        });
+        function showLeft() {
+            $('#left-hidden').animate({
+                    right: '0'
+                },
+                100);
+            $('#left-hidden').after('<div class="m-quick-sidebar-overlay" onclick="hideLeft(this)"></div>');
+        }
+        function hideLeft() {
+            $('#left-hidden').animate({
+                    right: '-450px'
+                },
+                100);
+            $('.m-quick-sidebar-overlay').remove();
+        }
+
+        function Formula() {
+            var length = Number($("#length").val());
+            var width = Number($("#width").val());
+            var height = Number($("#height").val());
+            length = length ? length : 0;
+            width = width ? width : 0;
+            height = height ? height : 0;
+            var formula = $('input[name="formula"]:checked').val();
+            var v;
+            if (formula == "1") {
+                v = ((Math.pow(length, 2) - Math.pow(width, 2)) * (Math.PI / 4) * 7.85 * height) / 1000;
+                $("#weight").val(v);
+            } else {
+                v = ((Math.pow(length, 2) - Math.pow(width, 2)) * (Math.PI / 4) * 8.5 * height) / 1000;
+                $("#weight").val(v); ;
+            }
+           
+        }
+    </script>
+}
+

@@ -1,0 +1,87 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductInfoStandards; //The menu item will be active for this page.
+    ViewBag.Title = "标准管理";
+    // List<SelectListItem> classification = ViewBag.Classification;
+
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <input type="hidden" id="IsLock" value="N" />
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu })
+    <table id="table"
+           data-url="/api/services/app/Standards/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="standardName">标准名称</th>
+                <th data-align="center" data-field="standardDesc">标准描述</th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("产品标准"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                            {
+                                                                new InputViewModel("id", hide: true),
+                                                                new InputViewModel("standardName", displayName: "标准名称"),
+
+                                                                new InputViewModel("standardDesc",InputTypes.Textarea, "标准描述").SetNotRequired(),
+
+                                                            };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{                               
+    <script type="text/javascript">
+
+        $(function () {
+            //show完毕前执行
+
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "standardName" }); };
+
+
+
+        });
+        
+
+    </script>
+
+
+}

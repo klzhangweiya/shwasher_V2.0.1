@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Organization Chart Plugin</title>
+    <link rel="icon" href="img/logo.png">
+    <link href="../../bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/jquery.orgchart.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="../../select2/css/select2.min.css" rel="stylesheet" />
+    <style type="text/css">
+
+        #chart-container {
+            /*text-align: left;*/
+            height: 600px
+        }
+
+        * {
+            margin: 0
+        }
+
+        dl {
+            margin: 5px 0;
+        }
+
+            dl > dt, dl > dd {
+                display: inline-block;
+            }
+
+        .orgchart {
+            background-image: none;
+        }
+
+
+            .orgchart .lines .leftLine {
+                border-left: 1px solid #678CEB;
+            }
+
+            .orgchart .lines .rightLine {
+                border-right: 1px solid #678CEB;
+            }
+
+            .orgchart .lines .topLine {
+                border-top: 2px solid #678CEB;
+            }
+
+            .orgchart .lines .downLine {
+                background-color: #678CEB;
+            }
+
+            .orgchart .node {
+                width: 200px;
+                height: 150px;
+            }
+
+                .orgchart .node .title {
+                    text-align: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                    height: 30px;
+                    line-height: 30px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    background-color: #678CEB;
+                    color: #fff;
+                    border-radius: 4px 4px 0 0;
+                }
+
+                .orgchart .node .content {
+                    height: calc(100% - 30px);
+                    border: 1px solid #678CEB;
+                    padding: 5px;
+                }
+
+            .orgchart.l2r .node, .orgchart.r2l .node {
+                width: 150px;
+                height: 250px;
+            }
+
+                .orgchart.l2r .node .title {
+                    text-align: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                    height: 30px;
+                    line-height: 30px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    background-color: #678CEB;
+                    color: #fff;
+                    border-radius: 4px 4px 0 0;
+                }
+
+                .orgchart.l2r .node .title, .orgchart.l2r .node .content {
+                    transform: rotate(-90deg) translate(-90px, -90px) rotateY(180deg);
+                    transform-origin: bottom center;
+                    width: 240px;
+                }
+
+                .orgchart.l2r .node .content {
+                    transform-origin: top center;
+                    height: 100px;
+                }
+    </style>
+</head>
+<body>
+  <div id="chart-container"></div>
+  <select>
+      <option value="value">text</option>
+  </select>
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/jquery.orgchart.js"></script>
+    <script src="../../select2/js/select2.min.js"></script>
+ <script type="text/javascript">
+    var data =
+        [{"Node":1,"No":"1-1","ParentNo":"0","ObjEvents":"001","GoodScore":"0","PoorScore":"0"},{"Node":2,"No":"2-1","ParentNo":"1-1","ObjEvents":"011","PoorScore":"0","GoodScore":"30"},{"Node":2,"No":"2-2","ParentNo":"1-1","ObjEvents":"012","PoorScore":"30","GoodScore":"70"},{"Node":2,"No":"2-3","ParentNo":"1-1","ObjEvents":"013","PoorScore":"70","GoodScore":"100"},{"Node":3,"No":"3-1","ParentNo":"2-1","ObjEvents":"021","PoorScore":"0","GoodScore":"30"},{"Node":3,"No":"3-2","ParentNo":"2-1","ObjEvents":"022","PoorScore":"30","GoodScore":"70"},{"Node":3,"No":"3-3","ParentNo":"2-1","ObjEvents":"023","PoorScore":"70","GoodScore":"100"},{"Node":3,"No":"3-4","ParentNo":"2-2","ObjEvents":"024","PoorScore":"0","GoodScore":"30"},{"Node":3,"No":"3-5","ParentNo":"2-2","ObjEvents":"025","PoorScore":"30","GoodScore":"70"},{"Node":3,"No":"3-6","ParentNo":"2-2","ObjEvents":"026","PoorScore":"70","GoodScore":"100"},{"Node":3,"No":"3-7","ParentNo":"2-3","ObjEvents":"027","PoorScore":"0","GoodScore":"30"},{"Node":3,"No":"3-8","ParentNo":"2-3","ObjEvents":"028","PoorScore":"30","GoodScore":"70"},{"Node":3,"No":"3-9","ParentNo":"2-3","ObjEvents":"029","PoorScore":"70","GoodScore":"100"}];
+
+    function GetData(data) {
+        var node = {};
+        $.each(data,function(i, v) {
+            if (v["Node"]===1) {
+                node = v;
+                return false;
+            }
+        });
+        node["children"] = GetChilds(node["No"], data);
+        console.log(node);
+        return node;
+    }
+    function GetChilds(parentNo, data) {
+        var nodes = [];
+        $.each(data, function (i, v) {
+            if (v["ParentNo"] === parentNo) {
+                v["children"] = GetChilds(v["No"], data);
+                nodes.push(v);
+            }
+        });
+        return nodes;
+    }
+    $(function () {
+        
+        var datascource = GetData(data);
+        $('#chart-container').orgchart({
+            'data': datascource,
+            'pan': true,
+            'zoom': true,
+            'nodeContent': '',
+            'nodeTitle': 'No',
+            //'direction': 'l2r',
+            'nodeId': 'No',
+            'parentNodeSymbol':'iconfont icon-start',
+        //'toggleSiblingsResp':true
+        'nodeTemplate':FormateNode
+    });
+        $("select").select2();
+    });
+    function FormateNode(data){
+        var str = '<div class="title"><div class="tool-box"></div>' + data.No +'</div><div class="content">';
+        //str += '<dl><dt>事件：</dt><dd>' + data.ObjEvents + '</dd></dl>';
+        str +=
+            '<div class="form-group-sm">' +
+                '<label class="iwb-label" for="" style="float:left">选择事件</label>' +
+                '<select style="width:100%"><option value="value">text</option><option value="value">text</option></select>'+
+            '</div>';
+    	str+='</div>';
+    	return str;
+    }
+</script>
+  </body>
+</html>

@@ -1,0 +1,194 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Layout
+@model SearchFormViewModal
+<style>
+    .search-unit.FieldType.ExpType.KeyWords.multi {
+        font-size: 14px;
+    }
+    .search-unit .input-group-addon.search-icon {
+        z-index: 3;
+        font-size: 14px;
+        min-width: 35px !important;
+        line-height: 28px !important;
+        height: 28px !important;
+        border-radius: 0 3px 3px 0 !important;
+        text-align: center !important;
+        right: 0px !important;
+    }
+</style>
+
+<div class="input-group input-group-sm hidden-sm hidden-xs hidden-sm" id="SearchBox" style="position: absolute; width: 100%; z-index: 2;max-width: 300px">
+    <form id="SearchForm">
+        @{
+            var selectItemStr = "{";
+
+            if (Model.SearchItems.Any())
+            {
+                int i = 0;
+                if (Model.IsSingle)
+                {
+                    <div class="search-unit" data-index="1">
+                        <select id="KeyField-1" name="KeyField-1" class="form-control KeyField" style="width: 100px !important">
+                            @foreach (var item in Model.SearchItems)
+                            {
+                                int isSelect = 0;
+                                if (!string.IsNullOrEmpty(item.SelectItemStr))
+                                {
+                                    selectItemStr += (selectItemStr == "{" ? "" : ",") + item.SelectItemStr;
+                                    isSelect = 1;
+                                }
+                                string selected = i == 0 ? "selected" : "";
+                                int fieldType = (int) item.FiledType;
+                                int expType = (int) item.ExpType;
+                                <option value="@item.Field" data-index="1" data-select="@isSelect" data-field="@item.Field" data-field-type="@fieldType" data-exp-type="@expType" @selected>@item.DisplayName</option>
+                                i++;
+                            }
+                        </select>
+                        <input id="FieldType-1" name="FieldType-1" class="FieldType" type="hidden" value="0" />
+                        <input id="ExpType-1" name="ExpType-1" class="ExpType" type="hidden" value="6"/>
+                        <input id="KeyWords-1" name="KeyWords-1" class="form-control  pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="请输入查询关键字..." autocomplete="off" />
+                        <span class="btn search-btn" data-type="_" onclick="BtnSearch(true)"><i class="iconfont icon-search "></i></span>
+                    </div>
+                }
+                else
+                {
+                    <div class="panel-group" id="search-multi">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#search-multi" href="#collapse1" style="width:100%">点击展开多条件查询框查询</a>
+                                    <span class="search-icon" onclick="BtnSearch(true)" style=""><i class="iconfont icon-search "></i></span>
+                                </h4>
+                            </div>
+                            <div id="collapse1" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    @{
+                                        foreach (var item in Model.SearchItems)
+                                        {
+                                            i++;
+                                            int fieldType = (int) item.FiledType;
+                                            int expType = (int) item.ExpType;
+                                            <div class="search-unit" data-index="@i">
+                                                <div class="input-group input-group-sm text-non" style="position: relative; width: 100%;">
+                                                    <span class="input-group-addon">@item.DisplayName</span>
+                                                    <input id="KeyField-@i" name="KeyField-@i"  class="KeyField" style="display: none" value="@item.Field" />
+                                                    <input id="FieldType-@i" name="FieldType-@i" class="FieldType" type="hidden" value="@fieldType" />
+                                                    <input id="ExpType-@i" name="ExpType-@i" class="ExpType" type="hidden" value="@expType" />
+                                               
+                                                @{
+                                                    var selectItem = item.SelectItems.FirstOrDefault(a => a.Filed == item.Field);
+                                                    if (selectItem != null) 
+                                                    {
+                                                        <select id="KeyWords-@i" name="KeyWords-@i" class="form-control  pull-right KeyWords multi" placeholder="请选择查询项..." autocomplete="off" data-placeholder="请选择查询项..." style="width: 100%">
+                                                            @if (selectItem.IsAddBlank)
+                                                            {
+                                                                <option value="">请选择</option>
+                                                            }
+                                                            @foreach (var sItem in selectItem.Items)
+                                                            {
+                                                                <option value="@sItem.Value">@sItem.Text</option>
+                                                            }
+                                                        </select>
+                                                    }
+                                                    else
+                                                    {
+                                                        string placeholder,classStr="";
+                                                        if (item.FiledType == FiledType.I)
+                                                        {
+                                                            placeholder = "需查询的数字";
+                                                            classStr = "number";
+                                                        }
+                                                        else if (item.FiledType == FiledType.D||item.FiledType == FiledType.Dnull)
+                                                        {
+                                                            placeholder = "需查询的日期";
+                                                            classStr = "dateISO iwb-date";
+                                                        }
+                                                        else
+                                                        {
+                                                            placeholder = "查询关键字";
+                                                        }
+                                                        <input id="KeyWords-@i" name="KeyWords-@i" class="form-control @classStr pull-right KeyWords multi"  placeholder="请输入@(placeholder)..." autocomplete="off" value="@item.Value"/>
+                                                        if (!string.IsNullOrEmpty(item.SearchModalId))
+                                                        {
+                                                            <div class="input-group-addon search-icon" onclick="ShowQueryModal('@item.SearchModalId','@item.Target');">
+                                                                <i class="iconfont icon-search"></i>
+                                                            </div>
+                                                        }
+                                                    }
+                                                }
+                                                </div>       
+                                            </div>
+                                        }
+                                    }
+                                    <span class="search-button" onclick="BtnSearch(true)" style=""><i class="iconfont icon-search "></i>查询</span>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                }
+
+            }
+
+            selectItemStr += "}";
+
+        }
+    </form>
+</div>
+
+@using (Html.BeginScripts())
+{
+    <script>
+        $(function () {
+            $(".search-unit select").select2();
+            $(".KeyField").off("change.keyfield").on("change.keyfield", function () {
+                var $that = $(this).find("option:selected");
+                var selectIndex = $that.data("index"),
+                    isSelect = $that.data("select"),
+                    field = $that.data("field"),
+                    expType = $that.data("exp-type"),
+                    fieldType = $that.data("field-type");
+                changeKeyWord(selectIndex, isSelect,field, expType, fieldType);
+            });
+            var selectItem = @Html.Raw(selectItemStr);
+            function changeKeyWord(index, isSelect,field,expType, fieldType) {
+                var $index = $(".search-unit[data-index='" + index + "']");
+                $index.find(".ExpType").val(expType);
+                $index.find(".FieldType").val(fieldType);
+                var str;
+                var id = $index.find(".KeyWords").attr("id");
+                console.log(fieldType, "-", isSelect);
+                if (isSelect) {
+                    if (selectItem.length < 0) {
+                        return;
+                    }
+                    str = '<select id="' + id + '" name="' + id + '" class="form-control  pull-right KeyWords" style="width: calc(100% - 120px) !important;" placeholder="请选择查询项..." autocomplete="off" data-placeholder="请选择查询项...">';
+                    str += selectItem[field];
+                    str += '</select>';
+                    $index.find(".KeyWords").next("span.select2").remove();
+                    $index.find(".KeyWords").remove();
+                    $index.find(".ExpType").after(str);
+                    $index.find(".KeyWords").select2();
+                    if ($index.find(".search-btn").length>0) {
+                        $index.find(".KeyWords").next().find(".select2-selection__arrow").css("right", "30px");
+                    }
+                } else {
+                    if (fieldType === 1) {
+                        str = ' <input id="' + id + '" name="' + id + '" class="form-control number pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="请输入需查询的数字..." autocomplete="off" />';
+                    } else if (fieldType === 5) {
+                        str = ' <input id="' + id + '" name="' + id + '" class="form-control dateISO pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="请输入需查询的日期..." autocomplete="off" />';
+                    } else {
+                        str = '<input id="' + id + '" name="' + id + '" class="form-control  pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="请输入查询关键字..." autocomplete="off" />';
+                    }
+                    $index.find(".KeyWords").next("span.select2").remove();
+                    $index.find(".KeyWords").remove();
+                    $index.find(".ExpType").after(str);
+                }
+                AddSearchEvents();
+            }
+        });
+       
+    </script>
+
+
+
+}

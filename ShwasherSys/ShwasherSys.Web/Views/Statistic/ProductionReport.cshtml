@@ -1,0 +1,276 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "车间生产统计";
+    string activeMenu = PermissionNames.PagesStatisticMgProductionReportMg; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+
+}
+@section css{
+    <link href="~/Content/Css/statistic.css" rel="stylesheet" />
+    <style>
+        #table1 th.td:not(.index) {
+            min-width: 120px;
+            max-width: 300px;
+        }
+    </style>
+}
+
+<div class="box-tool">
+    <div class="tool-form">
+        <form id="tool-form">
+            <div style="float: left">
+                <select id="year" name="year" class="form-control" autocomplete="off" style="width: 120px;">
+                    <option value="">请选择年份</option>
+                    @for (int i = DateTime.Now.Year; i >= 2019; i--)
+                    {
+                        <option value="@(i)">@(i)年</option>
+                    }
+                </select>
+                <select id="month" name="month" class="form-control" autocomplete="off" style="width: 180px;">
+                    <option value="">请选择月份/季度/年度</option>
+                    <optgroup label="月份">
+                        @for (int j = 1; j <= 12; j++)
+                        {
+                            <option value="@(j)">@(j)月</option>
+                        }
+                    </optgroup>
+                   
+                    <optgroup label="季度">
+                        @for (int j = 1; j <= 4; j++)
+                        {
+                            <option value="@(j+12)">第 @(j) 季度</option>
+                        }
+                    </optgroup>
+                     
+                    <optgroup label="年度">
+                        <option value="19">整年度</option>
+                        <option value="17">上半年</option>
+                        <option value="18">下半年</option>
+                    </optgroup>
+                   
+                </select>
+                @*<input id="query-date1" class="form-control iwb-date" type="text" value="" placeholder="请输入查询开始日期..." style="width: 250px;"/>
+        <input id="query-date2" class="form-control iwb-date" type="text" value="" placeholder="请输入查询结束日期..." style="width: 250px;"/>*@
+            </div>
+            <div style="width: 250px; float: left;margin-left: 10px;">
+                <div class="input-group form-group-sm " style="width: 100%;">
+                    <input id="employeeId" name="employeeId" class="form-control" type="hidden" autocomplete="off" placeholder="" style="width: 250px;"/>
+                    <input class="form-control" id="query-man" name="query-man" type="text"  autocomplete="off" required="" placeholder="请输入查询员工..." readonly="">
+                    <div class="input-group-addon" onclick="ShowQueryModal('query_employee_modal', '.tool-form');">
+                        <i class="iconfont icon-search"></i>
+                    </div>
+                    <div class="input-group-addon" title="清除员工信息" onclick="ClearQueryValue(this);">
+                        <i class="iconfont icon-close"></i>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+       
+    </div>
+    <div class="tool-btn">
+        @if (IsGranted(PermissionNames.PagesStatisticMgProductionReportMgQuery))
+        {
+            <button class="btn btn-info btn-sm" onclick="Query()">查询</button>
+        }
+        @* <button class="btn btn-success btn-sm" onclick="Export()">导出</button>*@
+    </div>
+
+</div>
+<div class="box-data">
+    <div class="box-body">
+        <table id="table1" style="display: none">
+            <thead>
+                <tr class="title">
+                    <td class="td" colspan="20">上海上垫垫圈有限公司车间生产统计表</td>
+                </tr>
+                <tr class="title-sm">
+                    <th class="td department" colspan="3">部门：生产车间</th>
+                    <th class="td date" colspan="3">日期：<span class="date">2020-01-20</span></th>
+                </tr>
+                <tr>
+                    <th class="td index">序号</th>
+                    <th class="td">工号</th>
+                    <th class="td">姓名</th>
+                    <th class="td">重量(kg)</th>
+                    <th class="td">千件</th>
+                    <th class="td">日期</th>
+                </tr>
+            </thead>
+            <tbody class="tbody"></tbody>
+            <tfoot>
+                <tr>
+                    <td class="td" colspan="1"></td>
+                    <td class="td detail" colspan="2">
+                        总重量：<strong class="kg"></strong> kg
+                    </td>
+                    <td class="td detail" colspan="2">
+                        总件数： <strong class="pcs"></strong> 千件
+                    </td>
+                    <td class="td" colspan="1"></td>
+                    @*<th class="td" colspan="1">本月总计</th>
+        <td class="td detail" colspan="3">
+            <p>总重量：<strong id="kg">44</strong> kg</p>
+            <p>总件数：<strong id="pcs">55</strong> 千件</p>
+        </td>*@
+
+                </tr>
+            </tfoot>
+        </table>
+        <table id="table2" style="display: none">
+            <thead>
+                <tr class="title">
+                    <td class="td" colspan="20">上海上垫垫圈有限公司车间生产统计表</td>
+                </tr>
+                <tr class="title-sm">
+                    <th class="td department" colspan="4">部门：生产车间</th>
+                    <th class="td" colspan="2" style="border-left:none">工号：<span class="eNo"></span></th>
+                    <th class="td" colspan="2" style="border-left:none">姓名：<span class="eName"></span></th>
+                    <th class="td date" colspan="3">日期：<span class="date">2020-01-20</span></th>
+                </tr>
+                <tr>
+                    <th class="td index">序号</th>
+                    <th class="td">流转单号</th>
+                    <th class="td">重量(kg)</th>
+                    <th class="td">千件</th>
+                    <th class="td">千件重</th>
+                    <th class="td">日期</th>
+                    <th class="td">半成品名称</th>
+                    <th class="td">零件号</th>
+                    <th class="td">规格</th>
+                    <th class="td">材质</th>
+                    <th class="td">表色</th>
+
+                </tr>
+            </thead>
+            <tbody class="tbody"></tbody>
+            <tfoot>
+                <tr>
+                    <td class="td" colspan="1"></td>
+                    <td class="td detail" colspan="3">
+                        总重量：<strong class="kg"></strong> kg
+                    </td>
+                    <td class="td detail" colspan="3">
+                        总件数： <strong class="pcs"></strong> 千件
+                    </td>
+                    <td class="td" colspan="5"></td>
+                    @*<th class="td" colspan="1">本月总计</th>
+                    <td class="td detail" colspan="3">
+                        <p>总重量：<strong id="kg">44</strong> kg</p>
+                        <p>总件数：<strong id="pcs">55</strong> 千件</p>
+                    </td>*@
+
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+@section modal{
+    @Html.Partial("Modals/Query/_Employee", "1:query-man,employeeId")
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $table = $('#table');
+        $(function () {
+            $('#year').val(@(DateTime.Now.Year)).select2();
+            $('#month').val(@(DateTime.Now.Month)).select2();
+            Query();
+        });
+        function Query() {
+            var date = $('#year').val();
+            if (date) {
+                $.iwbAjax4({
+                    url: window.appUrl + 'ProductionOrders/QueryProductionReport' ,
+                    form:'tool-form',
+                    success: function (res) {
+                        $table = $('#employeeId').val() ? $('#table2') : $('#table1');
+                        var $table2 = $('#employeeId').val() ? $('#table1') : $('#table2');
+                        $table.find('.date').html(res.dayDate || "");
+                        $table.find('.eNo').html(res.employeeNo || "");
+                        $table.find('.eName').html(res.employeeName || "");
+                        $table.find('.kg').html(res.kgTotal || "");
+                        $table.find('.pcs').html(res.pcsTotal || "");
+                        if (res) {
+                            
+                          
+                            var str = ItemFormatter(res.items);
+                            $table.find('.tbody').html(str);
+                            $table.fadeIn();
+                            $table2.hide();
+                        } else {
+                            $table.hide();
+                            $table2.hide();
+                            abp.message.warn("未查询到数据。");
+                        }
+                    }
+                });
+            } else {
+                abp.message.warn("请选择年份。");
+            }
+        }
+
+        function ItemFormatter(data) {
+            var str = "";
+            if (data && data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    str += '<tr>';
+
+                    str += '<td class="td">{0}</td>'.format(i+1);
+                    if ($('#employeeId').val()) {
+                        str += '<td class="td">{0}</td>'.format(item.productionOrderNo || "");
+                        str += '<td class="td">{0}</td>'.format(item.kgQuantity || "");
+                        str += '<td class="td">{0}</td>'.format(item.pcsQuantity || "");
+                        str += '<td class="td">{0}</td>'.format(item.kgWeight || "");
+                        str += '<td class="td">{0}</td>'.format(new Date(item.productDate).format('yyyy-MM-dd'));
+                        str += '<td class="td">{0}</td>'.format(item.productName || "");
+                        str += '<td class="td">{0}</td>'.format(item.partNo || "");
+                        str += '<td class="td">{0}</td>'.format(item.model || "");
+                        str += '<td class="td">{0}</td>'.format(item.material || "");
+                        str += '<td class="td">{0}</td>'.format(item.surfaceColor || "");
+                    }else
+                    {
+                        str += '<td class="td">{0}</td>'.format(item.employeeNo || "");
+                        str += '<td class="td">{0}</td>'.format(item.employeeName || "");
+                        str += '<td class="td">{0}</td>'.format(item.kgQuantity || "");
+                        str += '<td class="td">{0}</td>'.format(item.pcsQuantity || "");
+                        str += '<td class="td">{0}</td>'.format(new Date(item.productDate).format('yyyy-MM-dd'));
+                    }
+                   
+                    str += '</tr>';
+                }
+            } else {
+                str += '<tr>';
+                str += '<td class="td" colspan="20" style="color:red;padding:10px;">未查询到生产明细</td>';
+                str += '</tr>';
+            }
+            return str;
+        }
+
+        function Export() {
+
+        }
+
+        function ClearQueryValue(that) {
+            var $that = $(that).closest('.input-group');
+            $that.find('input').val("");
+        }
+    </script>
+
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @*@Html.DropDownList("hid-type", type)*@
+</section>

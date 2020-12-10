@@ -1,0 +1,170 @@
+﻿@using System.Linq;
+@using Abp.Extensions
+@using ShwasherSys.Models.Modal
+@model ModalBodyViewModel
+<div class="modal-body container-fluid" style="padding-top: 15px;padding-bottom: 0;">
+    <form class="pr-3 pl-3 form-horizontal " id="@Model.FormId">
+
+        @{
+            //string type = "text";
+            string oBefore, oAfter, iBefore, iAfter;
+            if (Model.Specials != null && Model.Specials.Any())
+            {
+                foreach (var i in Model.Inputs)
+                {
+                    oBefore = "";
+                    oAfter = "";
+                    iBefore = "";
+                    iAfter = "";
+                    var special = Model.Specials.FirstOrDefault(a => a.Id == i.Id);
+                    if (!string.IsNullOrEmpty(i.DivOutBefore))
+                    {
+                        oBefore = i.DivOutBefore;
+                    }
+                    if (!string.IsNullOrEmpty(i.DivOutAfter))
+                    {
+                        oAfter = i.DivOutAfter;
+                    }
+                    if (!string.IsNullOrEmpty(i.DivInterBefore))
+                    {
+                        iBefore = i.DivInterBefore;
+                    }
+                    if (!string.IsNullOrEmpty(i.DivInterAfter))
+                    {
+                        iAfter = i.DivInterAfter;
+                    }
+
+                    @Html.Raw(oBefore)
+        <div class="form-group-sm @i.DivClass" @i.DivOther>
+            @Html.Raw(i.Lable)
+            @if (special != null)
+            {
+                @Html.Raw(special.InputStr)
+            }
+            else
+            {
+                if (i.IsHidden)
+                {
+                    <input id="@i.Id" name="@i.Name" type="hidden" />
+                }
+                else
+                {
+                    <div class="col-md-10">
+
+                        @Html.Raw(iBefore)
+                        @if (i.Types == InputTypes.List)
+                        {
+                            var style = i.Styles.IsNullOrEmpty() ? "width:100%" : i.Styles;
+                            <select class="@i.Class  @i.Required" id="@i.Id" name="@i.Name" placeholder="@L("SelectPlaceholder")" value="@i.Value" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@style" @i.Other>
+                                @Html.Raw(i.SelectOptions)
+                            </select>
+                        }
+                        else if (i.Types == InputTypes.Textarea)
+                        {
+                            <textarea rows="2" class="@i.Class @i.Required" id="@i.Id" name="@i.Name" value="@i.Value" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other></textarea>
+                        }
+                        else
+                        {
+                            
+                            if (!string.IsNullOrEmpty(i.SearchModalId))
+                            {
+                            <div class="input-group" style="width: 100%">
+                                <input class="@i.Class @i.Required " id="@i.Id" name="@i.Name" type="@i.TypeStr"@i.DataOptions @i.Events @i.Disabled @i.IsReadOnly style="@i.Styles" @i.Other />
+                                <div class="input-group-addon" onclick="ShowQueryModal('@i.SearchModalId','@i.TargetDom');">
+                                    <i class="iconfont icon-search"></i>
+                                </div>
+                            </div>
+                            }
+                            else
+                            {
+                                <input class="@i.Class @i.Required " id="@i.Id" name="@i.Name" type="@i.TypeStr" @i.DataOptions @i.Events @i.Disabled @i.IsReadOnly style="@i.Styles" @i.Other />
+                            }
+
+                        }
+                        @Html.Raw(iAfter)
+                    </div>
+                }
+            }
+        </div>
+                    @Html.Raw(oAfter)
+                }
+            }
+            else
+            {
+                foreach (var i in Model.Inputs)
+                {
+                    oBefore = "";
+                    oAfter = "";
+                    iBefore = "";
+                    iAfter = "";
+                    if (!string.IsNullOrEmpty(i.DivOutBefore))
+                    {
+                        oBefore = i.DivOutBefore;
+                    }
+                    if (!string.IsNullOrEmpty(i.DivOutAfter))
+                    {
+                        oAfter = i.DivOutAfter;
+                    }
+                    if (!string.IsNullOrEmpty(i.DivInterBefore))
+                    {
+                        iBefore = i.DivInterBefore;
+                    }
+                    if (!string.IsNullOrEmpty(i.DivInterAfter))
+                    {
+                        iAfter = i.DivInterAfter;
+                    }
+                    @Html.Raw(oBefore)
+                    <div class="form-group-sm @i.DivClass" @i.DivOther>
+                        @Html.Raw(i.Lable)
+                        @if (i.IsHidden)
+                        {
+                            <input id="@i.Id" name="@i.Name" type="hidden" />
+                        }
+                        else
+                        {
+                            <div class="col-md-10">
+                                @Html.Raw(iBefore)
+
+                                @if (i.Types == InputTypes.List)
+                                {
+                                    var style = i.Styles.IsNullOrEmpty() ? "width:100%" : i.Styles;
+                                    <select class="@i.Class @i.Required" id="@i.Id" name="@i.Name" placeholder="@L("SelectPlaceholder")" value="@i.Value" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@style" @i.Other>
+                                        @Html.Raw(i.SelectOptions)
+                                    </select>
+                                }
+                                else if (i.Types == InputTypes.Textarea)
+                                {
+                                    <textarea rows="2" class="@i.Class @i.Required" id="@i.Id" name="@i.Name" value="@i.Value" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other></textarea>
+                                }
+                                else
+                                {
+                                    if (!string.IsNullOrEmpty(i.SearchModalId))
+                                    {
+                                        <div class="input-group"  style="width: 100%">
+                                            <input class="@i.Class @i.Required" id="@i.Id" name="@i.Name" type="@i.TypeStr" placeholder="请输入@(i.DisplayName)..." value="@i.Value" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other />
+                                            <div class="input-group-addon" onclick="ShowQueryModal('@i.SearchModalId','@i.TargetDom');">
+                                                <i class="iconfont icon-search"></i>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        @*@L("InputPlaceholder")*@
+                                        <input class="@i.Class @i.Required" id="@i.Id" name="@i.Name" type="@i.TypeStr" placeholder="请输入@(i.DisplayName)..." value="@i.Value" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other />
+                                    }
+
+                                }
+                                @Html.Raw(iAfter)
+                            </div>
+                        }
+                       
+                    </div>
+                    @Html.Raw(oAfter)
+                }
+            }
+
+        }
+
+
+    </form>
+</div>

@@ -1,0 +1,147 @@
+﻿@using Abp.Collections.Extensions
+@using ShwasherSys.Authorization.Permissions
+@model ShwasherSys.Models.Layout.SideBarNavViewModel
+@{
+    var calculateMenuUrl = new Func<string, string>((url) =>
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            return ApplicationPath;
+        }
+
+        if (UrlChecker.IsRooted(url))
+        {
+            return url;
+        }
+
+        return ApplicationPath + url;
+    });
+
+
+}
+<aside class="main-sidebar">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- Sidebar Menu -->
+        <ul class="sidebar-menu" data-widget="tree" role="menu" data-accordion="false">
+            @{
+                if (Model!=null)
+                {
+                    foreach (var menuItem in Model.MainMenu.Items)
+                    {
+
+                        if ((int) menuItem.CustomData != 1&& (int)menuItem.CustomData!=2)
+                        {
+                            continue;
+                        }
+                        string open;
+                        string active;
+                        if (Model.ActiveNames.LastOrDefault()== menuItem.Name||( Model.ActiveNames.Count==0 && menuItem.Name == "Pages"))
+                        {
+                            active = "active";
+                            open = menuItem.Name !=  "Pages" ?"menu-open":"";
+                        }
+                        else
+                        {
+                            active = "";
+                            open = "";
+                        }
+
+                        //var active = Model.ActiveMenuItemName == menuItem.Name ? "active" : "" ;
+                        //var open = (Model.ActiveMenuItemName == menuItem.Name || (Model.ActiveMenuItemName.Contains(menuItem.Name)&& menuItem.Name!="Pages")) ? "menu-open" : "" ;
+                        var dispaly = open == "" ? "none;" : "block;";
+                        if (!menuItem.Items.IsNullOrEmpty())
+                        {
+                            <li class="treeview @open @active">
+                                <a href="#">
+                                    <i class="iconfont @menuItem.Icon"></i><span>@menuItem.DisplayName</span>
+                                    <span class="pull-right-container">
+                                        <i class="iconfont icon-left fa-angle-left pull-right"></i>
+                                    </span>
+                                </a>
+                                <ul class="treeview-menu" style="display:@dispaly ">
+                                    @foreach (var menuChild in menuItem.Items)
+                                    {
+                                        active = Model.ActiveNames.Contains(menuChild.Name) ? "active" : "";
+                                        open = Model.ActiveNames.Contains(menuChild.Name) ? "menu-open" : "";
+                                        if ((int) menuChild.CustomData != 1 && (int)menuChild.CustomData!=2)
+                                        {
+                                            continue;
+                                        }
+                                        if (menuChild.Items.IsNullOrEmpty()|| !menuChild.Items.Any(a=>(int)a.CustomData==1||(int)a.CustomData==2))
+                                        {
+                                            //active = Model.ActiveNames.Contains(menuChild.Name) ? "active" : "";
+                                            <li class="@active" >
+                                                <a href="@calculateMenuUrl(menuChild.Url)" class="">
+                                                    <i class="iconfont @menuChild.Icon"></i><span>@menuChild.DisplayName</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        else
+                                        {
+
+                                            dispaly = active == "" ? "none;" : "block;";
+                                            <li class="treeview @open @active">
+                                                <a href="#">
+                                                    <i class="iconfont @menuChild.Icon"></i><span>@menuChild.DisplayName</span>
+                                                    <span class="pull-right-container">
+                                                        <i class="iconfont icon-left fa-angle-left pull-right"></i>
+                                                    </span>
+                                                </a>
+                                                
+                                            <ul class="treeview-menu" style="display:@dispaly ">
+                                                @foreach (var menuChildItem in menuChild.Items)
+                                                {
+                                                    //if (menuChild.Name == PermissionNames.PagesCompanyDieMaintenance)
+                                                    //{
+
+                                                    //}
+                                                    active = Model.ActiveNames.Contains(menuChildItem.Name) ? "active" : "";
+                                                    //active = Model.ActiveMenuItemName == menuChild.Name ? "active" : "";
+                                                    if ((int)menuChildItem.CustomData != 1 && (int)menuChildItem.CustomData != 2)
+                                                    {
+                                                        continue;
+                                                    }
+                                                    if (menuChildItem.Items.IsNullOrEmpty()||!menuChildItem.Items.Any(a=>(int)a.CustomData==1||(int)a.CustomData==2))
+                                                    {
+                                                        <li class="@active">
+                                                            <a href="@calculateMenuUrl(menuChildItem.Url)" class="">
+                                                                <i class="iconfont @menuChildItem.Icon"></i><span>@menuChildItem.DisplayName</span>
+                                                            </a>
+                                                        </li>
+                                                    }
+                                                    else
+                                                    {
+
+                                                    }
+                                                }
+                                            </ul>
+                                            </li>
+                                        }
+
+                                        
+                                    }
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="@active" >
+                                <a href="@calculateMenuUrl(menuItem.Url)" class="">
+                                    <i class="iconfont @menuItem.Icon"></i><span>@menuItem.DisplayName</span>
+                                </a>
+                            </li>
+                        }
+
+                    }
+                }
+
+            }
+        </ul>
+        <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+</aside>
+<script>
+    var pageTitle = '@Html.Raw(Model!=null? Model.PageTitle:"")';
+</script>

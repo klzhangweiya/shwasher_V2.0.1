@@ -1,0 +1,412 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSystemUsers; //The menu item will be active for this page.
+    ViewBag.Title = "用户管理";
+    CurrentUserViewModel currentUser = ViewBag.CurrentUser;
+    List<SelectListItem> userType = ViewBag.UserType;
+    List<SelectListItem> activeType = ViewBag.IsActive;
+    List<SelectListItem> factories = ViewBag.Factories;
+    List<SelectListItem> departments = ViewBag.Departments;
+    List<SelectListItem> duties = ViewBag.Duties;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("userName","用户名"),
+new SearchItem("realName","真实姓名"),
+new SearchItem("userType","用户类型",FiledType.I )
+.SetSearchItem(userType),
+new SearchItem("emailAddress","电子邮箱"),
+new SearchItem("isActive","激活状态",FiledType.B)
+.SetSearchItem(activeType),
+//.SetSearchItem(new List<SelectListItem>
+//{
+//    new SelectListItem(){Text = @"激活",Value = "1"},
+//    new SelectListItem(){Text = @"锁定",Value = "0"},
+//}),
+//new SearchItem("lastLoginTime","最后登陆时间",FiledType.D,ExpType.GreaterOrEqual),
+}, false);
+}
+
+<link href="~/Content/Plugins/jstree/themes/default/style.min.css" rel="stylesheet" />
+<link href="~/Content/Plugins/jstree/themes/jstree-self.css" rel="stylesheet" />
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/Users/GetAllUser"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true"
+           data-page-size="30"
+           data-page-number="1"
+           data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="userName">用户名</th>
+                <th data-align="center" data-field="realName">真实姓名</th>
+                <th data-align="center" data-field="userTypeName" data-formatter="UserTypeFormatter">用户类型</th>
+                <th data-align="center" data-field="emailAddress">电子邮箱</th>
+                <th data-align="center" data-field="isActiveName" data-formatter="ActiveStateFormatter">激活状态</th>
+                @*<th data-align="center" data-field="lastLoginTime">最后登陆时间</th>
+                    <th data-align="center" data-field="lastModificationTime">最后修改时间</th>
+                     <th data-align="center" data-field="lastModifierUserName">最后修改人</th>*@
+            </tr>
+        </thead>
+    </table>
+</div>
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("用户"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                            {
+                                                                                new InputViewModel("id", hide: true),
+                                                                                new InputViewModel("userName", displayName: "用户名"),
+                                                                                new InputViewModel("userType", InputTypes.List,"用户类型")
+                                                                                    .SetSelectOptions(userType),
+                                                                                new InputViewModel("realName", displayName: "真实姓名"),
+                                                                                new InputViewModel("emailAddress", displayName: "电子邮箱"),
+                                                                                new InputViewModel("isActive",InputTypes.List, "激活状态")
+                                                                                    .SetSelectOptions(activeType),
+                                                                            new InputViewModel("factoryID",InputTypes.List, "办公地点")
+                                                                                .SetSelectOptions(factories),
+                                                                                    new InputViewModel("departmentID",InputTypes.List, "部门")
+                                                                                        .SetSelectOptions(departments),
+                                                                                            new InputViewModel("dutyID",InputTypes.List, "职务")
+                                                                                                .SetSelectOptions(duties)
+                                                                            };
+                        if (currentUser.UserType == 1 || currentUser.UserType == 2)
+                        {
+                            inputs.Add(new InputViewModel("roleNames", InputTypes.List, "角色信息", other: "multiple").SetNotRequired()
+                                .SetSelectOptions((List<SelectListItem>)ViewBag.Roles));
+                        }
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <!--Auth Modal -->
+        <div class="modal fade" id="auth_Modal" role="dialog" aria-labelledby="ModalLabel_AUTH" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="min-height: 700px;">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("用户权限配置", ""))
+                    <form>
+                        <div class="modal-body" style="max-height: 500px;overflow: auto">
+                            <div class="" id="auth-tree"></div>
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">@L("Cancel")</button>
+                        <button type="button" class="btn btn-primary save-btn waves-effect">@L("Save")</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @*<section>
+            Auth Modal
+            <div class="modal fade" id="auth_Modal" role="dialog" aria-labelledby="ModalLabel_AUTH" aria-hidden="true">
+                <div class="modal-dialog  modal-dialog-centered" role="document" style="min-height: 700px;">
+                    <div class="modal-content">
+                        @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("用户权限配置",""))
+                        <form>
+                            <div class="modal-body" style="max-height: 500px;overflow: auto">
+                            </div>
+                        </form>
+                        <div class="modal-footer">
+                            <div class="pull-left" id="checkAll" style="margin: 10px 20px 0 70px;color: red;">
+                                <input class="filled-in" type="checkbox" name="checkAll" value="" />
+                                <label style="font-size: 15px">全选</label>
+                            </div>
+                            <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">@L("Cancel")</button>
+                            <button type="button" class="btn btn-primary save-btn waves-effect">@L("Save")</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>*@
+}
+@section scripts
+{
+    <script src="~/Content/Plugins/jstree/jstree.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function() {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var userId = rows[0].id;
+                    abp.ajax({
+                        url: window.appUrl + 'Users/GetUserRoles?UserId=' + userId,
+                        type: 'POST',
+                        dataType: "json",
+                        success: function (res) {
+                            var data = rows[0];
+                            data.roleNames = res;
+                            //console.log(data);
+                            //$("#accountType").off("change.accountType");
+                            BtnUpdate({ readonly: "userName,userType",data:data });
+                            //$("#accountType").on("change.accountType", ChangeAccountList);
+                            //ChangeAccountList(rows[0].accountNo);
+                        }
+                    });
+                }
+            };
+            funs["btnAuth"] = function() {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    abp.ui.setBusy();
+                    var userId = rows[0].id;
+                    abp.ajax({
+                        url: abp.appPath + 'System/GetUserPermission?userId=' + userId,
+                        type: 'POST',
+                        dataType: "json",
+                        success: function (res) {
+                            $("#auth_Modal").on('show.bs.modal',function() {
+                                AuthFormate(res);
+                                $("#auth_Modal").find("button.save-btn").off("click").on("click", function() {
+                                    var authData = GetAuthData(userId);
+                                    SaveAjax({
+                                        url: $("#tableTool").find('.btn[data-type=btnAuth]').data('url'),
+                                        isValidate: false,
+                                        success: function() { $("#auth_Modal").modal("hide"); },
+                                        data: authData
+                                    });
+                                });
+                            });
+
+                            $("#auth_Modal").modal("show");
+                            abp.ui.clearBusy();
+
+                        }
+                    });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+            funs["btnResetPwd"] = function (url) {
+                console.log("ResetPwd");
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    abp.message.confirm("重置密码", "确定用户 【" + rows[0].realName + "(" + rows[0].userName+") 】的密码吗？", function () {
+                        SaveAjax({ url: url, data: { Id: rows[0].id }, isValidate: false });
+                    });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+        });
+    </script>
+
+    <script>
+        function AuthFormate(data) {
+            var authData = [];
+            authData.push(data);
+            authData = AuthDataConvert(authData).authData;
+            console.log(authData);
+            $("#auth-tree").jstree("destroy");
+            $("#auth-tree").data('jstree', false).empty().jstree({
+                plugins: ["wholerow", "checkbox", "types"],
+                core: {
+                    themes: {
+                        responsive: false
+                    },
+                    data: authData,
+                    //data: [
+                    //    {
+                    //        'id': 'node_2',
+                    //        'text': 'Root node with options',
+                    //        'state': { 'opened': true, 'selected': true },
+                    //        'children': [{ 'text': 'Child 1' }, 'Child 2']
+                    //    }
+                    //]
+                },
+                //checkbox: {
+                //    "keep_selected_style": false,
+                //    "three_state": false,
+                //    "tie_selection": false
+                //},
+                types: {
+                    default:
+                    {
+                        icon: "fa fa-folder m--font-warning"
+                    },
+                    file: {
+                        icon: "fa fa-file  m--font-warning"
+                    }
+                }
+            });
+        }
+
+        function AuthDataConvert(data) {
+            //console.log(data);
+            var authData = [], j = 0;
+            for (var i = 0; i < data.length; i++) {
+                var item = data[i], newItem = [];
+                newItem["id"] = item.name;
+                newItem["text"] = item.permDisplayName;
+                newItem["icon"] = item.icon + " iconfont m--font-warning";
+                newItem["state"] = {};
+                newItem["state"].opened = item.isOpen;
+                var childResult = { "authData": [], "isAuth": true };
+                if (item.children && item.children.length > 0) {
+                    childResult = AuthDataConvert(item.children);
+                    newItem["children"] = childResult.authData;
+                }
+                if (!(item.isAuth && childResult.isAuth)) {
+                    j++;
+                }
+                newItem["state"].selected = item.isAuth && childResult.isAuth;
+                authData.push(newItem);
+            }
+            var result = { "authData": authData, "isAuth": j === 0 };
+            return result;
+        }
+
+        function GetAuthData(roleId) {
+            var authData = { Id: roleId, PermissionNames: [] };
+            var permissionNames = $('#auth-tree').jstree(true).get_selected(false);//获得所有选中节点，返回值为数组
+            $(".jstree-undetermined").each(function () {
+                permissionNames.push($(this).parent().parent().attr('id'));
+            });
+            authData.PermissionNames = permissionNames;
+            return authData;
+        }
+
+    </script>
+    
+    <script>
+        function UserTypeFormatter(v, r) {
+            if (r.userType === 1) {
+                return '<span class="label label-danger">' + v + '</span>';
+            } else if (r.userType === 2) {
+                return '<span class="label label-success">' + v + '</span>';
+            } else if (r.userType === 3) {
+                return '<span class="label label-warning">' + v + '</span>';
+            } else if (r.userType === 4) {
+                return '<span class="label label-primary">' + v + '</span>';
+            }
+            return v;
+        }
+        //function AccountTypeFormatter(v, r) {
+        //    if (r.accountType === 1) {
+        //        return '<span class="label label-danger">系统用户</span>';
+        //    } else if (r.accountType === 2) {
+        //        return '<span class="label label-success">来宾用户</span>';
+        //    }
+        //    return v;
+        //}
+        //function AccountStateFormatter(v, r) {
+        //    if (r.accountType === 1) {
+        //        return '<span class="label label-primary"> 不分配</span>';
+        //    }
+        //    if (v) {
+        //        return '<span class="label label-success"> 已分配</span>';
+        //    }
+        //    return '<span class="label label-danger"> 未分配</span>';
+        //}
+        function ActiveStateFormatter(v, r) {
+            if (r.isActive) {
+                return '<span class="label label-success"> ' + v + '</span>';
+            }
+            return '<span class="label label-danger"> ' + v + '</span>';
+        }
+    </script>
+
+
+    @*<script type="text/javascript">
+            $(function () {
+                LoadTable();
+                var funs = window.funs || { none: function () { console.log("No type"); } };
+                funs["btnUpdate"] = function () {
+                    var rows = config.table.bootstrapTable("getSelections");
+                    if (rows.length === 1) {
+                        var userId = rows[0].id;
+                        abp.ajax({
+                            url: window.appUrl + 'Users/GetUserRoles?UserId=' + userId,
+                            type: 'POST',
+                            dataType: "json",
+                            success: function (res) {
+                                var data = rows[0];
+                                data.roleNames = res;
+                                console.log(data);
+                                BtnUpdate({ readonly: "userName,userType", data: data });
+                            }
+                        });
+                    }
+                };
+                funs["btnAuth"] = function () {
+                    var rows = config.table.bootstrapTable("getSelections");
+                    if (rows.length === 1) {
+                        var userId = rows[0].id;
+                        $.ajax({
+                            url: abp.appPath + 'System/UserAuthModal?userId=' + userId,
+                            type: 'POST',
+                            //contentType: 'application/html',
+                            dataType: "html",
+                            success: function (content) {
+                                //console.log(0);
+                                if (content === "") {
+                                    return;
+                                }
+                                $("#auth_Modal").on('show.bs.modal',
+                                    function () {
+                                        $("#auth_Modal").find(".modal-body").empty().append(content);
+                                        $("#auth_Modal").find("button.save-btn").off("click").on("click",
+                                            function () {
+                                                var authData = GetAuthData(userId);
+                                                SaveAjax({
+                                                    url: $("#tableTool").find('.btn[data-type=btnAuth]').data('url'),
+                                                    isValidate: false,
+                                                    success: function () { $("#auth_Modal").modal("hide"); },
+                                                    data: authData
+                                                });
+                                            });
+                                    });
+                                $("#auth_Modal").modal("show");
+                            },
+                            error: function () {
+                                return;
+                            }
+                        });
+                    } else
+                        abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                };
+            });
+            function GetAuthData(roleId) {
+                var authData = { Id: roleId, PermissionNames: [] };
+                var perms = $("input[name='permission']:checked");
+                if (perms) {
+                    for (var i = 0; i < perms.length; i++) {
+                        var perm = $(perms[i]);
+                        authData.PermissionNames.push(perm.val());
+                    }
+                }
+                return authData;
+            }
+
+        </script>*@
+}

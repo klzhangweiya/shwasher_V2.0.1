@@ -1,0 +1,27 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "id,outFactoryName",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems = new List<QueryItem>()
+{
+new QueryItem("id","编号",true),
+new QueryItem("outFactoryName","厂商名称",true),
+new QueryItem("linkMan","联系人"),
+new QueryItem("telephone","联系电话"),
+    new QueryItem("address","详细地址"),
+    new QueryItem("email","邮箱"),
+    new QueryItem("zip","邮编"),
+    new QueryItem("fax","传真"),
+    new QueryItem("webSite","网址"),
+};
+
+
+    QueryModalModel qmModel = new QueryModalModel("外协厂商信息", "/api/services/app/Query/GetOutFactory", queryItems, originFiled, targetFiled, modalId: "query_outFactory_modal");
+}
+@Html.Partial("Modals/Query/_QueryModal", qmModel)
+
+
+

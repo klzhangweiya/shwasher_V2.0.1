@@ -1,0 +1,300 @@
+﻿@using IwbZero.Setting
+@using NPOI.SS.Formula.Functions
+@using ShwasherSys.Common
+@using ShwasherSys.CustomerInfo
+@using ShwasherSys.OrderSendInfo
+@using ShwasherSys.OrderSendInfo.Dto
+
+@{
+    Layout = null;
+    ViewBag.Title = "OrderSendBillDetail";
+    Customer customerInfo = ViewBag.CustomerInfo;
+    OrderSendBillDto sendBill = ViewBag.SendBill;
+    List<ViewOrderSend> orderSends = ViewBag.OrderSends;
+    string sendTitle = SettingManager.GetSettingValue("SysUserCop") + SettingManager.GetSettingValue("SENDBILLTITLE");
+    string sendAddress = SettingManager.GetSettingValue("SENDADDRESS");
+    string sendTel = SettingManager.GetSettingValue("SENDTELEPHONE");
+    string tddate = "日期: " + DateTime.Now.Year + " 年 " + DateTime.Now.Month + " 月 " + DateTime.Now.Day + " 日 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
+    ShwasherSys.Inspection.TemplateInfo templateInfo = ViewBag.TemplateInfo;
+    string tmpKey ="";
+    if (templateInfo != null)
+    {
+        tmpKey = templateInfo.TempKey;
+    }
+}
+<html> 
+<head>
+    <title>发货单打印</title>
+    <link href="~/Content/Css/PrintPage.css" rel="stylesheet" media="all" />
+    <link href="~/Content/Plugins/PrintPreView/print-preview.css" rel="stylesheet" />
+    @*<link href="~/Content/Plugins/jquery-print-preview/src/css/print-preview.css" rel="stylesheet" media="screen" />
+        <script src="https://cdn.bootcss.com/jquery-tools/1.2.7/jquery.tools.min.js"></script>
+        <script src="~/Content/Plugins/jquery-print-preview/src/jquery.print-preview.js"></script>*@
+
+    @*<script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>*@
+
+    <script src="~/Content/Scripts/Jquery/jquery-3.3.1.js"></script>
+    <script src="~/Content/Plugins/jquery.validate/jquery.validate.js"></script>
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+    <script src="~/Content/Scripts/MyScript/ExportExcel.js"></script>
+    <script src="~/Abp/Framework/scripts/abp.js"></script>
+    <script src="~/Abp/Framework/scripts/libs/abp.jquery.js"></script>
+    <script src="~/Content/Scripts/MyScript/UtilJs.js"></script>
+    <script>
+        $(function () {
+
+            $("#printBtn").printPreview({
+                printBody: "#printContent",
+                modalWidth: 1100
+            });
+            $("#exportBtn").on('click',
+                function (e) {
+                    var key = '@tmpKey';
+                    var serverUrl = (key.length > 0) ? "ExportOrderSend" : "ExportOrderSendCommon";
+                    SaveAjax({
+                        url: "/api/services/app/OrderSendBill/"+serverUrl,
+                        isValidate: false,
+                        isAlert: false,
+                        data: { id: '@sendBill.Id' },
+                        success: function (res) {
+                            var urlPath = window.document.location.href; //浏览器显示地址 http://10.15.5.83:5555/ISV/demo.aspx?a=1&b=2
+                            var docPath = window.document.location.pathname; //文件在服务器相对地址 /ISV/demo.aspx
+                            var index = urlPath.indexOf(docPath);
+                            var serverPath = urlPath.substring(0, index); //服务器地址 http://10.15.5.83:5555
+                            window.location.href = serverPath+"/" + res;
+                        }
+                    });
+                });
+        })
+    </script>
+</head>
+
+<body>
+
+    <header style="height: 40px;">
+        <div style="position: absolute;left: calc(50% - 100px)">
+            <input type="button" value="打印" class="btn" id="printBtn" />
+            <input type="button" value="导入Excel" class="btn" id="exportBtn" />
+        </div>
+        <hr class="hr01" />
+    </header>
+<div id="printContent">
+<table style="width: 1000px; margin-left: calc(50% - 500px); text-align: center;" id='tbheader' name='tbheader'>
+    <tr>
+        <td colspan="15" style="width:  auto ; height:  auto ; text-align: center">
+            <strong>
+                <span style="font-size: 20pt; font-family: STFangsong;">
+                    <label style="width: 509px; display: inline;">@sendTitle</label>
+                </span>
+            </strong>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="15" style="width:  auto ; height:  auto ; text-align: right" id="tddanhao"><strong>单号:@sendBill.Id</strong></td>
+    </tr>
+    <tr>
+        <td colspan="15" style="width:  auto ; height:  auto ; text-align: center" id="tdSendAddress">
+            <span style="font-size: 10pt">
+                @sendAddress
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="15" style="width:auto ; text-align:center; height:auto ;" id="tdSendTelephone">
+            <span style="font-size: 10pt">
+                @Html.Raw(sendTel)
+            </span>
+        </td>
+    </tr>
+</table>
+
+<table style="table-layout: auto; margin: 0 auto; width: 1000px; " id='tbheader2'>
+    <tr style="height:auto ">
+        <td style="width:80px;">
+            <strong><span style="font-size: 11pt">客户：</span></strong>
+        </td>
+        <td colspan="7" style="width:400px; " id="tdcustormer">@customerInfo.CustomerName</td>
+        <td style="width:60px; ">
+            <strong><span style="font-size: 11pt">地址：</span></strong>
+        </td>
+        <td colspan="6" style="width:auto;" id="tdsendaddr">@sendBill.SendAddress</td>
+    </tr>
+    <tr style="height:auto ">
+        <td style="width:80px; ">
+            <strong><span style="font-size: 11pt">联系电话：</span></strong>
+        </td>
+        <td colspan="7" style="width:400px; text-align: left;" id="tdtel">@sendBill.ContactTels</td>
+        <td style="width:60px  ;">
+            <strong><span style="font-size: 11pt">联系人：</span></strong>
+        </td>
+        <td colspan="6" style="width:  auto ; " id="tdlinkman">@sendBill.ContactMan</td>
+    </tr>
+    <tr style="height:auto ">
+        <td colspan="15" style="width:auto;text-align: right;">@Html.Raw(tddate)</td>
+    </tr>
+</table>
+
+
+<table class="table-body" style="table-layout: fixed; margin: 0 auto; width: 1100px;" id="fhdataTBL">
+    <tr>
+        <td style="width: 15px; text-align: center; border: thin solid #000000;" rowspan="2">
+            <strong>序号</strong>
+        </td>
+        <td style="width:  60px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                客户订单号
+            </strong>
+        </td>
+        <td style="width:  60px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                零件号
+            </strong>
+        </td>
+        <td style="width:  60px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                描述
+            </strong>
+        </td>
+        <td style="width:  60px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                规格
+            </strong>
+        </td>
+        <td style="width:  50px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                表色
+            </strong>
+        </td>
+        <td style="width:  60px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                材质
+            </strong>
+        </td>
+        <td style="width:  60px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                硬度
+            </strong>
+        </td>
+        <td style="width:  20px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                单位
+            </strong>
+        </td>
+        <td style="width:  20px ; text-align: center;border: thin solid #000000;" rowspan="2">
+            <strong>
+                数量
+            </strong>
+        </td>
+        <td style="text-align: center;width:  115px ;border: thin solid #000000;" colspan="4">
+            <strong>
+                (箱数*千件数+零头数=发货数)
+            </strong>
+        </td>
+        <td style="width:  50px ; text-align: center;border: thin solid #000000;"  rowspan="2">
+            <strong>
+                批次号
+            </strong>
+        </td>
+    </tr>
+    <tr>
+
+        <td style="text-align:center; width: 15px;border: thin solid #000000;">
+            <strong>箱数</strong>
+        </td>
+        <td style="text-align: center; width: 40px;border: thin solid #000000;">
+            <strong>千件/箱</strong>
+        </td>
+        <td style=" text-align: center; width: 30px;border: thin solid #000000;">
+            <strong>零头</strong>
+        </td>
+        <td style="text-align: center; width: 30px;border: thin solid #000000;">
+            <strong>总数</strong>
+        </td>
+    </tr>
+    @{
+        int index = 1;
+        foreach (var orderSend in orderSends)
+        {
+            var sendQuantity = Math.Round(Math.Floor(orderSend.SendQuantity * 1000) / 1000, 3);//发货数量
+            var quantityPerPack = orderSend.QuantityPerPack ?? 0;
+            quantityPerPack = quantityPerPack == 0 ? sendQuantity : quantityPerPack;//每包数量，如果为0则等于发货数量
+            decimal packageCount = sendQuantity == 0 ? 0 : (sendQuantity <= quantityPerPack ? 1 : Math.Floor(orderSend.SendQuantity / quantityPerPack));
+            var sysl = sendQuantity - quantityPerPack * packageCount;
+            <tr class="trColor">
+                <td style="border: thin solid #000000;">@index</td>
+                @if (string.IsNullOrEmpty(orderSend.StockNo))
+                {
+                    <td style="border: thin solid #000000;">@orderSend.OrderNo</td>
+                }
+                else
+                {
+                    <td style="border: thin solid #000000;">@orderSend.StockNo</td>
+                }
+                <td style="border: thin solid #000000;">@orderSend.PartNo</td>
+                <td style="border: thin solid #000000;">@orderSend.ProductName</td>
+                <td style="border: thin solid #000000;">@orderSend.Model</td>
+                <td style="border: thin solid #000000;">@orderSend.SurfaceColor</td>
+                <td style="border: thin solid #000000;">@orderSend.Material</td>
+                <td style="border: thin solid #000000;">@orderSend.Rigidity</td>
+                <td style="border: thin solid #000000;">千件</td>
+                <td style="border: thin solid #000000;">@sendQuantity</td>
+                <td style="border: thin solid #000000;">@packageCount</td>
+                <td style="border: thin solid #000000;">@quantityPerPack</td>
+                <td style="border: thin solid #000000;">@sysl</td>
+                <td style="border: thin solid #000000;">@sendQuantity</td>
+                <td style="border: thin solid #000000;">@orderSend.ProductBatchNum</td>
+            </tr>
+            index++;
+        }
+
+    }
+</table>
+
+
+<table style="width: 1000px; margin: 0 auto;" id='tbfooter' name='tbfooter'>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>制表人:</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>送货人:</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td> 签收人：</td>
+        <td></td>
+        <td></td>
+        <td>送货日期：</td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+
+</table>
+</div>
+
+
+
+
+    
+</body>
+
+</html>

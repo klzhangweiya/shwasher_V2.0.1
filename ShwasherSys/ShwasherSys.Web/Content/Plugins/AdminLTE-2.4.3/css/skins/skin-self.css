@@ -1,0 +1,237 @@
+/*
+ * Skin: Black
+ * -----------
+ */
+/* skin-self navbar */
+.skin-self .main-header {
+    -webkit-box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+    .skin-self .main-header .navbar-toggle {
+        color: #333;
+    }
+
+    .skin-self .main-header .navbar-brand {
+        color: #333;
+        border-right: 1px solid #eee;
+    }
+
+    .skin-self .main-header .navbar {
+        background-color: #ffffff;
+    }
+
+        .skin-self .main-header .navbar .nav > li > a {
+            color: #333333;
+        }
+
+            .skin-self .main-header .navbar .nav > li > a:hover,
+            .skin-self .main-header .navbar .nav > li > a:active,
+            .skin-self .main-header .navbar .nav > li > a:focus,
+            .skin-self .main-header .navbar .nav .open > a,
+            .skin-self .main-header .navbar .nav .open > a:hover,
+            .skin-self .main-header .navbar .nav .open > a:focus,
+            .skin-self .main-header .navbar .nav > .active > a {
+                background: #ffffff;
+                color: #999999;
+            }
+
+        .skin-self .main-header .navbar .sidebar-toggle {
+            color: #333333;
+        }
+
+            .skin-self .main-header .navbar .sidebar-toggle:hover {
+                color: #999999;
+                background: #ffffff;
+            }
+
+        .skin-self .main-header .navbar > .sidebar-toggle {
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+
+        .skin-self .main-header .navbar .navbar-nav > li > a {
+            border-right: 1px solid #eee;
+        }
+
+        .skin-self .main-header .navbar .navbar-custom-menu .navbar-nav > li > a,
+        .skin-self .main-header .navbar .navbar-right > li > a {
+            border-left: 1px solid #eee;
+            border-right-width: 0;
+        }
+
+    .skin-self .main-header > .logo {
+        background-color: #2762D4;
+        color: #fff;
+        font-size: 20px;
+        font-weight: 600； border-bottom: 0 solid transparent;
+        border-right: 1px solid #2762D4;
+    }
+
+        .skin-self .main-header > .logo:hover {
+            background-color: #2762D4;
+            font-size: 22px;
+            font-weight: 800；
+        }
+
+@media (max-width: 767px) {
+    .skin-self .main-header > .logo {
+        background-color: #222222;
+        color: #ffffff;
+        border-bottom: 0 solid transparent;
+        border-right: none;
+    }
+
+        .skin-self .main-header > .logo:hover {
+            background-color: #1f1f1f;
+        }
+}
+
+.skin-self .main-header li.user-header {
+    background-color: #4B83F0;
+}
+
+.skin-self .navbar-nav > .user-menu > .dropdown-menu > .user-footer {
+    border: 1px solid #4B83F0;
+}
+
+.skin-self .content-header {
+    background: transparent;
+    box-shadow: none;
+}
+
+.skin-self .wrapper,
+.skin-self .main-sidebar,
+.skin-self .left-side {
+    background-color: #4B83F0;
+}
+
+.skin-self .user-panel > .info,
+.skin-self .user-panel > .info > a {
+    color: #fff;
+}
+
+.skin-self .sidebar-menu > li.header {
+    color: #4b646f;
+    background: #1a2226;
+}
+
+.skin-self .sidebar-menu > li > a {
+    border-left: 3px solid transparent;
+}
+
+.skin-self .sidebar-menu > li:hover > a,
+.skin-self .sidebar-menu > li.active > a,
+.skin-self .sidebar-menu > li.menu-open > a {
+    color: #ffffff;
+    background: #62D862;
+}
+
+.skin-self .sidebar-menu > li.menu-open > a {
+    font-size: 1.1em;
+}
+
+.skin-self .sidebar-menu > li.active > a {
+    border-left-color: #ffffff;
+}
+
+.skin-self .sidebar-menu > li > .treeview-menu {
+    margin: 0 1px;
+    background: #4DB04D;
+}
+
+.skin-self .sidebar a {
+    color: #eef;
+}
+
+    .skin-self .sidebar a:hover {
+        text-decoration: none;
+    }
+
+.skin-self .sidebar-menu .treeview-menu {
+    padding-left: 0
+}
+
+.skin-self .sidebar-menu .treeview.active-open > a {
+    border-left: 3px solid #fff;
+}
+
+.skin-self .sidebar-menu .treeview-menu li .iconfont {
+    margin-right: 3px !important;
+}
+
+.skin-self .sidebar-menu .treeview-menu > li {
+    padding-left: 5px;
+    border-left: 3px solid transparent;
+}
+
+    .skin-self .sidebar-menu .treeview-menu > li.active {
+        padding-left: 5px;
+        border-left: 3px solid #ffffff;
+    }
+
+    .skin-self .sidebar-menu .treeview-menu > li.treeview {
+        border-left: none;
+    }
+
+    .skin-self .sidebar-menu .treeview-menu > li > a {
+        color: #D4EED4;
+    }
+
+        .skin-self .sidebar-menu .treeview-menu > li.active > a,
+        .skin-self .sidebar-menu .treeview-menu > li > a:hover {
+            color: #ffffff;
+        }
+
+    .skin-self .sidebar-menu .treeview-menu > li.active > a {
+        font-size: 1.1em;
+    }
+
+.skin-self .sidebar-form {
+    border-radius: 3px;
+    border: 1px solid #374850;
+    margin: 10px 10px;
+}
+
+    .skin-self .sidebar-form input[type="text"],
+    .skin-self .sidebar-form .btn {
+        box-shadow: none;
+        background-color: #374850;
+        border: 1px solid transparent;
+        height: 35px;
+    }
+
+    .skin-self .sidebar-form input[type="text"] {
+        color: #666;
+        border-top-left-radius: 2px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 2px;
+    }
+
+        .skin-self .sidebar-form input[type="text"]:focus,
+        .skin-self .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
+            background-color: #fff;
+            color: #666;
+        }
+
+            .skin-self .sidebar-form input[type="text"]:focus + .input-group-btn .btn {
+                border-left-color: #fff;
+            }
+
+    .skin-self .sidebar-form .btn {
+        color: #999;
+        border-top-left-radius: 0;
+        border-top-right-radius: 2px;
+        border-bottom-right-radius: 2px;
+        border-bottom-left-radius: 0;
+    }
+
+.skin-self .pace .pace-progress {
+    background: #222;
+}
+
+.skin-self .pace .pace-activity {
+    border-top-color: #222;
+    border-left-color: #222;
+}

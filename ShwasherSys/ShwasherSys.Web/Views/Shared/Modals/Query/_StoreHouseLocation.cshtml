@@ -1,0 +1,31 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "storeHouseId,storeLocationNo,storeAreaCode,shelfNumber,shelfLevel,sequenceNo",
+        targetFiled = Model ?? "";
+
+    List<QueryItem> queryItems = new List<QueryItem>()
+{
+        new QueryItem("storeHouseId","仓库编号",true).SetHidden(),
+        new QueryItem("storeLocationNo","库位编号",true),
+        new QueryItem("storeAreaCode","库区",true),
+        new QueryItem("shelfNumber","货架号"),
+        new QueryItem("shelfLevel","层次"),
+        new QueryItem("sequenceNo","序列号")
+    };
+    QueryModalModel qmModel = new QueryModalModel("库位信息", "/api/services/app/Query/GetStoreHouseLocation", queryItems, originFiled, targetFiled, modalId: "query_storeHouseLocation_modal").SetDefaultValueFunction("StoreHouseIdDefaultValue");
+}
+@Html.Partial("Modals/Query/_QueryModal", qmModel)
+
+@using (Html.BeginScripts())
+{
+    <script>
+        function StoreHouseIdDefaultValue() {
+            $("#query_storeHouseLocation_modal #Q-KeyWords-1").val(queryParams.storeHouseId ? queryParams.storeHouseId : "");
+            $("#query_storeHouseLocation_modal #Q-FieldType-1").val(queryParams.storeHouseIdType ? queryParams.storeHouseIdType : "2");
+            $("#query_storeHouseLocation_modal #Q-ExpType-1").val(queryParams.storeHouseIdExpType ? queryParams.storeHouseIdExpType : "0");
+        }
+    </script>
+}
+

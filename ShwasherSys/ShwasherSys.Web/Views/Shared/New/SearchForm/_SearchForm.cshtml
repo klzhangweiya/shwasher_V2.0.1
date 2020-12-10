@@ -1,0 +1,225 @@
+﻿
+@using ShwasherSys
+@model ShwasherSys.Views.Shared.New.SearchForm.SearchFormViewModel
+@{
+    var scriptStr = "";
+    var selectItemStr = "{";
+}
+<!-- SEARCH-FORM  @(Model.FormId)  START-->
+
+<div class="hidden-sm hidden-xs search-box" id="" style="position: absolute; right: 0; z-index: 2; width: 100%; max-width: 400px;">
+    <form id="@Model.FormId">
+        @if (!string.IsNullOrEmpty(Model.Field))
+        {
+            <input id="keyWords" name="keyWords" data-field="@(Model.Field)" data-ftype="@(Model.FType)" data-etype="@(Model.EType)" type="hidden" value="" />
+        }
+
+        @{
+            if (Model.SearchItems.Any())
+            {
+                int i = 0;
+                if (Model.IsSingle)
+                {
+                    <div class="search-unit" data-index="1">
+                        <select id="Single-KeyField" name="Single-KeyField" class="form-control" style="width: 100px !important">
+                            @foreach (var item in Model.SearchItems)
+                            {
+                                int isSelect = 0;
+                                if (!string.IsNullOrEmpty(item.SelectItemStr))
+                                {
+                                    selectItemStr += (selectItemStr == "{" ? "" : ",") + item.SelectItemStr;
+                                    isSelect = 1;
+                                }
+                                string selected = i == 0 ? "selected" : "";
+                                int fieldType = (int)item.FieldType;
+                                int expType = (int)item.ExpType;
+                                <option value="@item.Field" data-index="1" data-select="@isSelect" data-field="@item.Field" data-field-type="@fieldType" data-exp-type="@expType" @selected>@item.DisplayName</option>
+                                i++;
+                            }
+                        </select>
+                        <input id="Single-KeyWords" data-field="" data-ftype="0" data-etype="6" name="Single-KeyWords" class="form-control  pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="@(L("SearchPlaceholder"))" autocomplete="off" />
+                        <span class="btn search-btn menu-btn" data-type="_btnSearch"><i class="fa fa-search "></i></span>
+                    </div>
+                }
+                else
+                {
+                    <div class="card card-default search-card collapsed-card">
+                        <div class="card-header" data-card-widget="collapse">
+                            <h5 class="card-title">@(L("SearchLabel"))</h5>
+
+                            <div class="card-tools">
+                                @*<button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>*@
+                                <button type="button" class="btn btn-tool"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body" style="display: none">
+                            @{
+                                foreach (var item in Model.SearchItems)
+                                {
+                                    i++;
+                                    int fieldType = (int)item.FieldType;
+                                    int expType = (int)item.ExpType;
+                                    int inputWidth = 80;
+                                    string isShow = !item.IsShow ? " style=\"display:none\"" : "";
+                                    string classStr = item.IsOnlyView ? "" : "KeyWords";
+                                    <div class="search-unit" data-index="@i" @Html.Raw(isShow)>
+                                        <div class="input-group input-group-sm text-non" style="position: relative; width: 100%;">
+                                            <span class="input-group-prepend"><span class="input-group-text">@item.DisplayName</span></span>
+                                            @{
+                                                var selectItem = item.SelectItems.FirstOrDefault(a => a.Filed == item.Field);
+                                                if (selectItem != null)
+                                                {
+                                                    <select id="@(Model.FormId)-@(item.Field)" name="@(Model.FormId)-@(item.Field)" class="form-control @(classStr)" data-field="@(item.Field)" data-ftype="@(fieldType)" data-etype="@(expType)" placeholder="请选择查询项..." autocomplete="off" data-placeholder="请选择查询项..." style="width: calc(100% - @(inputWidth)px)" @(item.Other)>
+
+                                                        @Html.Raw(selectItem.ItemStrs)
+
+                                                    </select>
+
+                                                    if (!string.IsNullOrEmpty(item.Value))
+                                                    {
+                                                        scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').val('" + item.Value + "').select2();\r\n";
+                                                    }
+                                                    if (item.IsTree)
+                                                    {
+                                                        scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').select2tree();\r\n";
+                                                    }
+                                                }
+                                                else if (fieldType == 5 || fieldType == 6)
+                                                {
+                                                    //scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').iwbDate({\r\nmethod:'twoDate',\r\nendId:'" + Model.FormId + "-" + item.Field + "-end',format:'" + item.DateItem.Formatter + "'\r\n,startView:" + item.DateItem.StartView + "\r\n,minView:" + item.DateItem.MinView + "\r\n,maxView:" + item.DateItem.MaxView + "\r\n,isAutoSetDate:" + item.DateItem.IsAutoSetStr + "\r\n,startEndInterval:" + item.DateItem.Interval + "\r\n});\r\n";
+                                                    scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').iwbDateRange({opens:'left',dayStep:" + item.DateItem.Interval + ",format:'" + item.DateItem.Formatter + "',autoApply:" + item.DateItem.IsAutoApplyStr + "})\r\n";
+                                                    <input id="@(Model.FormId)-@(item.Field)" name="@(Model.FormId)-@(item.Field)" class="form-control dataRange @(classStr)" data-field="@(item.Field)" data-ftype="@(fieldType)" data-etype="4" placeholder="@(L("SearchPlaceholder"))" autocomplete="off" type="text" style="padding-right: 0;" @(item.Other) />
+                                                    i++;
+
+                                                    if (!string.IsNullOrEmpty(item.Value))
+                                                    {
+                                                        string[] arrDate = item.Value.Split(new[] { '@' }, StringSplitOptions.RemoveEmptyEntries);
+
+
+                                                        var interval = item.DateItem.Interval > 0 ? item.DateItem.Interval : 30;
+                                                        if (item.DateItem.Interval > 0)
+                                                        {
+                                                            string startValue = "new Date(new Date('" + arrDate[0] + "').valueOf() - 1000 * 60 * 60 * 24 * " + interval + ")";
+                                                            scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').iwbDateRange('setStartDate'," + startValue + ");\r\n";
+                                                        }
+                                                        else if (arrDate.Length == 2)
+                                                        {
+                                                            string startValue = "new Date(new Date('" + arrDate[1] + "'))";
+                                                            scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').iwbDateRange('setStartDate'," + startValue + ");\r\n";
+                                                        }
+                                                        scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').iwbDateRange('setEndDate','" + arrDate[0] + "');\r\n";
+                                                    }
+                                                }
+                                                else
+                                                {
+
+                                                    if (fieldType == 1 || fieldType == 2)
+                                                    {
+                                                        classStr += " number";
+                                                    }
+
+                                                    if (string.IsNullOrEmpty(item.ShowId))
+                                                    {
+                                                        <input id="@(Model.FormId)-@(item.Field)" name="@(Model.FormId)-@(item.Field)" class="form-control @(classStr)" data-field="@(item.Field)" data-ftype="@(fieldType)" data-etype="@(expType)" placeholder="@(L("SearchPlaceholder"))" autocomplete="off" type="text" />
+
+                                                    }
+                                                    else
+                                                    {
+                                                        <input id="@(Model.FormId)-@(item.ShowId)" name="@(Model.FormId)-@(item.ShowId)" class="form-control" placeholder="@(L("SearchPlaceholder"))" autocomplete="off" type="text" disabled="disabled" />
+                                                        <input id="@(Model.FormId)-@(item.Field)" name="@(Model.FormId)-@(item.Field)" class="form-control @(classStr)" data-field="@(item.Field)" data-ftype="@(fieldType)" data-etype="@(expType)" placeholder="@(L("SearchPlaceholder"))" autocomplete="off" type="hidden" />
+                                                    }
+
+                                                    if (!string.IsNullOrEmpty(item.SearchModalId))
+                                                    {
+
+                                                        <div class="input-group-append search-icon" title="@(L("Search"))" onclick="ShowQueryModal('@item.SearchModalId','@(item.Target)');">
+                                                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                                                        </div>
+                                                        
+
+                                                    }
+
+                                                    if (!string.IsNullOrEmpty(item.Value))
+                                                    {
+                                                        scriptStr += "$('#" + Model.FormId + "-" + item.Field + "').val('" + item.Value + "');\r\n";
+                                                    }
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <!-- /.card-body -->
+                        <div class="card-footer">
+                            <span class="btn btn-sm btn-outline-iwb btn-block menu-btn" type="button" data-type="_btnSearch"><i class="fa fa-search"></i> 查询</span>
+                        </div>
+                    </div>
+                    <!-- /.card -->
+
+                }
+
+            }
+
+            selectItemStr += "}";
+
+        }
+    </form>
+</div>
+
+<!-- SEARCH-FORM  @(Model.FormId)  END-->
+
+@using (Html.BeginScripts())
+{
+    <!-- SEARCH-FORM  @(Model.FormId)  START-->
+    <script>
+        $(function () {
+            $(".search-unit select").select2();
+            @Html.Raw(scriptStr);
+            $("#Single-KeyField").off("change.keyfield").on("change.keyfield", function () {
+                var $that = $(this).find("option:selected");
+                var isSelect = $that.data("select"),
+                    field = $that.data("field"),
+                    expType = $that.data("exp-type"),
+                    fieldType = $that.data("field-type");
+                changeKeyWord($that, isSelect,field, expType, fieldType);
+            });
+            var selectItem = @Html.Raw(selectItemStr);
+            function changeKeyWord($that,isSelect,field,expType, fieldType) {
+                var str;
+                console.log(fieldType, "-", isSelect);
+                if (isSelect) {
+                    if (selectItem.length < 0) {
+                        return;
+                    }
+                    str = '<select id="Single-KeyWords" data-field="' + field + '" data-ftype="' + fieldType + '" data-etype="' + expType + '"  name="Single-KeyWords" class="form-control  pull-right KeyWords" style="width: calc(100% - 120px) !important;" placeholder="@(L("SearchPlaceholder"))..." autocomplete="off" data-placeholder="@(L("SearchPlaceholder"))...">';
+                    str += selectItem[field];
+                    str += '</select>';
+                    $("#Single-KeyWords").next("span.select2").remove();
+                    $("#Single-KeyWords").remove();
+                    $("#Single-KeyField").parent().find('.menu-btn').before(str);
+                    $("#Single-KeyWords").select2();
+                    if ($("#Single-KeyField").parent().find(".search-btn").length>0) {
+                        $("#Single-KeyWords").next().find(".select2-selection__arrow").css("right", "30px");
+                    }
+                } else {
+                    if (fieldType === 1) {
+                        str = ' <input  id="Single-KeyWords" data-field="' + field + '" data-ftype="' + fieldType + '" data-etype="' + expType + '"  name="Single-KeyWords" class="form-control number pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="@(L("SearchPlaceholder"))..." autocomplete="off" />';
+                    } else if (fieldType === 5) {
+                        str = ' <input  id="Single-KeyWords" data-field="' + field + '" data-ftype="' + fieldType + '" data-etype="' + expType + '"  name="Single-KeyWords" class="form-control dateISO pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="@(L("SearchPlaceholder"))..." autocomplete="off" />';
+                    } else {
+                        str = '<input  id="Single-KeyWords" data-field="' + field + '" data-ftype="' + fieldType + '" data-etype="' + expType + '"  name="Single-KeyWords" class="form-control  pull-right KeyWords" style="width: calc(100% - 100px) !important" placeholder="@(L("SearchPlaceholder"))..." autocomplete="off" />';
+                    }
+                    $("#Single-KeyWords").next("span.select2").remove();
+                    $("#Single-KeyWords").remove();
+                    $("#Single-KeyField").parent().find('.menu-btn').before(str);
+                }
+                //AddSearchEvents();
+            }
+        });
+
+    </script>
+    <!-- SEARCH-FORM  @(Model.FormId)  END-->
+}
+

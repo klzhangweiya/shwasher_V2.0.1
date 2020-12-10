@@ -1,0 +1,287 @@
+﻿@using IwbZero.AppServiceBase
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductionInfoRePlatingOutStoreApplyMg; //The menu item will be active for this page.
+    ViewBag.Title = "改镀出库申请";
+    List<SelectListItem> processTypeItems = ViewBag.ProcessTypeItems;
+    List<SelectListItem> applyStatus = ViewBag.ApplyStatus;
+    List<SelectListItem> storeHouses = ViewBag.StoreHouses;
+    List<SelectListItem> closeStatus = new List<SelectListItem>()
+{
+        new SelectListItem(){Text = @"未关闭",Value = "false",Selected = true},
+        new SelectListItem(){Text = @"已关闭",Value = "true"}
+    };
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("productionOrderNo","排产单号"),
+
+        new SearchItem("applyStatus","申请状态" )
+            .SetSearchItem(applyStatus),
+        new SearchItem("isClose","关闭状态" ,FiledType.Bnull,ExpType.Equal)
+            .SetSearchItem(closeStatus),
+new SearchItem("productNo","成品编码").SetSearchIcon("query_Product_modal"),
+    }, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+
+}
+<section style="display: none">
+    @Html.DropDownList("hide-ApplyStatus", applyStatus)
+    @Html.DropDownList("hide-StoreHouses", storeHouses)
+</section>
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/ProductionOrders/GetRePlatingOutStoreApply"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                <th data-align="center" data-field="productNo">成品编码</th>
+                <th data-align="center" data-field="productName">半成品名称</th>
+                <th data-align="center" data-field="quantity">申请出库数量(kg)</th>
+                <th data-align="center" data-field="actualQuantity">出库数量(kg)</th>
+                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatte">仓库</th>
+                <th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">申请状态</th>
+                <th data-align="center" data-field="applyOutDate">申请时间</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-formatter="ActionFormatter">操作</th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+
+    <section>
+        <!--CreateProductionOrder Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("确认收货并创建外协流转单", ""))
+                    @{
+                        var inputs2 = new List<InputViewModel>
+                                                                        {
+                                                    new InputViewModel("outStoreId",hide:true),
+                                                    new InputViewModel("outsourcingFactory",hide:true),
+                                                                    new InputViewModel("sourceProductionOrderNo",displayName:"源流转单号").SetDisabled(),
+                                                    new InputViewModel("processingType",InputTypes.List,displayName:"加工类别").SetSelectOptions(processTypeItems),
+                                                    new InputViewModel("outsourcingFactoryName",displayName:"外协厂商").SetSearchIcon("query_outFactory_modal"),
+                                                    new InputViewModel("processingTypeNo",displayName:"外协编码",@class:"outCode" ),
+                                                            new InputViewModel("planProduceDate",displayName:"计划完成日期" ),
+                                                    //new InputViewModel("eaCurrentSemiStoreHouseNo", hide:true),
+                                                    //new InputViewModel("eaSemiProductNo",  displayName:"半成品编码").SetDisabled().SetInterBefore(" <div class=\"input-group\">").SetInterAfter("<div class=\"input-group-addon\" style=\"padding: 1px 12px\" onclick=\"showSelectSemiProductDialog()\" > <i class=\"iconfont icon-search\"></i></div></div>"),
+                                                    new InputViewModel("semiProductNo",  displayName:"半成品编码").SetSearchIcon("query_semiProduct_modal","#modal"),
+                                                    new InputViewModel("quantity", displayName:"加工数量",@class:"number",other:"min=0.001"),
+                                                    new InputViewModel("remark",InputTypes.Textarea,displayName:"备注").SetNotRequired(),
+                                                    new InputViewModel("semiProductName", displayName:"半成品名称").SetDisabled(),
+                                                    new InputViewModel("model", displayName:"规格").SetDisabled(),
+                                                    new InputViewModel("material", displayName:"材质").SetDisabled(),
+                                                    new InputViewModel("rigidity", displayName:"硬度").SetDisabled(),
+                                                    new InputViewModel("surfaceColor", displayName:"表色").SetDisabled(),
+
+
+                                                };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs2, "CreateProductionOrderForm"))
+                    @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modal", "Submitcreateorder()"))
+
+                </div>
+            </div>
+        </div>
+
+
+    </section>
+    @Html.Partial("Modals/Query/_SemiProduct", "semiProductNo,semiProductName,model,material,surfaceColor,rigidity")
+    @*@Html.Partial("Modals/Query/_SemiProductEx", "eaSemiProductNo")*@
+    @Html.Partial("Modals/Query/_OutFactory", "outsourcingFactory,outsourcingFactoryName")
+    @Html.Partial("Modals/Query/_Product", "KeyWords-4")
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script type="text/javascript">
+        // 外协编码验证
+        jQuery.validator.addMethod("outCode",
+            function(value, element) {
+                //var tel = /^[a-zA-Z0-9]{2}$/;
+                var tel = /^[0-9]{2}$/;
+                return this.optional(element) || (tel.test(value));
+            },
+            "外协编码为两位数字");
+
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function() {
+            $("#planProduceDate").datetimepicker(datePickerOpt).on('show',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            $("#KeyWords-3").val("false").select2();
+
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+
+
+        });
+
+
+        function f_createProductionOrder(id, preOrderNo) {
+
+            $("#outStoreId").val(id);
+            $("#sourceProductionOrderNo").val(preOrderNo);
+            $("#processingTypeNo").val("");
+            $("#modal").modal("show");
+
+        }
+
+
+        function Submitcreateorder() {
+
+            SaveAjax({
+                url: window.appUrl + "ProductionOrders/CreateOutProductionOrder",
+                data: {
+                    IsReplating: 1,
+                    OutStoreId: $("#outStoreId").val(),
+                    sourceProductionOrderNo: $("#sourceProductionOrderNo").val(),
+                    processingTypeNo: $("#processingTypeNo").val(),
+                    outsourcingFactory: $("#outsourcingFactory").val(),
+                    processingType: $("#processingType").val(),
+                    Quantity: $("#quantity").val(),
+                    SemiProductNo: $("#semiProductNo").val(),
+                    planProduceDate: $("#planProduceDate").val(),
+                    Remark: $('#modal #remark').val()
+                },
+                modal: $("#modal"),
+                isAlert: false,
+                success: function(res) {
+                    if (res) {
+                        abp.message.success("外协流转单创建成功,前往外协生产维护中查看信息！").done(function() {
+                            window.location.href = "@Url.Action("OutProductionOrderMg", "ProductionInfo")";
+
+                        });
+                        $("#modal").modal("hide");
+                        RefreshTable();
+                    }
+                }
+            });
+        }
+
+        function f_RefuseApply(id) {
+            //console.log("cancef_RefuseApplylApply", id);
+            abp.message.confirm("确认取消返镀申请?",
+                "取消返镀",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/CancelFinishOutStoreApply',
+                        data: { Id: id }, // ProductionOrderStatus: 4
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+                });
+
+        }
+        function f_ExportApply(id)
+        {
+            console.log(id)
+            SaveAjax({
+                url: window.appUrl + "ProductionOrders/RePlatingExportApply",
+                data: {
+                    Id: id
+                },
+                modal: $("#modal"),
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    if (res) {
+                        window.location.href = "/" + res;
+                    }
+                }
+            });
+        }
+    </script>
+
+    <script id="formatter">
+        function StoreHouseIdFormatte(v) {
+            var name = $("#hide-StoreHouses option[value='" + v + "']").text();
+            return '<span class="label label-primary">' + name + '</span>';
+        }
+
+        function ApplyStatusFormatter(v, r) {
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            var name = $("#hide-ApplyStatus option[value='" + v + "']").text();
+            if (v === "1") {
+                return '<span class="label label-default">' + name + '</span>';
+            } else if (v === "2") {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === "3") {
+                return '<span class="label label-warning">' + name + '</span>';
+            } else if (v === "4") {
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+
+        function ActionFormatter(v, r) {
+            var str = '<span class="table-action">暂无操作</span>';;
+            if (!r.isConfirm && !r.isClose) { //&&r.applyOutStoreSourceTypeFormatter===5
+                str = `<span class="table-action" onclick="f_createProductionOrder(\'${r.id
+                    }\',\'${r.productionOrderNo}\')"><i class="iconfont icon-right"></i>返镀创建流转单</span>`;
+                str += `<span class="table-action" onclick="f_RefuseApply(\'${r.id
+                    }\')"><i class="iconfont icon-right"></i>拒绝返镀</span>`;
+                str += `<span class="table-action" onclick="f_ExportApply(\'${r.id
+                    }\')"><i class="iconfont icon-right"></i>导出返镀申请</span>`;
+            }
+
+            return str;
+        }
+
+    </script>
+
+}

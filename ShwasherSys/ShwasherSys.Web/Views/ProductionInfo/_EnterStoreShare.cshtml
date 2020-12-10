@@ -1,0 +1,728 @@
+﻿@using Abp.Authorization
+@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Modal
+@model List<SelectListItem>[]
+<section>
+    <div class="modal fade" id="ApplyEnterStoreModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered" role="document">
+            <div class="modal-content" style="min-width: 850px;">
+
+                @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("入库申请", ""))
+                <div style="padding: 5px;">
+                    <div style="border: gray 1px solid; background: #ecf0f5; border-radius: 5px; padding-bottom: 3px;">
+                        @{
+                            var inputs2 = new List<InputViewModel>
+{
+    new InputViewModel("e_productionOrderNo", hide: true, name: "productionOrderNo"),
+    new InputViewModel("e_productionOrderId", hide: true, name: "id"),
+    new InputViewModel("enterStoreQuantity", displayName: "入库数量(kg)", @class: "number calc", other: "min=0.001"),
+    new InputViewModel("e_kgWeight", displayName: "千件重", @class: "number calc", other: "min=0.001"),
+    new InputViewModel("enterStoreQuantity2", displayName: "入库数量(千件)", @class: "number calc", other: "min=0.001").SetDisabled(),
+    new InputViewModel("e_carNo", displayName: "车号").SetOuterBefore("<div class=\"type1\">"),
+    new InputViewModel("e_man", InputTypes.List, displayName: "生产人员",other:"multiple").SetSelectOptions(Model[0]).SetOuterAfter("</div>"),
+    new InputViewModel("storeHouseId", InputTypes.List, displayName: "半成品仓库").SetSelectOptions(Model[1]),
+    new InputViewModel("e_remark", InputTypes.Textarea, displayName: "入库备注").SetNotRequired(),
+
+};
+
+                        }
+                        @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs2, "ApplyEnterStoreForm"))
+                        <div class="row">
+                            <div class="col-md-12" style="text-align: center; padding: 0 30px; margin-bottom: 10px;"><button type="button" class="btn btn-default save-btn waves-effect " style="min-width: 300px; width: 100%; box-shadow: 3px 3px 4px #666;" onclick="AddEnterStore()"><i class="iconfont icon-add"></i>添加入库申请<span style="color: red;font-weight: bold; padding-left: 30px">(*可多次添加入库申请,详情操作请转到生产入库申请)</span></button></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-box mr-4  iwb-bootstrap-table">
+                    @if (PermissionChecker.IsGranted(PermissionNames.PagesProductionInfoProductionEnterStoreApplyMgUpdate))
+                    {
+                        <div class="btn-toolbar row" role="toolbar" aria-label="Toolbar with button groups">
+                            <div class="col-sm-12 col-lg-12 pull-left" style="padding: 0">
+                                <div class="btn-group btn-group-sm" role="group" aria-label="First group">
+                                    <button type="button" class="btn btn-default btnEnterTool" data-type="btnUpdate" data-url="/api/services/app/ProductionOrders/UpdateEnterStoreApply" onclick="UpdateEnterStoreApply()">
+                                        <i class="iconfont icon-edit">修改申请明细</i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <table id="EnterApplyTable" data-id-field="id" data-unique-id="id" data-single-select="true"
+                           data-click-to-select="true" data-post-body="OnPostBody">
+                        <thead>
+                            <tr class="row">
+                                <th data-field="state" data-checkbox="true"></th>
+                                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                                <th data-align="center" data-field="quantity">申请入库数量(kg)</th>
+                                <th data-align="center" data-field="actualQuantity" data-formatter="QuantityFormatter">入库数量(kg)</th>
+                                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatter">仓库</th>
+                                <th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">申请状态</th>
+                                <th data-align="center" data-field="partNo">零件号</th>
+                                <th data-align="center" data-field="applyEnterDate">申请时间</th>
+                                <th data-align="center" data-formatter="EnterActionFormatter"></th>
+
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("ApplyEnterStoreModal", "SubmitEnterStore()", submitName: "确认完成入库", footStyle: "text-align:right;"))
+                @*@Html.Partial("Modals/_ModalFooter", "0")*@
+
+            </div>
+        </div>
+    </div>
+</section>
+<section>
+    <!--Main Modal-->
+    <div class="modal fade" id="modalEnterQuantity" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered" role="document">
+            <div class="modal-content" style="min-width: 850px;">
+                @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("修改申请数量", ""))
+                @{
+                    var inputs3 = new List<InputViewModel>
+                                                        {
+                            new InputViewModel("EnterStoreId", hide:true,name:"id"),
+                            new InputViewModel("kgWeight", displayName:"千件重",@class:"number",other:"min=0.001"),
+                            new InputViewModel("EnterStoreQuantity", displayName:"入库数量(kg)",@class:"number",other:"min=0.001",name:"quantity")
+
+                            /*new InputViewModel("remark",InputTypes.Textarea,displayName:"备注").SetNotRequired(),*/
+
+                        };
+                    //var specials = new List<SpecialInputModel>();
+                }
+                @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs3))
+                @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modalEnterQuantity", "ModifyEnterStoreQuantity()"))
+
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section>
+    <!--Main Modal-->
+    <div class="modal fade" id="RmStoreUseModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered" role="document">
+            <div class="modal-content" style="min-width: 850px;">
+                @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("原料使用情况", ""))
+                @{
+                    var inputs4 = new List<InputViewModel>
+                                                        {
+                            new InputViewModel("id", hide:true),
+                            new InputViewModel("currentRmHouseId", hide:true),
+                            new InputViewModel("rmProductNo", displayName:"原材料编码").SetSearchIcon("query_rmCurrentStore_modal","RmStoreUseModal"),
+                            //new InputViewModel("rmStoreId", displayName:"仓库"),
+                            new InputViewModel("productName", displayName:"原材料名称"),
+                            new InputViewModel("canUseQuantity", displayName:"可用数量"),
+                            new InputViewModel("totalQuantity", displayName:"领用原料(kg)",@class:"number",other:"min=0.001"),
+                            new InputViewModel("laveQuantity", displayName:"剩余数量(kg)",@class:"number",other:"min=0")
+
+                            /*new InputViewModel("remark",InputTypes.Textarea,displayName:"备注").SetNotRequired(),*/
+
+                        };
+                    //var specials = new List<SpecialInputModel>();
+                }
+                @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs4))
+                @Html.Partial("Modals/_ModalFooter", "")
+
+            </div>
+        </div>
+    </div>
+</section>
+    @Html.Partial("Modals/Query/_RmCurrentStore", "1:rmProductNo,2:productName,5:canUseQuantity,6:currentRmHouseId")
+@Html.Partial("Modals/Query/_SemiEnterStore", "")
+@Html.Partial("Modals/Query/_ProductionLog", "")
+<section style="display: none">
+    @Html.DropDownList("hide-StoreHouses", Model[1])
+    @Html.DropDownList("hide-ApplyStatus", Model[2])
+    @Html.DropDownList("hide-ProductionOrderStatus", Model[3])
+</section>
+
+@using (Html.BeginScripts())
+{
+    <script type="text/javascript">
+        $(function() {
+            $('body').addClass('sidebar-collapse');
+            $('#query_productionLog_modal').find('.modal-footer button').eq(1).hide();
+        })
+        var productionType;
+        function f_ExcuteProduction(id, status, row) {
+            row = row || $("#table").bootstrapTable("getRowByUniqueId", id);
+            if (row.productionOrderStatus===5) {
+                abp.message.warn("排产单已关闭，不可操作");
+                return;
+            }
+            if (row.productionOrderStatus > 2 && row.productionOrderStatus !== 6 && row.productionOrderStatus !==7) {
+                abp.message.warn("排产单已进行入库，不可操作！（关闭入库申请后可操作）");
+                return;
+            }
+            abp.message.confirm("确认变更排产单状态?",
+                "排产单状态变更",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/ChangeProductionOrderStatus',
+                        data: { Id: id, ProductionOrderStatus: status },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+                });
+
+        }
+        function f_CloseProduction(id, row) {
+            row = row || $("#table").bootstrapTable("getRowByUniqueId", id);
+            if (row.productionOrderStatus!==7&&row.productionOrderStatus > 2 && (row.productionOrderStatus !== 4 || !row.isChecked)) {
+                abp.message.warn("排产单已进行入库，不可操作！（关闭入库申请后(或检验完成后)可操作）");
+                return;
+            }
+            abp.message.confirm("关闭排产单后不可再恢复，确认关闭排产单?",
+                "关闭排产单",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/ChangeProductionOrderStatus',
+                        data: { Id: id, ProductionOrderStatus: 5 },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+                });
+
+        }
+
+        function f_ApplyEnterStore(id, quantity, row) {
+            row = row || $("#table").bootstrapTable("getRowByUniqueId", id);
+            if (row.productionOrderStatus !== 2 && row.productionOrderStatus !== 3 && row.productionOrderStatus !== 5) {
+                abp.message.warn("生成完成的排产单才可以进行入库申请!");
+                return;
+            }
+            $('#ApplyEnterStoreModal .form-control').val('');
+            $("#e_productionOrderId").val(id);
+            $("#e_kgWeight").val(row.kgWeight);
+            $("#e_productionOrderNo").val(row.productionOrderNo);
+            productionType = row.productionType;
+            if (productionType === "0") {
+                if (row.carNo) {
+                    $("#e_carNo").val(row.carNo).prop("disabled", true);
+                } else {
+                    $("#e_carNo").val('').prop("disabled", false);
+                }
+                $("#e_carNo").addClass('required');
+                $("#e_man").addClass('required');
+                $('#ApplyEnterStoreModal .type1').show();
+            } else {
+                $('#ApplyEnterStoreModal .type1').hide();
+                $("#e_carNo").removeClass('required');
+                $("#e_man").removeClass('required');
+            }
+            $("#ApplyEnterStoreModal select").select2();
+
+            $('#ApplyEnterStoreModal .calc').off('change.calc').on('change.calc',function() {
+                var qw = Number($('#enterStoreQuantity').val()),
+                    k = Number($('#e_kgWeight').val());
+                if (qw && k) {
+                    //$('#enterStoreQuantity2').val(Math.floor(qw * 1000 / k) / 1000);
+                    $('#enterStoreQuantity2').val(qw.Newdiv(k));
+                }
+            });
+            //$("#enterStoreQuantity").val(quantity);
+            RefreshEnterTable(row.productionOrderNo);
+            $("#ApplyEnterStoreModal").modal("show");
+
+            @*OpenModal({
+                url: window.appUrl + 'ProductionOrders/CreateEnterStoreApply',
+                modal: $("#ApplyEnterStoreModal"),
+                data: { id: id, enterStoreQuantity: quantity, Remark: $("e_remark").val(), storeHouseId: $("#storeHouseId").val()},
+                success: function () {
+                    RefreshTable();
+                    $("#ApplyEnterStoreModal").modal("hide");
+                    abp.message.success("入库申请成功,请前往生产完成入库申请中查看信息！").done(function() {
+                        window.location.href = "@Url.Action("ProductionEnterStoreApplyMg","ProductionInfo")";
+                    });
+                }
+            });*@
+
+        }
+
+        function AddEnterStore() {
+            if (!FormValidate({form:$("#ApplyEnterStoreForm")})) {
+                return;
+            }
+            abp.message.confirm("确认申请入库?","创建入库申请",
+                function() {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/CreateEnterStoreApply',
+                        data: {
+                            Id: $("#e_productionOrderId").val(),
+                            EnterStoreQuantity: $("#enterStoreQuantity").val(),
+                            EnterStoreQuantity2: $("#enterStoreQuantity2").val(),
+                            KgWeight: $("#e_kgWeight").val(),
+                            CarNo: $("#e_carNo").val(),
+                            ProductUser: $("#e_man").val(),
+                            Remark: $("e_remark").val(),
+                            StoreHouseId: $("#storeHouseId").val()
+                        },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function() {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshEnterTable($("#e_productionOrderNo").val());
+                            RefreshTable();
+                        }
+                    });
+                });
+        }
+
+        function SubmitEnterStore() {
+
+            var allData = $("#EnterApplyTable").bootstrapTable("getData");
+
+            if (allData && allData.length > 0) {
+                //var isCanComplete = true;
+                var enterCount = 0;
+                for (var i = 0; i < allData.length; i++) {
+                    var isClose = allData[i].isClose;
+                    var aStatus = allData[i].applyStatus;
+
+                    if (!isClose && (aStatus === "2")) {
+                        //isCanComplete = false;
+                        abp.message.warn("存在未被检验的入库申请，请联系检验人员检验后再操作！");
+                        return;
+                    }
+                    if (!isClose && (aStatus === "1" )) {
+                        //isCanComplete = false;
+                        abp.message.warn("存在申请中的入库申请，请联系仓库人员审核或关闭无效的申请！");
+                        return;
+                    }
+                    if (!isClose && (aStatus === "21" )) {
+                        //isCanComplete = false;
+                        abp.message.warn("存在已被检验未确认入库的申请，请尽快确认入库！");
+                        return;
+                    }
+                    if (!isClose && (aStatus === "3" || aStatus === "4")) {
+                        //isCanComplete = false;
+                        abp.message.warn("存在已取消或被拒绝的入库申请，请尽快确认入库或关闭无效的申请！");
+                        return;
+                    }
+                    if (aStatus === "5") {
+                        enterCount++;
+                    }
+                }
+                if (enterCount === 0) {
+                    abp.message.warn("未发现有效的入库申请，请检查后再操作！");
+                    return;
+                }
+                if (productionType === "0") {
+                    OpenModal({
+                        url: window.appUrl + 'ProductionOrders/ConfirmEnterStore',
+                        modal: $('#RmStoreUseModal'),
+                        data: {id:$("#e_productionOrderId").val()},
+                        disabled: "currentRmHouseId,rmProductNo,canUseQuantity,productName",
+                        save: function() {
+                            var u = Number($('#canUseQuantity').val()),
+                                t = Number($('#totalQuantity').val()),
+                                l = Number($('#laveQuantity').val());
+                            if (t > u){
+                                abp.message.warn("领用数量不能大于可用数量！");
+                                return;
+                            }
+                            if (l > t) {
+                                abp.message.warn("剩余数量不能大于领用数量！");
+                                return;
+                            }
+                            abp.message.confirm("排产单将进已入库状态,确认后排产单不能再进行添加入库申请?", "排产单完成入库",
+                                function() {
+                                    $('#RmStoreUseModal #id').val($("#e_productionOrderId").val());
+                                    SaveAjax({
+                                        url: window.appUrl + 'ProductionOrders/ConfirmEnterStore',
+                                        modal:$('#RmStoreUseModal'),
+                                        success: function() {
+                                            RefreshTable();
+                                            $("#ApplyEnterStoreModal").modal("hide");
+                                            $("#RmStoreUseModal").modal("hide");
+                                        }
+                                    });
+                                });
+                        }
+                    });
+                } else {
+                    abp.message.confirm("排产单将进已入库状态,确认后排产单不能再进行添加入库申请?", "排产单完成入库",
+                        function() {
+                            abp.ajax({
+                                url: window.appUrl + 'ProductionOrders/ConfirmEnterStore',
+                                data: { Id: $("#e_productionOrderId").val(), ProductionOrderStatus: 4 },
+                                async: true,
+                                type: "Post",
+                                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                                isValidate: false,
+                                dataType: "json",
+                                success: function() {
+                                    RefreshTable();
+                                    $("#ApplyEnterStoreModal").modal("hide");
+                                }
+                            });
+                        });
+                }
+                
+            } else {
+                abp.message.warn("完成入库申请前请先添加入库申请！");
+            }
+
+        }
+
+        function RefreshEnterTable(productionOrderNo) {
+            SaveAjax({
+                url: window.appUrl + "Query/QueryEnterStoresByPoNo?productionOrderNo=" + productionOrderNo,
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    $("#EnterApplyTable").bootstrapTable('destroy');
+                    if (res && res.length > 0) {
+                        $("#EnterApplyTable").bootstrapTable({ data: res, onPostBody: OnPostBody });
+                    } else {
+                        $("#EnterApplyTable").bootstrapTable({ data: [], onPostBody: OnPostBody });
+                    }
+                    $("#EnterApplyTable").find(".bs-checkbox").find("input").addClass("filled-in")
+                        .after("<label></label");
+                }
+            });
+        }
+
+   
+
+    </script>
+    <script>
+        function UpdateEnterStoreApply() {
+            var rows = $("#EnterApplyTable").bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                if (rows[0].applyStatus === "2" || rows[0].applyStatus === "5") {
+                    abp.message.warn("已入库(或审核)的申请不可进行更改！");
+                    return;
+                }
+                if (rows[0].applyStatus !== "1") {
+                    abp.message.warn("请恢复申请后进行更改！");
+                    return;
+                }
+                $("#modalEnterQuantity").modal("show");
+                $("#EnterStoreId").val(rows[0].id);
+                $("#kgWeight").val(rows[0].kgWeight);
+                $("#EnterStoreQuantity").val("");
+            }
+        }
+
+        function ModifyEnterStoreQuantity() {
+            SaveAjax({
+                url: window.appUrl + 'ProductionOrders/UpdateEnterStoreApply',
+                data: {
+                    Id: $("#EnterStoreId").val(),
+                    KgWeight: $("#kgWeight").val(),
+                    Quantity: $("#EnterStoreQuantity").val()
+                },
+                isAlert: false,
+                isValidate: false,
+                success: function () {
+                    abp.message.success("修改申请成功！");
+                    $("#modalEnterQuantity").modal("hide");
+                    RefreshEnterTable($("#e_productionOrderNo").val());
+                }
+            });
+        }
+
+        function f_cancelApply(id) {
+            console.log("cancelApply", id);
+            abp.message.confirm("确认取消申请?",
+                "取消申请",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/CancelSemiEnterStoreApplyStatus',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshEnterTable($("#e_productionOrderNo").val());
+                        }
+                    });
+                });
+        }
+
+        function f_confirmEnterApply(id) {
+            console.log("cancelApply", id);
+            abp.message.confirm("确认产品入库数量正确吗?",
+                "确认入库数量",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/ConfirmSemiEnterStoreQuantity',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshEnterTable($("#e_productionOrderNo").val());
+                        }
+                    });
+                });
+        }
+
+        function f_closeApply(id) {
+            console.log("recoveryApply", id);
+            abp.message.confirm("入库申请关闭后不可恢复，确认关闭申请?",
+                "关闭申请",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/CloseEnterStoreApply',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshEnterTable($("#e_productionOrderNo").val());
+                        }
+                    });
+                });
+        }
+
+        function f_recoveryApply(id) {
+            console.log("recoveryApply", id);
+            abp.message.confirm("确认恢复申请?",
+                "恢复申请",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/RecoverySemiEnterStoreApplyStatus',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshEnterTable($("#e_productionOrderNo").val());
+                        }
+                    });
+                });
+        }
+
+        function f_ShowProductUser(id) {
+            queryParams.no=id;
+            ShowQueryModal('query_productionLog_modal');
+        }
+        function f_ShowStoreDetail(id) {
+            queryParams.no=id;
+            ShowQueryModal('query_semiEnterStore_modal');
+        }
+
+        function f_ShowImage(that, id) {
+            SaveAjax({
+                url: window.appUrl + "Common/GetAttachFile",
+                data: { TableName: "SemiProducts", ColName: "SemiProductNo", Key: id },
+                isAlert: false,
+                isValidate: false,
+                success: function (res) {
+                    if (res && res.length > 0) {
+                        var fileExt = res[0].fileExt;
+                        if (officeFileExt.indexOf(fileExt) > 0) {
+                            OpenFile(res[0].filePath, 'office', { height: 800 });
+                        } else {
+                            OpenFile(res[0].filePath, null, { height: 800 });
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+    <script id="formatter">
+        function SemiProductNoFormatter(v, r) {
+            return '<span class="table-action" onclick="f_ShowImage(this,\'' + r.semiProductNo + '\')">' + v + '</span>';
+        }
+
+        function PlanDateFormatter(v, r, i, f) {
+            var value = DateFormatter(v, r, i, f);
+            var date = new Date(new Date(new Date().getTime() + 3 * 1000 * 60 * 60 * 24)).format('yyyy-MM-dd');
+            if (r.productionOrderStatus < 4 && date >= value) {
+                return '<span style="color:red">' + value + '</span>';
+            }
+            return value;
+        }
+
+        function ProductionOrderStatusFormatter(v, r) {
+            var name = $("#hide-ProductionOrderStatus option[value='" + v + "']").text();
+            var str = '';
+            switch (v) {
+            case 1:
+                str += '<span class="label label-info">' + name + '</span>';
+                break;
+            case 2:
+                str += '<span class="label label-iwb">' + name + '</span>';
+                break;
+            case 3:
+                str += '<span class="label label-danger">' + name + '</span>';
+                break;
+            case 4:
+                str += '<span class="label label-success">' + name + '</span>';
+                if (r.isChecked) {
+                    str += '<span class="label label-success" style="margin-left:5px"> 已检验 </span>';
+                } else {
+                    str += '<span class="label label-warning" style="margin-left:5px"> 待检验 </span>';
+                }
+                break;
+            default:
+                str += '<span class="label label-warning">' + name + '</span>';
+                break;
+            }
+            if (r.hasExported) {
+                str += '<span class="label label-success" style="margin-left:5px"> 已导出 </span>';
+            }
+            return str;
+
+        }
+        function ActionFormatter(v, r) {
+            var icon = '<i class="iconfont icon-right"></i>',
+                audit = `<span class="table-action" onclick="f_ExcuteProduction(\'${r.id}\',7 )">${icon}审核</span>`,
+                start =
+                    '<span class="table-action" onclick="f_ExcuteProduction(\'{0}\',2 )">{1}开始生产</span>'.format(r.id,
+                        icon),
+                //h = '<span class="table-action" onclick="f_ExcuteProduction(\'{0}\',6 )">{1}挂起</span>'.format(r.id,icon),
+                //r = '<span class="table-action" onclick="f_ExcuteProduction(\'{0}\',1 )">{1}恢复</span>'.format(r.id,icon),
+                //close = '<span class="table-action" onclick="f_CloseProduction(\'{0}\' )">{1}结束排产</span>'.format(r.id,icon),
+                store = '<span class="table-action" onclick="f_ApplyEnterStore(\'{0}\' )">{1}入库申请</span>'.format(r.id,
+                    icon),
+                p = '<span class="table-action" onclick="f_ShowProductUser(\'{0}\' )">{1}人员/车号</span>'.format(r.productionOrderNo, icon),
+                storeDetail =
+                    '<span class="table-action" onclick="f_ShowStoreDetail(\'{0}\' )">{1}入库明细</span>'.format(r.productionOrderNo, icon),
+                restore = '<span class="table-action" onclick="f_ExcuteProduction(\'{0}\',2)">{1}恢复生产</span>'.format(r.id, icon),
+            hangup =
+                '<span class="table-action" onclick="f_ExcuteProduction(\'{0}\',6)">{1}挂起</span>'.format(r.id, icon);
+            var str = '';
+            switch (r.productionOrderStatus) {
+            case 1:
+                    str += audit;
+                    break;
+                case 7:
+                    str += start;
+                    break;
+            case 2:
+                    str += store;
+                    str += hangup;
+                break;
+            case 3:
+                str += store ;
+                if (r.productionType === "0") {
+                    str += p;
+                }
+                break;
+            case 4:
+                str += storeDetail;
+                if (r.productionType === "0") {
+                    str += p;
+                }
+                    break;
+                case 6:
+                    str += restore;
+                    break;
+            default:
+                break;
+            }
+            return str;
+        }
+
+        function EnterActionFormatter(v, r) {
+            var str = '', icon = '<i class="iconfont icon-right"></i>';
+            var cancel = '<span class="table-action" onclick="f_cancelApply(\'{0}\',3)">{1}取消</span>'.format(r.id, icon),
+                close = '<span class="table-action" onclick="f_closeApply(\'{0}\')">{1}关闭</span>'.format(r.id, icon),
+                enter = '<span class="table-action" onclick="f_confirmEnterApply(\'{0}\')">{1}确认入库</span>'.format(r.id, icon),
+                recovery = '<span class="table-action" onclick="f_recoveryApply(\'{0}\')">{1}恢复</span>'.format(r.id, icon),
+                none = '<span class="table-action">暂无操作</span>';
+            if (r.isClose) {
+                return none;
+            }
+            switch (r.applyStatus) {
+            case "1":
+                str += cancel + close;
+                break;
+            case "21":
+                str += enter;
+                break;
+            case "3":
+            case "4":
+                str += recovery + close;
+                break;
+            case "2":
+            case "5":
+            default:
+                str = none;
+                break;
+            }
+            return str;
+        }
+
+        function ApplyStatusFormatter(v, r) {
+            var name = $("#hide-ApplyStatus option[value='" + v + "']").text();
+            if (v === "5") {
+                return '<span class="label label-info">' + name + '</span>';
+            }
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            switch (v) {
+            case "1":
+                return '<span class="label label-info">' + name + '</span>';
+            case "2":
+                return '<span class="label label-iwb">' + name + '</span>';
+            case "21":
+                return '<span class="label label-success">' + name + '</span>';
+            case "3":
+            case "4":
+                return '<span class="label label-warning">' + name + '</span>';
+            case "22":
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-default">' + name + '</span>';
+            }
+
+        }
+        function StoreHouseIdFormatter(v) {
+            var name = $("#hide-StoreHouses option[value='" + v + "']").text();
+            return '<span class="label label-primary">' + name + '</span>';
+        }
+
+        function QuantityFormatter(v, r) {
+            if (r.actualQuantity === 0) {
+                return '<span class="label label-default">' + v + '</span>';
+            }
+            if (r.actualQuantity > r.quantity) {
+                return '<span class="label label-success">' + v + '</span>';
+            } else if (r.actualQuantity === r.quantity) {
+                return '<span class="label label-info">' + v + '</span>';
+            } else {
+                return '<span class="label label-danger">' + v + '</span>';
+            }
+
+        }
+    </script>
+
+}

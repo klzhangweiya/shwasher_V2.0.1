@@ -1,0 +1,411 @@
+﻿@using Abp.Authorization
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductionInfoProductionOrderMg; //The menu item will be active for this page.
+    ViewBag.Title = "排产单信息维护";
+    List<SelectListItem> productionType = new List<SelectListItem>
+{
+new SelectListItem{Text = @"车间生产",Value = "0"},
+new SelectListItem{Text = @"外购单",Value = "1"},
+};
+
+    List<SelectListItem> handleType = new List<SelectListItem>
+    {
+        new SelectListItem{Text = @"导出",Value = "1"},
+        new SelectListItem{Text = @"确认导出",Value = "2"},
+    };
+    List<SelectListItem> applyStatus = ViewBag.ApplyStatus;
+    List<SelectListItem> productionOrderStatus = ViewBag.ProductionOrderStatus;
+    List<SelectListItem> employee = ViewBag.Employee;
+    List<SelectListItem> storeHouses = ViewBag.StoreHouses;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+    new SearchItem("productionOrderNo","排产单号"),
+    new SearchItem("partNo","零件号"),
+    new SearchItem("semiProductName","半成品名称"),
+    new SearchItem("model","规格"),
+    new SearchItem("material","材质"),
+    new SearchItem("remark","备注" ),
+    new SearchItem("planProduceDate","计划完成时间",FiledType.Dnull,ExpType.GreaterOrEqual),
+    new SearchItem("planProduceDate","至",FiledType.Dnull,ExpType.LessOrEqual),
+    new SearchItem("semiProductNo","半成品编码").SetSearchIcon("query_semiProduct_modal"),
+    new SearchItem("productionOrderStatus","排产状态" ,FiledType.I).SetSearchItem(productionOrderStatus),
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/viewer/viewer.min.css" rel="stylesheet" />
+    @*<link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />*@
+    <style>
+        .tool-radio {
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+            .tool-radio [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+                padding-left: 25px;
+                font-size: 1.5rem;
+                color: #dad9db;
+            }
+
+                .tool-radio [type="radio"]:not(:checked) + label::before, [type="radio"]:not(:checked) + label::after {
+                    border: 2px solid #fff;
+                }
+    </style>
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/ProductionOrders/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="semiProductName">名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="quantity">排产数量(千件)</th>
+                <th data-align="center" data-field="timeCreated">创建时间</th>
+                <th data-align="center" data-field="productionOrderStatus" data-formatter="ProductionOrderStatusFormatter">生产状态</th>
+                <th data-align="center" data-field="remark">备注</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                @*<th data-align="center" data-field="stoveNo">炉号</th>
+                    <th data-align="center" data-field="carNo">车号</th>*@
+                <th data-align="center" data-field="kgWeight">千件重</th>
+                <th data-align="center" data-field="planProduceDate" data-formatter="PlanDateFormatter">计划完成时间</th>
+                <th data-align="center" data-field="enterDate" data-formatter="DateFormatter">入库时间</th>
+                <th data-align="center" data-field="semiProductNo" data-formatter="SemiProductNoFormatter">半成品编码</th>
+                <th data-align="center" data-formatter="ActionFormatter">操作</th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("排产单"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                {
+                            new InputViewModel("id", hide:true),
+                            new InputViewModel("productionOrderNo",displayName:"流转单编号").SetOuterBefore("<div class=\"type2\">"),
+                            new InputViewModel("semiProductNo", displayName: "半成品编码").SetSearchIcon("query_semiProduct_modal","#modal"),
+                            new InputViewModel("quantity", displayName:"生产数量",@class:"number",other:"min=0.001"),
+                            new InputViewModel("planProduceDate", displayName:"计划完成时间",@class:"iwb-date"),
+                            new InputViewModel("productionType",InputTypes.List, "排产单类型").SetSelectOptions(productionType),
+                            new InputViewModel("kgWeight",displayName:"千件重",@class:"number",other:"min=0.001").SetNotRequired(),
+                            new InputViewModel("stoveNo", displayName:"炉号").SetNotRequired().SetOuterBefore("<div class=\"type0\">"),
+                            new InputViewModel("carNo",displayName:"车号").SetNotRequired().SetOuterAfter("</div></div>"),
+                            //new InputViewModel("OutsourceNo", displayName:"外购单号").SetNotRequired().SetOuterBefore("<div class=\"type1\">").SetOuterAfter("</div>"),
+                            new InputViewModel("remark",InputTypes.Textarea,"备注").SetNotRequired(),
+                            new InputViewModel("semiProductName", displayName: "半成品名称").SetNotRequired().SetOuterBefore("<div class=\"type2\">"),
+                            new InputViewModel("model", displayName: "规格").SetNotRequired(),
+                            new InputViewModel("partNo", displayName: "零件号").SetNotRequired(),
+                            new InputViewModel("material", displayName: "材质").SetNotRequired(),
+                            new InputViewModel("rigidity", displayName: "硬度").SetNotRequired(),
+                            new InputViewModel("surfaceColor", displayName: "表色").SetNotRequired(),
+                            //new InputViewModel("kgWeight", displayName: "千件重").SetNotRequired(),
+                            new InputViewModel("timeCreated", displayName: "创建时间").SetNotRequired().SetOuterAfter("</div>"),
+                            new InputViewModel("productionOrderStatus",hide:true),
+                            new InputViewModel("processingType",hide:true),
+                            new InputViewModel("processingLevel",hide:true),
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+  
+    @Html.Partial("Modals/Query/_SemiProduct", "semiProductNo|KeyWords-9")
+    @{
+        List<SelectListItem>[] arr = new List<SelectListItem>[4] { employee, storeHouses, applyStatus, productionOrderStatus };
+    }
+    @Html.Partial("_EnterStoreShare", arr)
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="~/Content/Plugins/viewer/viewer.min.js"></script>
+    <script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function () {
+            //$("#planProduceDate").datetimepicker(datePickerOpt).on('show',
+            //    function (event) {
+            //        event.preventDefault();
+            //        event.stopPropagation();
+            //    }).on('hide',
+            //        function (event) {
+            //            event.preventDefault();
+            //            event.stopPropagation();
+            //        });
+            //$("#KeyWords-7").datetimepicker(datePickerOpt);
+            //$("#KeyWords-8").datetimepicker(datePickerOpt);
+            //show完毕前执行
+            LoadTable();
+            //$("#print").printPreview({
+            //    printBody: "#modal"
+            //});
+
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnCreate"] = function () {
+                $("#productionType").off("change.productionType").on("change.productionType", ChangeProductionType);
+                $(".type2").css("display", "block");
+                BtnCreate({
+                    readonly: "semiProductNo",
+                    disabled:
+                        "productionOrderNo,semiProductName,model,material,rigidity,surfaceColor,partNo,timeCreated",
+                    data: {
+                        productionOrderStatus: 1,
+                        productionType: "0",
+                        processingType: "1",
+                        processingLevel: "1"
+                    }
+                });
+                //abp.ajax({
+                //    url: window.appUrl + 'ProductionOrders/GetNewProductionOrderNo?isOutsourcing=0',
+                //    async: true,
+                //    type: "Post",
+                //    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                //    isValidate: false,
+                //    dataType: "json",
+                //    success: function (res) {
+
+                //    }
+                //});
+            }
+            funs["btnUpdate"] = function () {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    console.log(rows[0].productionOrderStatus);
+                    if (rows[0].productionOrderStatus > 2 && rows[0].productionOrderStatus!==7) {
+                        abp.message.warn("排产单已审核或者生产入库，不可进行更改！");
+                        return;
+                    }
+
+                    $("#productionType").off("change.productionType");
+                    if (rows[0].productionOrderStatus === 2) {
+                        $(".type2").css("display", "none");
+                    } else {
+                        $(".type2").css("display", "block");
+                        var no = rows[0].productionOrderNo.substr(2, 1).toUpperCase();
+                        var type1 = "GHIJKLMNOPQRT";
+                        rows[0].productionType = "0";
+                        $(".type0").css("display", "block");
+                        $(".type1").css("display", "none");
+                        if (no && type1.indexOf(no) > -1) {
+                            rows[0].productionType = "1";
+                            $(".type1").css("display", "block");
+                            $(".type0").css("display", "none");
+                        }
+                    }
+
+                    SaveAjax({
+                        url: window.appUrl + "Query/GetSingleSemiProduct?input=" + rows[0].semiProductNo,
+                        isAlert: false,
+                        isValidate: false,
+                        success: function(res) {
+
+                            var data = rows[0];
+                            if (res) {
+                                data.model = res.model;
+                                data.partNo = res.partNo;
+                                data.material = res.material;
+                                data.rigidity = res.rigidity;
+                                data.surfaceColor = res.surfaceColor;
+                            }
+                            let isValidate = rows[0].productionOrderStatus !== 2;
+                            BtnUpdate({
+                                readonly: "semiProductNo",
+                                data: data,
+                                isValidate: isValidate,
+                                disabled:
+                                    "productionOrderNo,model,material,rigidity,surfaceColor,productionType,partNo,timeCreated"
+                            });
+                        
+                           
+                        }
+                    });
+
+                }
+            };
+
+            funs["btnDelete"] = function (url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].productionOrderStatus >= 2 && rows[0].productionOrderStatus !== 7) {
+                        abp.message.warn("排产单已生产，不可进行删除！");
+                        return;
+                    }
+                    BtnDelete(url);
+                }
+            };
+
+            funs["btnExport"] = function (url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].productionOrderStatus === 1) {
+                        abp.message.warn("排产单未确认审核，不可导出！");
+                        return;
+                    }
+                    SaveAjax({
+                        url: url,
+                        data: { Id: rows[0].id },
+                        isAlert: false,
+                        isValidate: false,
+                        success: function (res) {
+                            //console.log(res);
+                            RefreshTable();
+                            window.location.href = res;
+
+                        }
+                    });
+                }
+               // var rows = config.table.bootstrapTable("getSelections");
+               
+            };
+
+
+            $("#Tool1").append(
+                '<div  class="tool-radio"><input name="proType" type="radio" id="allProduction" checked value=""/><label for="allProduction">全部</label></div>' +
+                '<div  class="tool-radio"><input name="proType" type="radio" id="outPurchase" value="1"/><label for="outPurchase">外购</label></div>' +
+                '<div  class="tool-radio"><input name="proType" type="radio" id="machineShop" value="0"/><label for="machineShop">车间加工</label></div>');
+
+            $(".tool-radio input[type='radio']").on('click',
+                function (e) {
+                    //var outType = $(this).val();
+                    document.getElementById("SearchForm").reset();
+                    GetSearchList();
+                    RefreshTable();
+                });
+            //$('input').on('ifChecked', function(event){ alert(event.type + ' callback'); });
+        });
+
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            window._searchList.push({ KeyWords: "1", KeyField: "ProcessingLevel", FieldType: "0", ExpType: "0" });
+            var outType = $('input[name="proType"]:checked').val();
+            if (outType) {
+                window._searchList.push({
+                    KeyWords: outType,
+                    KeyField: "ProductionType",
+                    FieldType: "0",
+                    ExpType: "0"
+                });
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+    </script>
+
+    <script type="text/javascript">
+
+        function ChangeProductionType() {
+            var type = $("#productionType").val();
+            abp.ajax({
+                url: window.appUrl + 'ProductionOrders/GetNewProductionOrderNo?isOutsourcing=' + type,
+                async: true,
+                type: "Post",
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function (res) {
+                    $("#productionOrderNo").val(res);
+                }
+            });
+            if (type === "0") {
+                $(".type0").css("display", "block");
+                $(".type1").css("display", "none");
+            } else {
+                $(".type1").css("display", "block");
+                $(".type0").css("display", "none");
+            }
+        }
+
+        function f_ExcuteProduction(id, status, row) {
+            row = row || $("#table").bootstrapTable("getRowByUniqueId", id);
+            if (row.productionOrderStatus === 5) {
+                abp.message.warn("排产单已关闭，不可操作");
+                return;
+            }
+            if (row.productionOrderStatus > 2 && row.productionOrderStatus !== 6 && row.productionOrderStatus !== 7) {
+                abp.message.warn("排产单已进行入库，不可操作！（关闭入库申请后可操作）");
+                return;
+            }
+            abp.message.confirm("确认变更排产单状态?",
+                "排产单状态变更",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/ChangeProductionOrderStatus',
+                        data: { Id: id, ProductionOrderStatus: status },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+                });
+
+        }
+    </script>
+
+
+}

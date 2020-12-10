@@ -1,0 +1,125 @@
+﻿@using System.Linq;
+@model ShwasherSys.Views.Shared.New.Modals.ModalBodyViewModel
+
+<div class="modal-body">
+    <form class="form-horizontal " id="@Model.FormId">
+
+        @{
+            //string type = "text";
+            foreach (var i in Model.Inputs)
+            {
+                @*if (i.IsHidden)
+                {
+                    <input id="@i.Id" name="@i.Id" type="hidden" />
+                    continue;
+                }*@
+                string oBefore = "", oAfter = "", iBefore = "", iAfter = "";
+                var special = Model.Specials == null ? null : Model.Specials.FirstOrDefault(a => a.Id == i.Id);
+                string help = i.Help.IsEmpty() ? "" : "<span class=\"help-block\">" + i.Help + "</span>";
+
+                if (!string.IsNullOrEmpty(i.DivOutBefore))
+                {
+                    oBefore = i.DivOutBefore;
+                }
+                if (!string.IsNullOrEmpty(i.DivOutAfter))
+                {
+                    oAfter = i.DivOutAfter;
+                }
+                if (!string.IsNullOrEmpty(i.DivInterBefore))
+                {
+                    iBefore = i.DivInterBefore;
+                }
+                if (!string.IsNullOrEmpty(i.DivInterAfter))
+                {
+                    iAfter = i.DivInterAfter;
+                }
+
+                @Html.Raw(oBefore)
+                if (i.IsHidden)
+                {
+                    <input class="@i.Class @i.Required" id="@i.Id" name="@i.Name" type="hidden" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other />
+                }
+                else
+                {
+                    <div class="form-group-sm @i.DivClass" @i.DivOther>
+                        @Html.Raw(i.Label)
+                        @if (special != null)
+                        {
+                            @Html.Raw(special.InputStr)
+                            continue;
+                        }
+
+                        <div class="@(i.InputLayoutClass)">
+                            @Html.Raw(iBefore)
+                            @Html.Partial("New/Modals/_InputView", i)
+                            @Html.Raw(help)
+                            @Html.Raw(iAfter)
+                        </div>
+                    </div>
+                }
+                @Html.Raw(oAfter)
+            }
+
+
+        }
+
+
+    </form>
+</div>
+
+
+@*
+
+    @if (i.InputType == InputTypes.List)
+                    {
+                        var style = i.Styles.IsNullOrEmpty() ? "width:100%" : i.Styles;
+                        var multiple = i.IsMultiple ? "multiple" : "";
+                        <select class="@i.Class  @i.Required" id="@i.Id" name="@i.Name" placeholder="@(i.Placeholder)" value="@i.Value" @multiple @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@style" @i.Other>
+                            @Html.Raw(i.SelectOptions)
+                        </select>
+                    }
+                    else if (i.InputType == InputTypes.Textarea)
+                    {
+                        <textarea rows="2" class="@i.Class @i.Required" id="@i.Id" name="@i.Name" placeholder="@(i.Placeholder)" value="@i.Value" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other></textarea>
+                    }
+                    else if (i.InputType == InputTypes.File)
+                    {
+                        <div class="iwb-file">
+                            @if (i.FileOption == null)
+                            {
+                                <input type="hidden" id="@(i.Id)" name="@(i.Name)" value="" />
+                                <input type="hidden" id="@(i.Id)_name" name="@(i.Name)_name" value="" />
+                                <input type="hidden" id="@(i.Id)_ext" name="@(i.Name)_ext" value="" />
+                                <input class="iwb-file-input" id="@(i.Id)_file" type="file" onclick="FileUpload(this, {targetName:'@(i.Id)_name',targetExt:'@(i.Id)_ext'})">
+                                <label class="iwb-file-label" for="@(i.Id)_file">@L("SelectFile")</label>
+                            }
+                            else
+                            {
+                                var isImage = i.FileOption.IsImage ? "true" : "false";
+                                <input type="hidden" id="@(i.FileOption.FileInfoField)" name="@(i.FileOption.FileInfoField)" value="" />
+                                <input type="hidden" id="@(i.FileOption.FileNameField)" name="@(i.FileOption.FileNameField)" value="" />
+                                <input type="hidden" id="@(i.FileOption.FileExtField)" name="@(i.FileOption.FileExtField)" value="" />
+                                <input class="iwb-file-input" id="@(i.Id)_file" type="file" onclick="FileUpload(this, {targetInfo:'@(i.FileOption.FileInfoField)',targetName:'@(i.FileOption.FileNameField)',targetExt:'@(i.FileOption.FileExtField)',isImage:(@isImage),maxSize:(@i.FileOption.MaxSize)})">
+                                <label class="iwb-file-label" for="@(i.Id)_file">@L("SelectFile")</label>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrEmpty(i.SearchModalId))
+                        {
+                            <div class="input-group">
+                                <input class="@i.Class @i.Required" id="@i.Id" name="@i.Name" type="@i.TypeStr" placeholder="@(i.Placeholder)" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other />
+                                <div class="input-group-addon" style="min-width: 30px;" onclick="ShowQueryModal('@i.SearchModalId','@(i.Target)');">
+                                    <i class="iconfont icon-search"></i>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <input class="@i.Class @i.Required" id="@i.Id" name="@i.Name" type="@i.TypeStr" placeholder="@(i.Placeholder)" @i.DataOptions @i.Events @i.Disabled @i.ReadOnly style="@i.Styles" @i.Other />
+                        }
+                    }
+
+*@

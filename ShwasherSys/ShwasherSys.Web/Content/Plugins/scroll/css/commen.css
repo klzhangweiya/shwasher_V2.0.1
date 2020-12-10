@@ -1,0 +1,59 @@
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #f4f4f4
+}
+
+.scrollBox {
+    width: calc(50% - 20px);
+    float: left;
+    border: 1px solid #e8e8e8;
+    background: #fff;
+    box-sizing: border-box;
+    margin: 10px 0 10px 10px;
+    height: calc(50% - 15px);
+    overflow: auto;
+    padding: 10px
+}
+
+.scrollBox:nth-of-type(2n) {
+    margin-right: 10px
+}
+
+.scrollBox:nth-of-type(3),
+.scrollBox:nth-of-type(4) {
+    margin-top: 0
+}
+
+.contentBox1 {
+    width: 100%;
+    height: 900px;
+    background-image: url(../images/1.png);
+    background-size: cover;
+    background-repeat: no-repeat
+}
+
+.contentBox2 {
+    width: 1200px;
+    height: 100%;
+    background-image: url(../images/2.png);
+    background-size: cover;
+    background-repeat: no-repeat
+}
+
+.contentBox3 {
+    width: 1200px;
+    height: 900px;
+    background-image: url(../images/2.png);
+    background-size: cover;
+    background-repeat: no-repeat
+}

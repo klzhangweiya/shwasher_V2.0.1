@@ -1,0 +1,39 @@
+﻿@using System.Web.Optimization
+@using ShwasherSys
+@using ShwasherSys.Views
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section CSS {
+    @Styles.Render("~/Content/plugins")
+    @Styles.Render("~/Content/plugins-selfCss")
+
+    @RenderSection("css", false)
+    
+    @Styles.Render("~/Content/Util")
+   @RenderSection("styles",false)
+}
+
+@RenderBody()
+@section Modal{
+    @RenderSection("modal", false)
+}
+@section SCRIPTS {
+    @Scripts.Render("~/bundles/plugins")
+    @Scripts.Render("~/bundles/Util")
+    @Html.PartialViewScripts()
+    @RenderSection("script", false)
+    @RenderSection("scripts", false)
+  
+}
+
+
+
+
+
+
+
+
+
+
+

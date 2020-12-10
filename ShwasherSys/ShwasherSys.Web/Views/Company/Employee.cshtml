@@ -1,0 +1,165 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "人员信息维护";
+    string activeMenu = PermissionNames.PagesCompanyEmployee; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<SelectListItem> gender = new List<SelectListItem>
+    {
+        new SelectListItem(){Value = @"1",Text = "男"},
+        new SelectListItem(){Value = @"2",Text = "女"}
+    },duty = ViewBag.Duty, depart = ViewBag.Department;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("no","人员编号"),
+        new SearchItem("name","人员姓名"),
+        new SearchItem("departmentNo","部门",FiledType.S,ExpType.Equal).SetSearchItem(depart),
+        new SearchItem("dutyNo","职务",FiledType.I,ExpType.Equal).SetSearchItem(duty),
+        new SearchItem("userName","登陆账号"),
+    });
+
+    var table = new TableViewModel("/api/services/app/Employee/GetAll", activeMenu, searchForm)
+    .SetFields(new List<FieldItem>()
+    {
+        new FieldItem("no", "人员编号"),
+        new FieldItem("name", "人员姓名"),
+        new FieldItem("phoneNumber", "手机号"),
+        new FieldItem("cardId", "身份证号"),
+        new FieldItem("gender", "性别","GenderFormatter"),
+        new FieldItem("departmentNo", "部门","DepartmentFormatter"),
+        new FieldItem("dutyNo", "职务","DutyFormatter"),
+        new FieldItem("userName", "登陆账号","UserNameFormatter")
+    });
+}
+@section css{
+
+}
+
+@Html.Partial("New/Table/_Table", table)
+
+@section modal{
+    <!--Main Modal-->
+    @{
+        var modal = new ModalViewModel("人员", new ModalBodyViewModel(new List<Input>()
+        {
+            new InputHide("id"),
+            new Input("no", "人员编号",@class:"num4"),
+            new Input("name", "人员姓名"),
+            new Input("phoneNumber", "手机号").SetNotRequired(),
+            new Input("cardId", "身份证号",@class:"isIdCardNo").SetNotRequired(),
+            new Input("gender", "性别").SetSelectOptions(gender),
+            new Input("departmentNo", "部门").SetNotRequired().SetSelectOptions(depart),
+            new Input("dutyNo", "职务").SetNotRequired().SetSelectOptions(duty),
+            new InputTextarea("description", "详情").SetNotRequired(),
+            //new Input("userName", "登陆账号").SetNotRequired(),
+        }));
+        var accountModal = new ModalViewModel("绑定账号", new ModalBodyViewModel( new List<Input>()
+        {
+            new InputHide("id"),
+            new Input("userName", "登陆账号",InputTypes.List),
+        }), "Account_Modal");
+    }
+    @Html.Partial("New/Modals/_Modal", modal)
+    @Html.Partial("New/Modals/_Modal", accountModal)
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $table = $('#table');
+        $(function() {
+            jQuery.validator.addMethod("num4",
+                function(value, element) {
+                    var r = /^\d{4}$/;
+                    return this.optional(element) || r.test(value); //调用验证的方法
+                },
+                "请正确填写编码（4位数字）");
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnCreate"] = function() { BtnCreate({ data: { id: "" } }); }
+            funs["btnUpdate"] = function() { BtnUpdate({ disabled: "no" }); };
+            funs["btnBind"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    $.iwbAjax4({
+                        url: abp.appUrl + 'Employee/GetAccountUser',
+                        success: function(res) {
+                            $("#Account_Modal #userName").html(res);
+                            OpenModal({
+                                modal: $("#Account_Modal"),
+                                url: url,
+                                data: row
+                            });
+                        }
+                    });
+                }
+            }
+            funs["btnUnBind"] = function(url) {
+                var row = $table.bootstrapTable("getSelections")[0];
+                if (row) {
+                    if (row.userName) {
+                        BtnConfirm("确定解绑当前账号？", "解绑", url, row);
+                    } else {
+                        abp.message.warn("当前记录没有绑定账号。");
+                    }
+                }
+            };
+        });
+    </script>
+
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function DutyFormatter(v) {
+            var name = $('#hid-du option[value="' + v + '"]').text();
+            if (name) {
+                return '<span class="label label-info">' + name + '</span>';
+            }
+            return '';
+
+        }
+
+        function DepartmentFormatter(v) {
+            var name = $('#hid-de option[value="' + v + '"]').text();
+            if (name) {
+                return '<span class="label label-info">' + name + '</span>';
+            }
+            return '';
+        }
+
+        function UserNameFormatter(v) {
+            if (v) {
+                return '<span class="label label-info">' + v + '</span>';
+            } else {
+                return '<span class="label label-warning">暂无账号</span>';
+
+            }
+        }
+
+        function GenderFormatter(v) {
+            var name = $('#hid-gender option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-info">' + name + '</span>';
+            case 2:
+                return '<span class="label label-danger">' + name + '</span>';
+            default:
+                return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @Html.DropDownList("hid-du", duty)
+    @Html.DropDownList("hid-de", depart)
+    @Html.DropDownList("hid-gender", gender)
+</section>

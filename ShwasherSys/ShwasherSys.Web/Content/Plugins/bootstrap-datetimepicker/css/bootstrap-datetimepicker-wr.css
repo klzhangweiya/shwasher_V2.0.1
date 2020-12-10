@@ -1,0 +1,42 @@
+﻿.table-condensed {
+    width: 240px;
+}
+
+.datetimepicker table tr td span {
+    height: 28px;
+    line-height: 28px;
+}
+
+.datetimepicker td, .datetimepicker th {
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+}
+
+.table-condensed > tbody > tr > td, .table-condensed > tbody > tr > th, .table-condensed > tfoot > tr > td, .table-condensed > tfoot > tr > th, .table-condensed > thead > tr > td, .table-condensed > thead > tr > th {
+    padding: 6px;
+    font-size: 12px;
+}
+
+.datetimepicker table tr td.active:active, .datetimepicker table tr td.active:hover:active, .datetimepicker table tr td.active.disabled:active, .datetimepicker table tr td.active.disabled:hover:active, .datetimepicker table tr td.active.active, .datetimepicker table tr td.active:hover.active, .datetimepicker table tr td.active.disabled.active, .datetimepicker table tr td.active.disabled:hover.active,
+.datetimepicker table tr td span.active:active, .datetimepicker table tr td span.active:hover:active, .datetimepicker table tr td span.active.disabled:active, .datetimepicker table tr td span.active.disabled:hover:active, .datetimepicker table tr td span.active.active, .datetimepicker table tr td span.active:hover.active, .datetimepicker table tr td span.active.disabled.active, .datetimepicker table tr td span.active.disabled:hover.active {
+    background-color: #678CEB;
+    background-image: linear-gradient(to bottom,transparent,transparent);
+    border-radius: 2px;
+}
+
+.datetimepicker table tr td.day:hover, .datetimepicker table tr td span:hover, .datetimepicker thead tr:first-child th:hover, .datetimepicker tfoot th:hover {
+    background: #D1DCF9;
+}
+
+.table-condensed > thead, .table-condensed > tfoot {
+    font-size: 14px;
+    color: #333;
+}
+
+.table-condensed > tfoot {
+    color: #678CEB;
+}
+
+.datetimepicker td, .datetimepicker th {
+}

@@ -1,0 +1,58 @@
+﻿@using Abp.Extensions
+@using ShwasherSys.Views.Shared.New.Modals
+@model ShwasherSys.Views.Shared.New.Modals.Input
+@{
+    string sm = Model.IsSm ? "input-group-sm" : "";
+}
+@if (Model.InputType == InputTypes.List)
+{
+    var style = Model.Styles.IsNullOrEmpty() ? "width:100%" : Model.Styles;
+    var multiple = Model.IsMultiple ? "multiple" : "";
+    <select class="@Model.Class  @Model.Required" id="@Model.Id" name="@Model.Name" placeholder="@(Model.Placeholder)" value="@Model.Value" @multiple @Model.DataOptions @Model.Events @Model.Disabled @Model.ReadOnly style="@style" @Model.Other>
+        @Html.Raw(Model.SelectOptions)
+    </select>
+}
+else if (Model.InputType == InputTypes.Textarea)
+{
+    <textarea rows="5" class="@Model.Class @Model.Required" id="@Model.Id" name="@Model.Name" placeholder="@(Model.Placeholder)" value="@Model.Value" @Model.DataOptions @Model.Events @Model.Disabled @Model.ReadOnly style="@Model.Styles" @Model.Other></textarea>
+}
+else if (Model.InputType == InputTypes.File)
+{
+    <div class="custom-file iwb-file">
+        @{
+            string infoId = Model.Id, nameId = Model.Id + "_name", extId = Model.Id + "_ext", isImage = "false", maxSize = "5";
+
+            if (Model.FileOption != null)
+            {
+                infoId = string.IsNullOrEmpty(Model.FileOption.FileInfoField) ? infoId : Model.FileOption.FileInfoField;
+                nameId = string.IsNullOrEmpty(Model.FileOption.FileNameField) ? nameId : Model.FileOption.FileNameField;
+                extId = string.IsNullOrEmpty(Model.FileOption.FileExtField) ? extId : Model.FileOption.FileExtField;
+                isImage = Model.FileOption.IsImage ? "true" : "false";
+                maxSize = Model.FileOption.MaxSize > 0 ? Model.FileOption.MaxSize + "" : "5";
+            }
+        }
+        <input type="hidden" id="@(infoId)" name="@(infoId)" value="" />
+        <input type="hidden" id="@(nameId)" name="@(nameId)" value="" />
+        <input type="hidden" id="@(extId)" name="@(extId)" value="" />
+        <input class="custom-file-input" id="@(Model.Id)_file" type="file" onclick="FileUpload(this, { targetInfo: '@(infoId)', targetName: '@(nameId)', targetExt: '@(extId)', isImage: @(isImage), maxSize: '@(maxSize)' })">
+        <label class="custom-file-label" for="@(Model.Id)_file">@L("SelectFile")</label>
+
+
+    </div>
+}
+else
+{
+    if (!string.IsNullOrEmpty(Model.SearchModalId))
+    {
+        <div class="input-group ">
+            <input class="@Model.Class @Model.Required" id="@Model.Id" name="@Model.Name" type="@Model.TypeStr" placeholder="@(Model.Placeholder)" @Model.DataOptions @Model.Events @Model.Disabled @Model.ReadOnly style="@Model.Styles" @Model.Other />
+            <div class="input-group-addon" style="min-width: 30px;" onclick="ShowQueryModal('@Model.SearchModalId','@(Model.Target)');">
+                <i class="iconfont icon-search"></i>
+            </div>
+        </div>
+    }
+    else
+    {
+        <input class="@Model.Class @Model.Required" id="@Model.Id" name="@Model.Name" type="@Model.TypeStr" placeholder="@(Model.Placeholder)" @Model.DataOptions @Model.Events @Model.Disabled @Model.ReadOnly style="@Model.Styles" @Model.Other />
+    }
+}

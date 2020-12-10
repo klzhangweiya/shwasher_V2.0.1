@@ -1,0 +1,22 @@
+﻿@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "id,semiProductName,model,material,surfaceColor,rigidity,partNo",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems=new List<QueryItem>()
+    {
+        new QueryItem("id","半成品编码",true),
+        new QueryItem("semiProductName","半成品名称",true),
+        new QueryItem("partNo","零件号",true),
+        new QueryItem("model","规格",true),
+        new QueryItem("material","材质"),
+        new QueryItem("rigidity","硬度"),
+        new QueryItem("surfaceColor","表色")
+    };
+    QueryModalModel qmModel = new QueryModalModel("半成品信息", "/api/services/app/Query/GetSemiProduct", queryItems, originFiled, targetFiled, modalId: "query_semiProduct_modal");
+}
+@Html.Partial("Modals/Query/_QueryModal",qmModel)
+
+
+

@@ -1,0 +1,14 @@
+﻿@model string
+<div class="modal-footer" style="text-align: center;">
+@if (Model.ToLower() == "cancel" || Model == "1")
+{
+    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal" style="min-width: 100px;background: #FFFFFF;border: 1px solid #DDDDDD;">取消</button>
+}
+else if (Model.ToLower() == "save" || Model == "2")
+{
+    <button type="button" class="btn btn-success save-btn waves-effect" style="min-width: 100px; background-color: #678ceb;border: 1px solid #678ceb;">保存</button>
+}else{
+    <button type="button" class="btn btn-default waves-effect" data-dismiss="modal" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;">取消</button>
+    <button type="button" class="btn btn-success save-btn waves-effect" style="min-width:100px;background-color: #678ceb;border: 1px solid #678ceb;">保存</button>
+}
+</div>

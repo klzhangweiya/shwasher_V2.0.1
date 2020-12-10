@@ -1,0 +1,40 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "productionOrderNo,semiProductNo,semiProductName,actualQuantity,storeHouseId,currentSemiStoreHouseNo,canUseQuantity",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems=new List<QueryItem>()
+    {
+        new QueryItem("productionOrderNo","排产单编号",true),
+        new QueryItem("semiProductNo","半成品编码",true),
+        new QueryItem("semiProductName","名称",true),
+        new QueryItem("canUserQuantity","可用数量",formatter:"CanUserQuantityFormatte"),
+        new QueryItem("actualQuantity","库存"),
+        new QueryItem("storeHouseId","仓库",formatter:"StoreHouseIdFormatte"),
+        new QueryItem("freezeQuantity","冻结"),
+        new QueryItem("surfaceColor","表色"),
+        new QueryItem("partNo","零件号",true),
+        new QueryItem("model","规格",true),
+        new QueryItem("rigidity","硬度",true),
+        new QueryItem("material","材质"),
+    };
+
+
+    QueryModalModel qmModel = new QueryModalModel("半成品当前库存", "/api/services/app/Query/GetCurrentSemiStore", queryItems, originFiled, targetFiled, modalId: "query_semiCurrentStore_modal",modalWidth:1000);
+}
+
+@Html.Partial("Modals/Query/_QueryModal",qmModel)
+
+@using (Html.BeginScripts())
+{
+    <script>
+        function CanUserQuantityFormatte(v, r) {
+            var count = r.actualQuantity - r.freezeQuantity;
+            r.canUseQuantity = count;
+            return '<span class="label label-info">' + count+'</span>';
+        }
+    </script>
+}
+

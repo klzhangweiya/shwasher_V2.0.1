@@ -1,0 +1,335 @@
+﻿@using IwbZero.Setting
+@using NPOI.SS.Formula.Functions
+@using ShwasherSys.CustomerInfo
+@using ShwasherSys.Models.OrderInfo
+@using ShwasherSys.Order.Dto
+@using ShwasherSys.OrderSendInfo
+@using ShwasherSys.OrderSendInfo.Dto
+
+@{
+    Layout = null;
+    ViewBag.Title = "OrderDetail";
+    /*Customer customerInfo = ViewBag.CustomerInfo;
+    OrderSendBillDto sendBill = ViewBag.SendBill;
+    List<ViewOrderSend> orderSends = ViewBag.OrderSends;
+    string sendTitle = SettingManager.GetSettingValue("SysUserCop") + SettingManager.GetSettingValue("SENDBILLTITLE");
+    string sendAddress = SettingManager.GetSettingValue("SENDADDRESS");
+    string sendTel = SettingManager.GetSettingValue("SENDTELEPHONE");
+    string tddate = "日期: " + DateTime.Now.Year + " 年 " + DateTime.Now.Month + " 月 " + DateTime.Now.Day + " 日 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";*/
+    OrderHeaderDto orderHeader = ViewBag.OrderHeadDto;
+    Customer customer = ViewBag.Customer;
+    CustomerSend customerSend = ViewBag.CustomerSend;
+    List<OrderItemSendDto> orderItemSendDtos = ViewBag.OrderItemSendDtos;
+} 
+<html>
+<head>
+    <title>订单明细信息</title>
+    <link href="~/Content/Css/PrintPage.css" rel="stylesheet" media="all" />
+    <link href="~/Content/Plugins/PrintPreView/print-preview.css" rel="stylesheet" />
+    @*<link href="~/Content/Plugins/jquery-print-preview/src/css/print-preview.css" rel="stylesheet" media="screen" />
+        <script src="https://cdn.bootcss.com/jquery-tools/1.2.7/jquery.tools.min.js"></script>
+        <script src="~/Content/Plugins/jquery-print-preview/src/jquery.print-preview.js"></script>*@
+
+    @*<script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>*@
+</head>
+
+<body style="font-size: 10px;">
+
+    <header style="height: 40px;">
+        <div style="position: absolute;left: calc(50% - 100px)">
+            <input type="button" value="打印" class="btn" id="printBtn" />
+           
+        </div>
+        <hr class="hr01" />
+    </header>
+    <div id="printContent">
+        <table  border="1" align="center" cellPadding="1" cellSpacing="1" bgColor="#3d5db2" class="table-body" style="width: 1000px" >
+            <tr bgColor="#8caae7">
+                <td colSpan="9" style="text-align: center; height: 19px;">
+                    <span style="font-size: 12pt">&nbsp;<strong><span style="font-size: 11pt">订单基本资料</span></strong></span>
+                </td>
+
+            </tr>
+            <tr>
+                <td bgColor="#c6dbff" >
+                    <div style="text-align: right"> <strong>流水号</strong>：</div>
+                </td>
+                <td bgColor="#ffffff" colspan="2">@orderHeader.Id</td>
+                <td bgColor="#c6dbff" >
+                    <div style="text-align: right" > <strong>客户订单号</strong>：</div>
+                </td>
+                <td bgColor="#ffffff" colspan="2">@orderHeader.StockNo</td>
+                <td bgColor="#c6dbff" width="10%">
+                    <div style="text-align: right"> <strong>客户编号</strong>：</div>
+                </td>
+                <td bgColor="#ffffff" colspan="2">@orderHeader.CustomerId</td>
+
+
+            </tr>
+
+            <tr>
+                <td bgColor="#c6dbff" width="10%">
+                    <div style="text-align: right"> <strong>联系人</strong>：</div>
+                </td>
+                <td bgColor="#ffffff"  colspan="2">@orderHeader.LinkName</td>
+                <td bgColor="#c6dbff" width="10%">
+                    <div style="text-align: right"> <strong>电话</strong>：</div>
+                </td>
+                <td bgColor="#ffffff" colspan="2">@orderHeader.Telephone</td>
+
+                <td bgColor="#c6dbff" width="10%">
+                    <div style="text-align: right"> <strong>客户名称</strong>：</div>
+                </td>
+                <td bgColor="#ffffff" colspan="2">@customer.CustomerName</td>
+
+            </tr>
+            <tr>
+                <td bgColor="#c6dbff" width="10%">
+                    <div style="text-align: right"><strong>传真</strong>：</div>
+                </td>
+                <td bgColor="#ffffff" colspan="2">@orderHeader.Fax</td>
+                <td bgColor="#c6dbff" width="10%">
+                    <div style="text-align: right"><strong> 订单日期</strong>：</div>
+                </td>
+                <td bgColor="#ffffff" colspan="2">@orderHeader.OrderDate</td>
+                <td bgColor="#c6dbff" width="10%">
+                    <strong>送货地址</strong>：
+                </td>
+                <td bgColor="#ffffff" colspan="2">@customerSend.SendAdress</td>
+            </tr>
+        </table>
+        <table id="OrderDetailTBL" align="center" class="table-body" style="width: 1000px;table-layout:auto; " >
+            <tr bgColor="#8caae7">
+                <td colSpan="15" style="text-align: center; height: 19px;">
+                    <span style="font-size: 12pt">&nbsp;<strong><span style="font-size: 11pt">订单详细信息</span></strong></span>
+                </td>
+
+            </tr>
+            <tr>
+                <td bgColor="#c6dbff" align=center style="width:  15px ; height: 18px;">
+                    <div>
+                        <strong>序号</strong>
+                    </div>
+                </td>
+                <td bgColor="#c6dbff" align=center style="height: 18px; width:auto;">
+                    <strong>产品编号</strong>
+                </td>
+                <td bgColor="#c6dbff" align=center style="height: 18px; width:auto;">
+                    <strong>零件号</strong>
+                </td>
+                <td bgColor="#c6dbff" align=center style="width:auto; height: 18px;">
+                    <strong>规格</strong>
+                </td>
+                <td bgColor="#c6dbff" align=center style="width:auto;height: 18px;">
+                    <strong>材质</strong>
+                </td>
+                <td height="18" align=center bgColor="#c6dbff" style="width:auto;">
+                    <strong>型号</strong>
+                </td>
+
+                <td bgColor="#c6dbff" align=center style="width:auto;height: 18px;">
+                    <div>
+                        <strong>表色</strong>
+                    </div>
+                </td>
+                <td bgColor="#c6dbff" align=center style="height: 18px;width:auto;">
+                    <strong>硬度</strong>
+                </td>
+
+                <td bgColor="#c6dbff" align=center style="width:auto; height: 18px;">
+                    <strong>数量</strong>
+                </td>
+                <td bgColor="#c6dbff" align=center style="width:auto; height: 18px;">
+                    <strong>单位</strong>
+                </td>
+                <td height="18" align=center bgColor="#c6dbff" style="width:auto;" id="tdprice">
+                    <div><strong>单价</strong></div>
+                </td>
+                <td height="18" align=center bgColor="#c6dbff" style="width:auto;" id="totalPrice">
+                    <div><strong>总金额</strong></div>
+                </td>
+
+                <td height="18" align=center bgColor="#c6dbff" style="width:auto;">
+                    <div>
+                        <strong>送货日期</strong>
+                    </div>
+                </td>
+                <td bgColor="#c6dbff" align=center style="width:auto; height: 18px;">
+                    <div>
+                        <strong>检验报告</strong>
+                    </div>
+                </td>
+
+                <td height="18" align=center bgColor="#c6dbff" style="width:auto;">
+                    <div>
+                        <strong>备注</strong>
+                    </div>
+                </td>
+            </tr>
+            @{
+                string remark = @"  1,发货单编号<font color=red>红色</font>显示则表示该发货单还没有开票<br>
+                                    2,尚没有生成发货单，则显示<font color=blue>未生成</font><br>
+                                    3,每个明细还有剩余未发送，则剩余数量<font color=red>红色</font>显示<br>
+                                    4,送货时间显示<font color=#00ff00>绿色</font>时候,表示离要求发货日期还有三天<br>
+                                    5,送货日期显示<font color=#ff0000>红色</font>时,表示已超过要求的发货日期 
+                                    ";
+                int index = 1;
+                decimal totalAllPrice = 0;
+                foreach (var itemSendDto in orderItemSendDtos)
+                {
+                    DateTime loDt = itemSendDto.SendDate;
+                    DateTime loNow = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+                    TimeSpan loSpan = loDt - loNow;
+                    string lcSendDate = string.Format("{0:d}", itemSendDto.SendDate);
+                    if (loSpan.Days < 0)
+                    {
+                        lcSendDate = "<font color='#ff0000'>" + lcSendDate + "</font>";
+                    }
+                    if (loSpan.Days > -1 && loSpan.Days < 4)
+                    {
+                        lcSendDate = "<font color='#00ff00'>" + lcSendDate + "</font>";
+                    }
+                    string lcReport = itemSendDto.IsReport=="Y" ? "需要" : "不需要";
+                    string lcStatusName = "";
+                    switch (itemSendDto.OrderItemStatusId)
+                    {
+                        case 15:
+                            lcStatusName = "完成审核";
+                            break;
+                        case 9:
+                            lcStatusName = "发货";
+                            break;
+                        case 11:
+                            lcStatusName = "结束";
+                            break;
+                    }
+                    string lcIsPartSend = (itemSendDto.IsPartSend == "Y" ? "可以" : "不可以") + " 部分送货";
+
+                    decimal isSendQuantity = itemSendDto.IsSendQuantity ?? 0;
+                    decimal loLeftNub = itemSendDto.Quantity - isSendQuantity;
+                    <tr class="trColor">
+                        <td rowspan="2" width="5px">@index</td>
+                        <td >@itemSendDto.ProductNo</td>
+                        <td >@itemSendDto.PartNo</td>
+                        <td >@itemSendDto.Model</td>
+                        <td >@itemSendDto.Material</td>
+                        <td >@itemSendDto.ProductName</td>
+                        <td >@itemSendDto.SurfaceColor</td>
+                        <td >@itemSendDto.Rigidity</td>
+                        <td >@itemSendDto.Quantity</td>
+                        <td >@itemSendDto.OrderUnitName</td>
+                        <td >@itemSendDto.Price @itemSendDto.CurrencyId</td>
+                        <td>@itemSendDto.TotalPrice @itemSendDto.CurrencyId</td>
+                        <td >@Html.Raw(lcSendDate)</td>
+                        <td >@lcReport</td>
+                        <td >@itemSendDto.OrderItemDesc</td>
+
+
+                    </tr>
+
+                    <tr>
+                        <td colspan="14">
+                            <table align="center" border="1" CellPadding="1" CellSpacing="1" class="table-body" style="width: 830px">
+                                <tr>
+                                    <td>状态:@lcStatusName</td>
+                                    <td>@lcIsPartSend</td>
+                                    <td>
+                                        @if (loSpan.Days < 0)
+                                        {
+                                        <span>超期的天数：@loSpan.Days</span>
+                                        }
+                                        else
+                                        {
+                                        <span>剩余的天数：@loSpan.Days</span>
+                                        }
+                                    </td>
+                                    <td>已发货数量:@isSendQuantity</td>
+                                    <td >剩余数量:<span style="color: red;">@loLeftNub</span></td>
+                                </tr>
+                                @if (itemSendDto.ViewOrderSendStickBills.Count>0)
+                                {
+                                    <tr>
+                                        <td>发货单号</td>
+                                        <td>发货数量</td>
+                                        <td>发货时间</td>
+                                        <td>操作人编号</td>
+                                        <td>发货备注</td>
+                                    </tr>
+                                    foreach (var sendItem in itemSendDto.ViewOrderSendStickBills)
+                                    {
+                                        string lcSendBillNo = sendItem.OrderSendBillNo;
+                                        if (!string.IsNullOrEmpty(lcSendBillNo))
+                                        {
+                                            if (string.IsNullOrEmpty(sendItem.OrderStickBillNo))
+                                            {
+                                                lcSendBillNo = "<font color=red>" + lcSendBillNo + "</font>";
+                                            }
+                                        }
+                                        else
+                                        {
+                                            lcSendBillNo= "<font color=blue><strong>未生成</strong></font>";
+                                        }
+                                        <tr class="trColor">
+                                            <td>@Html.Raw(lcSendBillNo)</td>
+                                            <td>@sendItem.SendQuantity</td>
+                                            <td>@sendItem.SendDate</td>
+                                            <td>@sendItem.UserIDLastMod</td>
+                                            <td>@sendItem.Remark</td>
+                                        </tr>
+                                    }
+                                }
+                            </table>
+                        </td>
+                    </tr>
+                    index++;
+                    totalAllPrice += itemSendDto.TotalPrice;
+                }
+            }
+            <tr>
+                <td colspan="3" align="right"><b>合计：</b></td>
+                <td colspan="8" align="right">总金额:@totalAllPrice</td>
+                <td colspan="4" align="left"></td>
+            </tr>
+            <tr>
+                <td colspan="3" align="right"><b>说明：</b></td>
+                <td colspan="12" align="left">@Html.Raw(remark)</td>
+            </tr>
+        </table>
+     
+    </div>
+    <script src="~/Content/Scripts/Jquery/jquery-3.3.1.min.js"></script>
+@*<script src="~/Content/Plugins/printThis/printThis.js"></script>*@
+<script src="~/Content/Plugins/PrintPreView/print-preView.js"></script>
+
+    <script>
+        $(function () {
+            /*$("#printBtn").on('click',
+                function () {
+                    $("#printContent").printThis({
+                        debug: false, // show the iframe for debugging
+                        importCSS: true, // import page CSS
+                        importStyle: false, // import style tags
+                        printContainer: true, // grab outer container as well as the contents of the selector
+                        //loadCSS: "path/to/my.css",  // path to additional css file - use an array [] for multiple
+                        pageTitle: "", // add title to print page
+                        removeInline: false, // remove all inline styles from print elements
+                        printDelay: 333, // variable print delay
+                        header: null, // prefix to html
+                        footer: null, // postfix to html
+                        base: false, // preserve the BASE tag, or accept a string for the URL
+                        formValues: true, // preserve input/form values
+                        canvas: false, // copy canvas elements (experimental)
+                        //doctypeString: "...",       // enter a different doctype for older markup
+                        removeScripts: false, // remove script tags from print content
+                        copyTagClasses: false // copy classes from the html & body tag#1#
+                    });
+                });*/
+
+            $("#printBtn").printPreview({
+                printBody: "#printContent"
+            });
+        })
+    </script>
+</body>
+
+</html>

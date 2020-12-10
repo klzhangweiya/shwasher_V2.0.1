@@ -1,0 +1,32 @@
+namespace ShwasherSys.Migrations
+{
+    using System;
+    using System.Data.Entity.Migrations;
+    
+    public partial class updateVersion0108 : DbMigration
+    {
+        public override void Up()
+        {
+            CreateTable(
+                "dbo.OrderSendExceed",
+                c => new
+                    {
+                        Id = c.Int(nullable: false, identity: true),
+                        OrderItemId = c.Int(nullable: false),
+                        ExceedQuantity = c.Decimal(nullable: false, precision: 18, scale: 3, storeType: "numeric"),
+                        OperatorMan = c.String(maxLength: 30),
+                        LastModificationTime = c.DateTime(),
+                        LastModifierUserId = c.Long(),
+                        CreationTime = c.DateTime(nullable: false),
+                        CreatorUserId = c.Long(),
+                    })
+                .PrimaryKey(t => t.Id);
+            
+        }
+        
+        public override void Down()
+        {
+            DropTable("dbo.OrderSendExceed");
+        }
+    }
+}

@@ -1,0 +1,186 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSemiProductStoreInfoSemiOutStoreApplyMg; //The menu item will be active for this page.
+    ViewBag.Title = "半成品出库申请审核";
+    List<SelectListItem> semiApplyStatus = ViewBag.SemiApplyStatus;
+    List<SelectListItem> storeHouses = ViewBag.StoreHouses;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+        new SearchItem("productionOrderNo","排产单号"),
+        new SearchItem("semiProductName","半成品名称"),
+        new SearchItem("model","规格"),
+        new SearchItem("material","材质"),
+        new SearchItem("surfaceColor","表色"),
+        new SearchItem("partNo","零件号"),
+        new SearchItem("semiProductNo","半成品编码").SetSearchIcon("query_semiProduct_modal"),
+        new SearchItem("applyStatus","申请状态" )
+            .SetSearchItem(semiApplyStatus),
+        new SearchItem("isClose","是否关闭",FiledType.Bnull,ExpType.Equal).SetSearchItem(new List<SelectListItem>(){new SelectListItem(){Text = @"已关闭",Value = "true"},new SelectListItem(){Text = @"未关闭",Value = "false",Selected = true}}),
+    }, false);
+}
+<section style="display: none">
+    @Html.DropDownList("hide-ApplyStatus", semiApplyStatus)
+    @Html.DropDownList("hide-StoreHouses", storeHouses)
+</section>
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/SemiOutStore/GetViewAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                <th data-align="center" data-field="semiProductName">名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                <th data-align="center" data-field="quantity">申请出库数量(kg)</th>
+                <th data-align="center" data-field="actualQuantity">出库数量(kg)</th>
+                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatte">仓库</th>
+                <th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">申请状态</th>
+                <th data-align="center" data-field="createSourceType" data-formatter="CreateSourceTypeFormatter">申请类型</th>
+                <th data-align="center" data-field="applyOutDate">申请时间</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("半成品出库确认", ""))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                {
+                                    new InputViewModel("id", hide:true),
+                                    new InputViewModel("createSourceType", hide:true),
+                                    new InputViewModel("actualQuantity", displayName:"确认出库数量(kg)",@class:"number",other:"min=0.001"),
+                                };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+    @Html.Partial("Modals/Query/_SemiProduct", "KeyWords-7")
+
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+
+
+        $(function () {
+            $("#KeyWords-8").val("1").select2();//默认先未审核的
+            $("#KeyWords-9").val("false").select2();//默认先未关闭的
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].applyStatus === "5") {
+                        abp.message.warn("申请单已出库，不能进行修改！");
+                        return;
+                    }
+                    BtnUpdate({ readonly: "", data: { id: rows[0].id, actualQuantity: rows[0].quantity, createSourceType: rows[0].createSourceType} });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+
+            funs["btnRefuse"] = function() {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].applyStatus === "2" || rows[0].applyStatus === "5") {
+                        abp.message.warn("申请已审核通过,不能操作！");
+                        return;
+                    }
+                    var url = config.tableTool.find('.btn[data-type=btnDelete]').data('url');
+                    abp.message.confirm("确认拒绝出库申请？","拒绝申请",function() {
+                            SaveAjax({ url: url, data: { Id: rows[0].id }, isValidate: false });
+                        });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+        });
+
+        //function f_excuteApply(id, status) {
+        //    abp.message.confirm("确认取消申请?",
+        //        "取消申请",
+        //        function () {
+        //            abp.ajax({
+        //                url: window.appUrl + 'ProductionOrders/ChangeSemiOutStoreApplyStatus',
+        //                data: { Id: id, ProductionOrderStatus: status },
+        //                async: true,
+        //                type: "Post",
+        //                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+        //                isValidate: false,
+        //                dataType: "json",
+        //                success: function (res) {
+        //                    abp.message.success(abp.localization.localize("OpSuccess"));
+        //                    RefreshTable();
+        //                }
+        //            });
+        //        });
+        //}
+
+
+        function StoreHouseIdFormatte(v, r) {
+            var name = $("#hide-StoreHouses option[value='" + v + "']").text();
+            return '<span class="label label-primary">' + name + '</span>';
+        }
+
+        function ApplyStatusFormatter(v,r) {
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            var name = $("#hide-ApplyStatus option[value='" + v + "']").text();
+            if (v === "1") {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === "2") {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === "3") {
+                return '<span class="label label-warning">' + name + '</span>';
+            } else if (v === "4") {
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+        function CreateSourceTypeFormatter(v, r) {
+            if (v === 2) {
+                return '<span class="label label-info">手动平衡库存</span>';
+            }
+            return "";
+        }
+
+    </script>
+
+
+}

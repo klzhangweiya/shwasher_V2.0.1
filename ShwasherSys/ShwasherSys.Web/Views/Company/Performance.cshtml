@@ -1,0 +1,222 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@using ShwasherSys.Views.Shared.New.Table
+
+@{
+    ViewBag.Title = "员工绩效考核查询";
+    string activeMenu = PermissionNames.PagesCompanyEmployeePerformance; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<SelectListItem> workType = ViewBag.WorkType;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    { 
+        new SearchItem("employeeNo", "工号"),
+        new SearchItem("employeeName", "姓名"),
+        new SearchItem("productOrderNo","排产单号"),
+        new SearchItem("creationTime","记录时间",FiledType.D,ExpType.GreaterOrEqual),
+        new SearchItem("creationTime","至",FiledType.D,ExpType.LessOrEqual),
+        //new SearchItem("workType","工作类型",FiledType.I,ExpType.Equal).SetSearchItem(workType),
+    },"search-form",false);
+
+    var table = new TableViewModel( "/api/services/app/Performance/GetAll", activeMenu, searchForm)
+    .SetFields(new List<FieldItem>()
+    {
+        new FieldItem("performanceNo", "编号"),
+        new FieldItem("employeeNo", "工号"),
+        new FieldItem("employeeName", "姓名"),
+        //new FieldItem("relatedNo", "关联编号"),
+        new FieldItem("workType", "工作类型","WorkTypeFormatter"),
+        new FieldItem("performance", "绩效量化","PerformanceFormatter"),
+        new FieldItem("performanceDesc", "绩效描述"),
+        new FieldItem("productOrderNo", "排产单号"),
+        new FieldItem("creationTime", "记录时间"),
+    });
+}
+@section css{
+    <style>
+        .control-label {
+            text-align: right;
+        }
+    </style>
+}
+
+@Html.Partial("New/Table/_Table", table)
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content" style="min-width: 550px;">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("员工绩效汇总", ""))
+                    <div class="modal-body" style="padding: 5px;">
+                        <form id="form">
+                            <input id="employeeId" name="employeeId" type="hidden" value="">
+
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="employeeName">姓名</label>
+                                <div class="col-md-10">
+                                    <div class="input-group" style="width: 100%">
+                                        <input class="form-control" id="employeeName" name="employeeName" type="text" required="" placeholder="请输入员工姓名..." value="" style="" readonly="">
+                                        <div class="input-group-addon" onclick="ShowQueryModal('query_employee_modal','#modal');">
+                                            <i class="iconfont icon-search"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="workType">类型</label>
+                                <div class="col-md-10">
+                                    @Html.DropDownList("workType", workType, "请选择类型", new { style = "width:100%;" })
+                                </div>
+                            </div>
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="year">年份</label>
+                                <div class="col-md-10">
+                                    <select class="form-control" id="year" name="year" type="text" required="" placeholder="" value="" style="width:100%;">
+                                        <option value="">请选择年份</option>
+                                        @for (int i = DateTime.Now.Year; i >= 2019; i--)
+                                        {
+                                            <option value="@(i)">@(i)年</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label" for="month">月份</label>
+                                <div class="col-md-10">
+                                    <select class="form-control" id="month" name="month" type="text" placeholder="" value="" style="width:100%;">
+                                        <option value="">请选择月份</option>
+                                        @for (int j = 1; j <= 12; j++)
+                                        {
+                                            <option value="@(j)">@(j)月</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-9 control-label" for="">绩效：<span id="PerformanceTotal" style="color: red; padding: 5px; border: none; font-weight: 600; padding-left: 10px; padding-right: 20px;">0</span></label>
+                                <button class="col-md-3 btn btn-info btn-sm" style="" type="button" onclick="PerformanceTotalQuery()">查询</button>
+                            </div>
+                        </form>
+
+                    </div>
+                    @Html.Partial("Modals/_ModalFooter", "1")
+                </div>
+            </div>
+        </div>
+
+    </section>
+    
+    @Html.Partial("Modals/Query/_Employee","1:employeeName,employeeId")
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+		var $table;
+        $(function () {
+            $table = LoadTable();
+            var funs = window.iwbfuns || { none: function () { console.log("No type"); } };
+			funs["btnCreate"] = function() { BtnCreate({ data: { id: "" } }); }
+            funs["btnUpdate"] = function () { BtnUpdate({ disabled: "" }); };
+        
+            $("#Tool1").append(
+                '<div class="btn-group btn-group-sm"><button class="btn btn-default" type="button" style="border-radius: 4px;" onclick="QueryPerformance()"><i class="iconfont icon-search"></i>员工绩效</button></div>'+
+                '<div class="tool-radio"><input name="radioType" type="radio" id="radioType1" checked value=""/><label for="radioType1">全部</label></div>' +
+                '<div class="tool-radio"><input name="radioType" type="radio" id="radioType2" value="@(WorkTypeDefinition.Product)"/><label for="radioType2">生产绩效</label></div>'+
+                '<div class="tool-radio"><input name="radioType" type="radio" id="radioType3" value="@(WorkTypeDefinition.VerifyPackage)"/><label for="radioType3">包装核件绩效</label></div>'+
+                '<div class="tool-radio"><input name="radioType" type="radio" id="radioType4" value="@(WorkTypeDefinition.Package)"/><label for="radioType4">包装负责绩效</label></div>'+
+                '<div class="tool-radio"><input name="radioType" type="radio" id="radioType5" value="@(WorkTypeDefinition.MoldMg)"/><label for="radioType5">模具维护绩效</label></div>'+
+                '<div class="tool-radio"><input name="radioType" type="radio" id="radioType6" value="@(WorkTypeDefinition.DeviceMg)"/><label for="radioType6">设备维护绩效</label></div>');
+      
+            $(".tool-radio input[type='radio']").on('click', function (e) {
+                document.getElementById("SearchForm").reset();
+                GetSearchList();
+                RefreshTable();
+            });
+        });
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            var radioType = $('input[name="radioType"]:checked').val();
+            if (radioType) {
+                window._searchList.push({ KeyWords: radioType, KeyField: "workType", FieldType: "1", ExpType: "0" });
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    window._searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+    </script>
+    <script>
+          function QueryPerformance() {
+            var row = $('#table').bootstrapTable("getSelections")[0], data = {year:@(DateTime.Now.Year)};
+            if (row) {
+                data = $.extend({},data,row);
+            }
+            $('#PerformanceTotal').html("0");
+            OpenModal({
+                data: data,
+                modal: $('#modal')
+            });
+        }
+
+        function PerformanceTotalQuery() {
+            $.iwbAjax2({
+                isRefresh: false,
+                url: window.appUrl + 'Performance/PerformanceTotalQuery',
+                form:'form',
+                modal: null,
+                success: function (res) {
+                    if (res) {
+                        $('#PerformanceTotal').html(res);
+                    } else {
+                        $('#PerformanceTotal').html("未查询到数据");
+                    }
+                }
+            });
+        }
+    </script>
+
+    <!--格式化-->
+    <script  id="formatter-script" type="text/javascript">
+        function PerformanceFormatter(v,r) {
+            return v + ' ' + r.performanceUnit;
+        }
+        function WorkTypeFormatter(v) {
+            var name = $('#hid-workType option[value="' + v + '"]').text();
+            return '<span class="label label-info">' + name +'</span>';
+			
+		}
+  //      function TypeFormatter(v) {
+  //          var name = $('#hid-type option[value="' + v + '"]').text();
+		//	switch (v) {
+		//		case 0:
+  //                  return '<span class="label label-danger">' + name +'</span>';
+		//		default:
+		//			return '<span class="label label-info">' + name +'</span>';
+		//	}
+		//}
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+
+    @Html.DropDownList("hid-workType", workType)
+</section>

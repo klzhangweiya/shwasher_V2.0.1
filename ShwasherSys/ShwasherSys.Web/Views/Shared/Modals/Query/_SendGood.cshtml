@@ -1,0 +1,29 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "orderSendBillNo,orderNo",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems = new List<QueryItem>()
+{
+
+    new QueryItem("orderSendBillNo", "发货单号",true),
+    new QueryItem("orderNo", "订单号",true),
+    new QueryItem("productBatchNum", "批次号",true),
+    new QueryItem("productNo", "产品编号",true),
+    new QueryItem("productName", "产品名称"),
+    new QueryItem("customerId", "客户编号",true),
+    new QueryItem("customerName", "客户名称",true),
+    new QueryItem("sendQuantity", "发货数量"),
+    new QueryItem("sendDate", "发货日期",formatter:"DateFormatter"),
+    new QueryItem("orderItemId", "订单明细号"),
+};
+
+
+    QueryModalModel qmModel = new QueryModalModel("发货单明细", "/api/services/app/Query/QuerySendGood", queryItems, originFiled, targetFiled, modalId: "query_send_modal",modalWidth:1100);
+}
+@Html.Partial("Modals/Query/_QueryModal", qmModel)
+
+
+

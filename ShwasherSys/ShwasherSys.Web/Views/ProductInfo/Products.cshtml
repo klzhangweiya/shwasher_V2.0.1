@@ -1,0 +1,197 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductInfoProducts; //The menu item will be active for this page.
+    ViewBag.Title = "产品信息维护";
+    List<SelectListItem> MaterialSelect = ViewBag.MaterialSelect;
+    List<SelectListItem> SurfaceColorSelect = ViewBag.SurfaceColorSelect;
+    List<SelectListItem> RigiditySelect = ViewBag.RigiditySelect;
+    List<SelectListItem> standardIdSelect = ViewBag.StandardIdSelect;
+    List<SelectListItem> IsstandardSelect = new List<SelectListItem>()
+{
+        new SelectListItem()
+        {
+            Text = "是",
+            Value = "Y"
+        },
+        new SelectListItem()
+        {
+            Text = "否",
+            Value = "N"
+        }
+    };
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("id","产品编号"),
+        new SearchItem("productName","产品名称"),
+        new SearchItem("model","规格"),
+        new SearchItem("material","材质").SetSearchItem(MaterialSelect),
+        new SearchItem("rigidity","硬度").SetSearchItem(RigiditySelect),
+        new SearchItem("surfaceColor","表色")
+            .SetSearchItem(SurfaceColorSelect)
+    }, false);
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <input type="hidden" id="IsLock" value="N" />
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/Products/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post" 
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true" ></th>
+                <th data-align="center" data-field="id"  >产品编号</th>
+                <th data-align="center" data-field="productName" data-sortable="true">产品名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="defprice">价格</th>
+                <th data-align="center" data-field="tranUnitValue">公斤/千件</th>
+                <th data-align="center" data-field="productDesc">备注</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("成品"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                            {
+                                                                        new InputViewModel("id", displayName: "产品编号"),
+                                                                        new InputViewModel("productName", displayName: "产品名称"),
+                                                                        new InputViewModel("model", displayName: "规格").SetNotRequired(),
+                                                                        new InputViewModel("material", displayName: "材质").SetNotRequired(),
+                                                                        new InputViewModel("rigidity", displayName: "硬度").SetNotRequired(),
+                                                                        new InputViewModel("surfaceColor", displayName: "表色").SetNotRequired(),
+                                                                        new InputViewModel("tranUnitValue", displayName: "公斤/千件",@class:"number").SetNotRequired(),
+                                                                        new InputViewModel("defprice", displayName: "价格",@class:"number").SetNotRequired(),
+                                                                        new InputViewModel("standardId",InputTypes.List, displayName: "标准").SetSelectOptions(standardIdSelect),
+                                                                        new InputViewModel("isStandard",InputTypes.List,  displayName: "标准件").SetSelectOptions(IsstandardSelect),
+
+                                                                        new InputViewModel("productDesc",InputTypes.Textarea, "备注").SetNotRequired(),
+                                                                        new InputViewModel("sequence",hide:true, displayName:"排序"),
+
+                                                                    };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+
+        $(function () {
+            //show完毕前执行
+
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "id" }); };
+            funs["btnCreate"] = function () {
+                BtnCreate({ data: { standardId: 1, isStandard: "Y", sequence: 0 } });
+            }
+            funs["btnExport"] = function (url) {
+                //console.log(window._searchList)
+                SaveAjax({
+                    url: url,
+                    data: JSON.stringify(window._searchList),
+                    type: "Post",
+                    contentType: 'application/json',
+                    isValidate: false,
+                    success: function (res) {
+                        window.location.href = "/" + res;
+                    }
+                });
+            }
+
+        });
+        function initSearchForm() {
+            abp.ajax({
+                url: window.appUrl + 'Products/GetProductPropertyList?pcPropertyName=Material',
+                async: true,
+                //data: { pcPropertyName:"Material"},
+                type: "Post",
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function (res) {
+                    if (res && res.length > 0) {
+                        $("#KeyWords-4").empty();
+                        var option = '<option value="">请选择</option>';
+                        res.forEach(function (v, i) {
+                            option += '<option value=\"' + v.value + '\">' + v.text + '</option>';
+                        });
+                        console.log(option);
+                        $("#KeyWords-4").html(option);
+                    }
+                }
+            });
+            abp.ajax({
+                url: window.appUrl + 'Products/GetProductPropertyList?pcPropertyName=SurfaceColor',
+                async: true,
+                //data: { pcPropertyName: "SurfaceColor" },
+                type: "Post",
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function (res) {
+                    if (res && res.length > 0) {
+                        var option = '<option value="">请选择</option>';
+                        res.forEach(function (v, i) {
+                            option += '<option value=\"' + v.value + '\">' + v.text + '</option>';
+                        });
+                        $("#KeyWords-6").html(option);
+                    }
+                }
+            });
+            abp.ajax({
+                url: window.appUrl + 'Products/GetProductPropertyList?pcPropertyName=Rigidity',
+                async: true,
+                type: "Post",
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function (res) {
+                    if (res && res.length > 0) {
+                        var option = '<option value="">请选择</option>';
+                        res.forEach(function (v, i) {
+                            option += '<option value=\"' + v.value + '\">' + v.text + '</option>';
+                        });
+                        $("#KeyWords-5").html(option);
+                    }
+                }
+            });
+        }
+
+    </script>
+
+
+}

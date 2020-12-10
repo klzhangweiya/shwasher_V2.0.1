@@ -1,0 +1,133 @@
+﻿@using System.Web.Optimization
+@using Abp.Timing
+@using ShwasherSys
+@model ShwasherSys.Models.Account.LoginFormViewModel
+@{
+    Layout = null;
+    SetAntiForgeryCookie();
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="~/favicon.ico">
+    <title>@ViewBag.SystemName</title>
+    @Styles.Render("~/Bundles/Account/css")
+    <script type="text/javascript">
+        //This is used to get the application's root path from javascript. It's useful if you're running application in a virtual directory under IIS.
+        var abp = abp || {}; abp.appPath = '@ApplicationPath';
+    </script>
+</head>
+<body style="height: 100vh">
+    <div class="body img-bg">
+        <div class="login-box ">
+            <div class="left-box img-bg">
+                <div class="left-box-bg">
+                    <div class="login-logo-box img-bg">
+                        @*<img src="~/Content/images/login/logo.jpg" />*@
+                    </div>
+                    <div class="login-title-box">
+                        <span>@ViewBag.SystemName</span>
+                        @*<span><a href="http://v.youku.com/v_show/id_XMzk2OTY3NjEwNA==.html?spm=a2h4v.8841035.uerCenter.5!2~5~5!2~5~DL~DD~A" style="color:#fff;text-decoration:none;" target="_blank" >@ViewBag.SystemName</a></span>*@
+                    </div>
+                </div>
+            </div>
+            <div class="right-box">
+                <form class="form" id="LoginForm">
+                    <div class="input-group">
+                        <span class="input-icon" id="basic-addon1">
+                            <i class="iconfont icon-user-fill"></i>
+                        </span>
+                        <input type="text" class="form-input" id="UsernameOrEmailAddress" name="UsernameOrEmailAddress" placeholder="用户名" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group">
+                        <span class="input-icon" id="basic-addon2">
+                            <i class="iconfont icon-lock-fill"></i>
+                        </span>
+                        <input type="password" class="form-input" id="Password" name="Password" placeholder="密码" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="checkbox-box">
+                        <input class="filled-in" type="checkbox" id="Remember" name="Remember" onchange="SetCheckBoxVal(this)" value="false" autocomplete="off">
+                        <label for="Remember">记住密码</label>
+                    </div>
+                    <div class="input-group">
+                        <button class="form-button" id="LoginButton" disabled="disabled" type="submit">
+                            <span>登陆</span>
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="ReturnUrl" name="returnUrl" value="@Model.ReturnUrl" />
+                    <input type="hidden" id="ReturnUrlHash" name="returnUrlHash" value="" />
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    <script>
+        abp.localization.defaultSourceName = '@LocalizationSourceName';
+    </script>
+    @Scripts.Render("~/Bundles/Account/js")
+    @Scripts.Render("~/Bundles/Util")
+    <script>
+        $(function () {
+            var $loginForm = $('#LoginForm');
+            $loginForm.submit(function (e) {
+                e.preventDefault();
+                if (!$loginForm.valid()) {
+                    return;
+                }
+                SaveAjax({
+                    url: "@Url.Action("Login","Account")",
+                    data: {
+                        UsernameOrEmailAddress: $("#UsernameOrEmailAddress").val(),
+                        Password: $("#Password").val(),
+                        Remember: $("#Remember").val(),
+                        ReturnUrl: $("#ReturnUrl").val(),
+                        ReturnUrlHash: $("#ReturnUrlHash").val()
+                    },
+                    isAlert: false,
+                    isValidate:false,
+                    success: function() {
+                        abp.ui.setBusy();
+                    },
+                    error: function() {
+                        abp.ui.clearBusy();
+                    }
+                });
+            });
+            $loginForm.keydown(function(e) {
+                e = e || event;
+                var keycode = e.which || e.keyCode;
+                if (keycode===13) {
+                    $("#LoginButton").trigger("click");
+                }
+            });
+
+            $('input[name=returnUrlHash]').val(location.hash);
+
+            $('#LoginForm input:first-child').focus();
+            $('#LoginButton').prop("disabled",false);
+
+        });
+
+        function SetCheckBoxVal(that) {
+            var checked = $(that).prop("checked");
+            //console.log(checked);
+            if (checked) {
+                $(that).val("true");
+            } else {
+                $(that).val("false");
+            }
+            //console.log($(that).val());
+        }
+    </script>
+    @Html.PartialViewScripts()
+</body>
+</html>

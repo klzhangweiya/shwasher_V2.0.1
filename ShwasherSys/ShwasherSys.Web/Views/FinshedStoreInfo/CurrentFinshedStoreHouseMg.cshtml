@@ -1,0 +1,685 @@
+﻿@using Microsoft.Ajax.Utilities
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesFinshedStoreInfoCurrentFinshedStoreHouseMg; //The menu item will be active for this page.
+    ViewBag.Title = "成品库存实时信息";
+    //List<SelectListItem> semiApplyStatus = ViewBag.SemiApplyStatus;
+    List<SelectListItem> storeHouses = ViewBag.StoreHouses;
+    string AddEnterAuth = PermissionNames.PagesFinshedStoreInfoCurrentFinshedStoreHouseMgAddEnter;
+    string AddOutAuth = PermissionNames.PagesFinshedStoreInfoCurrentFinshedStoreHouseMgAddOut;
+    string updateStoreLocation = PermissionNames.PagesFinshedStoreInfoCurrentFinshedStoreHouseMgUpdateStoreLocation;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+
+new SearchItem("productionOrderNo","流转单编号"),
+    new SearchItem("productName","成品名称"),
+new SearchItem("model","规格"),
+    new SearchItem("material","材质"),
+new SearchItem("surfaceColor","表色"),
+    new SearchItem("rigidity","硬度"),
+new SearchItem("timeCreated","创建时间",FiledType.Dnull,ExpType.GreaterOrEqual),
+new SearchItem("timeCreated","至",FiledType.Dnull,ExpType.LessOrEqual),
+    new SearchItem("productNo","成品编号").SetSearchIcon("query_Product_modal"),
+new SearchItem("actualQuantity","异常数据",FiledType.Dec,ExpType.LessOrEqual).SetSearchItem(new List<SelectListItem> {new SelectListItem(){Text = "异常",Value = "0"}}),
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .tool-rc-group {
+            border: 1px solid #ba63d3;
+            float: left;
+            margin: 0 5px;
+            padding-right: 5px;
+            border-radius: 5px;
+        }
+
+        /*[type="checkbox"] + label::before, [type="checkbox"]:not(.filled-in) + label::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            z-index: 0;
+            border: 2px solid #008080;
+            border-radius: 1px;
+            margin-top: -10px;
+            transition: .2s;
+            margin: -10px 20px 0 0;
+            margin-left: -5px;
+        }*/
+        #showZoreCheckBox + label::before,#showZoreCheckBox:not(.filled-in) + label::after {
+            top: -10px;
+            left: -5px;
+            width: 18px;
+            height: 18px;
+        }
+        #showZoreCheckBox:checked + label::before {
+            top: -10px;
+            left: -8px;
+            width: 11px;
+            height: 15px;
+            border-top: 2px solid transparent;
+            border-left: 2px solid transparent;
+            border-right: 2px solid #26a69a;
+            border-bottom: 2px solid #26a69a;
+            transform: rotate(40deg);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform-origin: 100% 100%;
+            transform-origin: 100% 100%;
+        }
+    </style>
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/CurrentFinshedStoreHouse/GetViewAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">批次号</th>
+                <th data-align="center" data-field="productNo">成品编号</th>
+                <th data-align="center" data-field="quantity">当前库存数量(千件)</th>
+                <th data-align="center" data-field="freezeQuantity">被冻结数量</th>
+                <th data-align="center" data-field="actualQuantity" data-formatter="ActualQuantityFormatte">可用数量</th>
+                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatte">仓库</th>
+                @*<th data-align="center" data-field="storeLocationNo" data-formatter="StoreLocationFormatte">库位</th>*@
+                <th data-align="center" data-field="storeLocationNo">库位</th>
+                <th data-align="center" data-field="productName">产品名称</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="productDesc">成品备注</th>
+                <th data-align="center" data-field="timeCreated" data-formatter="TimeCreateFormatter">创建时间</th>
+                @*<th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">状态</th>*@
+                <th data-align="center" data-formatter="ActionFormatter"></th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+
+    <section>
+        <!--Main Modal-->
+
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("零库存入库操作", ""))
+                    @{
+
+                        var inputs = new List<InputViewModel>
+                                            {
+                                new InputViewModel("quantity", hide:true),
+                                new InputViewModel("freezeQuantity", hide:true),
+                                new InputViewModel("currentProductStoreHouseNo", hide:true),
+                                new InputViewModel("storeHouseId", hide:true),
+                                new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                                new InputViewModel("productNo", displayName: "成品编码").SetSearchIcon("query_Product_modal"),
+                            };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addEnterModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("入库平衡", ""))
+                    @{
+
+                        var inputs3 = new List<InputViewModel>
+                                            {
+                                //new InputViewModel("freezeQuantity", hide:true),
+                                //new InputViewModel("currentProductStoreHouseNo", hide:true),
+                                new InputViewModel("storeHouseId", hide:true),
+                                new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                                new InputViewModel("productNo", displayName: "成品编码").SetSearchIcon("query_Product_modal","addEnterModal"),
+                                //new InputViewModel("quantity", displayName:"入库数量",@class:"number",other:"min=0.001"),
+                                new InputViewModel("packageSpecification", displayName:"包装规格(千件/包)",@class:"number",other:"min=0.001"),
+                                new InputViewModel("packageCount", displayName:"包数",@class:"number",other:"min=0.001"),
+                                new InputViewModel("storeLocationNo",  hide:true)
+                                //new InputViewModel("storeLocationNo", displayName:"库位").SetSearchIcon("query_storeHouseLocation_modal","addEnterModal"),
+
+                            };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs3))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addOutModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("出库平衡", ""))
+                    @{
+
+                        var inputs4 = new List<InputViewModel>
+                                    {
+                        //new InputViewModel("freezeQuantity", hide:true),
+                        new InputViewModel("currentProductStoreHouseNo", hide:true),
+                        new InputViewModel("storeHouseId", hide:true),
+                        new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                        new InputViewModel("productNo", displayName: "成品编码"),
+                        new InputViewModel("quantity", displayName:"出库数量",@class:"number",other:"min=0.001"),
+
+                    };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs4))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="updateLocationModal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("变更库位", ""))
+                    @{
+
+                        var inputs5 = new List<InputViewModel>
+                                    {
+                        //new InputViewModel("freezeQuantity", hide:true),
+                        new InputViewModel("id", hide:true),
+
+                        new InputViewModel("storeHouseId",InputTypes.List, displayName:"仓库").SetSelectOptions(storeHouses),
+                        new InputViewModel("storeLocationNo", displayName:"库位编号").SetSearchIcon("query_storeHouseLocation_modal","#updateLocationModal"),
+                        new InputViewModel("changeQuantity", displayName:"变更数量",@class:"number",other:"min=0.001")
+
+
+                    };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs5))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="package-modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("申请包装", ""))
+                    @{
+                        var inputs2 = new List<InputViewModel>
+                                        {
+                            new InputViewModel("id", hide:true),
+                            new InputViewModel("packType", hide:true),
+                            new InputViewModel("currentProductStoreHouseNo", hide:true),
+                            new InputViewModel("productNo", hide:true),
+                            new InputViewModel("productionOrderNo",displayName:"流转单编号").SetDisabled(),
+                            new InputViewModel("surfaceColor", displayName: "表色"),
+                            new InputViewModel("model", displayName: "规格"),
+                            new InputViewModel("rigidity", displayName: "硬度"),
+                            new InputViewModel("material", displayName: "材质"),
+                            //new InputViewModel("kgWeight", displayName: "千件重"),
+                            new InputViewModel("quantity", displayName:"包装数量",@class:"number",other:"min=0.001"),
+                            new InputViewModel("remark",InputTypes.Textarea, "备注").SetNotRequired(),
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs2))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="disCustomer-modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("降级客户", ""))
+                    <table class="table table-striped disCustomer">
+                        <tbody>
+                            <tr>
+                                <th style="width: 150px">批次号</th>
+                                <th style="width: 150px">客户编号</th>
+                                <th style="width: 150px">客户名称</th>
+
+
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    @Html.Partial("Modals/_ModalFooter", "1")
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="replating-modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("改镀出库申请", ""))
+                    @{
+
+                        var inputs14 = new List<InputViewModel>
+                                {
+                            //new InputViewModel("freezeQuantity", hide:true),
+                            new InputViewModel("currentProductStoreHouseNo", hide:true),
+                            new InputViewModel("storeHouseId", hide:true),
+                            new InputViewModel("productionOrderNo", displayName: "流转单号"),
+                            new InputViewModel("productNo", displayName: "成品编码"),
+                            new InputViewModel("quantity", displayName:"出库数量",@class:"number",other:"min=0.001"),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs14))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+    @Html.Partial("Modals/Query/_Product", "KeyWords-9|productNo")
+    @Html.Partial("Modals/Query/_StoreHouseLocation", "storeLocationNo")
+
+}
+
+@section scripts
+{
+    @*<script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>*@
+    <script type="text/javascript">
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4,
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+
+        $(function() {
+            $("#tableTool").css("min-height", "40px");
+            //$("#KeyWords-7").datetimepicker(datePickerOpt);
+            //$("#KeyWords-8").datetimepicker(datePickerOpt);
+            LoadTable();
+
+            funs["btnPackage"] = function(url) {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+                    data.quantity = rows[0].actualQuantity;
+                    data.packType = 2;
+                    BtnUpdate({
+                        table: config.table,
+                        url: url,
+                        modal: $('#package-modal'),
+                        disabled: "productionOrderNo,model,surfaceColor,rigidity,material,kgWeight",
+                        data: data,
+                        success: function(res) {
+                            $('#package-modal').modal("hide");
+                            RefreshTable(config.table);
+                            DownLoadFilePath(res);
+                        }
+                    });
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+            funs["btnAddVirtualStore"] = function(url) {
+                SaveAjax({
+                    url: window.appUrl + "CurrentFinshedStoreHouse/GetVirtualProOrderNo",
+                    isAlert: false,
+                    isValidate: false,
+                    success: function(res) {
+                        OpenModal(url,
+                            {
+                                data: {
+                                    quantity: 0,
+                                    freezeQuantity: 0,
+                                    currentProductStoreHouseNo: guid(),
+                                    storeHouseId: 1
+                                },
+                                readonly: "productionOrderNo"
+                            });
+                        $("#productionOrderNo").val(res);
+                    }
+                });
+
+            }
+
+            funs["btnUpdateStoreLocation"] = function (url) {
+
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+                    queryParams.storeHouseId = data.storeHouseId;
+                    $("#updateLocationModal #storeHouseId").off('change.22');
+                    OpenModal(url, { url: url, data: data, disabled:"storeLocationNo", modal: $("#updateLocationModal") });
+                    $("#updateLocationModal #storeHouseId").on('change.22', function () {
+                        queryParams.storeHouseId = $(this).val();
+                        $("#updateLocationModal #storeLocationNo").val('');
+                    });
+                } else {
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+                }
+            }
+
+            funs["btnExportExcel"] = function(url) {
+                BtnExportExcel(url);
+            }
+            funs["btnAddEnter"] = function(url) {
+                BtnAddEnter();
+            }
+            funs["btnRePlating"] = function(url) {
+                BtnRePlating(url);
+            }
+            $("#Tool1").append(
+                '<div class="tool-rc-group">'+
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType1" checked value=""/><label for="radioType1">全部</label></div>' +
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType2" value="1"/><label for="radioType2">降级</label></div>'+
+                '<div  class="tool-radio"><input name="radioType" type="radio" id="radioType3" value="2"/><label for="radioType3">非降级</label></div></div>' +
+                '<div class="tool-rc-group">'+
+                '<div  class="tool-radio" style="padding:5px;" ><input name="showZoreCheckBox" type="checkbox" id="showZoreCheckBox"  value=""/><label for="showZoreCheckBox" style="color:white;padding-left: 15px; font-size: 1.5rem;">显示0库存</label></div>' +
+               '</div>');
+
+            $(".tool-radio input[type='radio'],.tool-radio input[type='checkbox']").on('click', function () {
+                document.getElementById("SearchForm").reset();
+                GetSearchList();
+
+                RefreshTable();
+            });
+
+        });
+        function BtnRePlating(url) {
+            var rows = config.table.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                var data = rows[0];
+                data.quantity = rows[0].actualQuantity;
+                OpenModal(url,
+                    {
+                        modal:$('#replating-modal'),
+                        data: data,
+                        readonly: "productionOrderNo,productNo",
+                        success: function() { $("#replating-modal").modal("hide"); }
+                    });
+            }else {
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+        }
+        function BtnAddEnter(productionOrderNo,
+            productNo,
+            quantity,
+            packageSpecification,
+            packageCount,
+            storeLocationNo) {
+
+            if (productionOrderNo&&(!storeLocationNo || storeLocationNo === 'null')){
+                abp.message.warn('请补全库位信息！');
+                return;
+            }
+            OpenModal(window.appUrl + "CurrentFinshedStoreHouse/AddEnter",
+                {
+                    data: { quantity: 0, storeHouseId: 1 },
+                    readonly: "productionOrderNo,productNo,storeLocationNo",
+                    modal: $("#addEnterModal"),
+                    success: function() { $("#addEnterModal").modal("hide"); }
+                });
+            if (!productionOrderNo) {
+                SaveAjax({
+                    url: window.appUrl + "CurrentFinshedStoreHouse/GetVirtualBlanceProOrderNo",
+                    isAlert: false,
+                    isValidate: false,
+                    success: function(res) {
+                        $("#addEnterModal #productionOrderNo").val(res);
+                    }
+                });
+                $("#addEnterModal").find("#productNo").siblings(".input-group-addon").css("display", "table-cell");
+            } else {
+                $("#addEnterModal #productionOrderNo").val(productionOrderNo);
+                $("#addEnterModal").find("#productNo").siblings(".input-group-addon").css("display", "none");
+            }
+
+            $("#addEnterModal #productNo").val(productNo);
+            $("#addEnterModal #quantity").val(quantity);
+            $("#addEnterModal #packageSpecification").val("");
+            $("#addEnterModal #packageCount").val("");
+            if (!storeLocationNo) {
+                storeLocationNo = '';
+            }
+            $("#addEnterModal #storeLocationNo").val(storeLocationNo);
+        }
+
+        function BtnAddOut(currentProductStoreHouseNo, productionOrderNo, productNo, quantity, storeLocationNo) {
+            if (!storeLocationNo || storeLocationNo === 'null'){
+                abp.message.warn('请补全库位信息！');
+                return;
+            }
+            OpenModal(window.appUrl + "CurrentFinshedStoreHouse/AddOut",
+                {
+                    data: {
+                        quantity: quantity,
+                        storeHouseId: 1,
+                        currentProductStoreHouseNo: currentProductStoreHouseNo,
+                        productionOrderNo: productionOrderNo,
+                        productNo: productNo
+                    },
+                    readonly: "productionOrderNo,productNo",
+                    modal: $("#addOutModal"),
+                    success: function() { $("#addOutModal").modal("hide"); }
+                });
+        }
+
+        function BtnExportExcel(url) {
+            GetSearchList();
+            console.log(_searchList);
+            abp.ajax({
+                url: url,
+                async: true,
+                data: JSON.stringify(_searchList),
+                type: "Post",
+                contentType: 'application/json',
+                isValidate: false,
+                dataType: "json",
+                success: function(res) {
+                    window.location.href = "/" + res;
+                }
+            });
+
+        }
+
+        function StoreHouseIdFormatte(v, r) {
+            if (v === 1) {
+                return '<span class="label label-primary">成品仓库</span>';
+            } else if (v === 2) {
+                return '<span class="label label-info">半成品仓库</span>';
+            }
+            return v;
+        }
+        function TimeCreateFormatter(v, r,i,f) {
+            var value = DateDiff(v);
+            v = DateFormatter(v, r, i, f);
+            if (value > 180) {
+                return '<span  style="color:red">'+v+'</span>';
+            } else if (value > 90) {
+                return '<span style="color:#f39c12">'+v+'</span>';
+            } else if (value > 30) {
+                return '<span class="text-success">'+v+'</span>';
+            }
+            return '<span class="text-default">'+v+'</span>';
+        }
+        function ActualQuantityFormatte(v, r) {
+            var str = '<span class="label label-warning">' + v + '</span>';
+            if (v > 0) {
+                str = '<span class="label label-info">' + v + '</span>';
+            } else if (v < 0) {
+                str = '<span class="label label-danger">' + v + '</span>';
+            }
+            return str;
+        }
+        function ShowNotDisCustomer(orderNo) {
+            var $tbody = $(".table.table-striped.disCustomer > tbody");
+            $tbody.find("tr:not(:first)").remove();
+            SaveAjax({
+                url: window.appUrl + "Common/GetDisCustomerInfo",
+                data: { id: orderNo },
+                isAlert: false,
+                isValidate: false,
+                success: function(res) {
+                    if (res && res.length > 0) {
+                        res.forEach(function(r) {
+                            var sTr = '<tr>';
+                            sTr += '<td class="currentProductStoreHouseNo" >' +
+                                r.productionOrderNo +
+                                '</td>';
+                            sTr += '<td class="customerId">' + r.customerId + '</td>';
+                            sTr += '<td class="customerName">' + r.customerName + '</td>';
+                            sTr += '</tr>';
+                            $tbody.append(sTr);
+
+                        });
+                    }
+                    $("#disCustomer-modal").modal('show');
+                }
+            });
+        }
+        function ActionFormatter(v, r) {
+            var str = '';
+            if (abp.auth.isGranted('@AddEnterAuth')) {
+                str = '<span class="table-action" onclick="BtnAddEnter(\'' +
+                    r.productionOrderNo +
+                    '\',\'' +
+                    r.productNo +
+                    '\',\'' +
+                    r.quantity +
+                    '\',\'' +
+                    r.packageSpecification +
+                    '\',\'' +
+                    r.packageCount +
+                    '\',\'' +
+                    r.storeLocationNo +
+                    '\')"><i class="iconfont icon-right"></i>入库平衡</span>';
+            }
+            if (abp.auth.isGranted('@AddOutAuth')) {
+                str += '<span class="table-action" onclick="BtnAddOut(\'' +
+                    r.currentProductStoreHouseNo +
+                    '\',\'' +
+                    r.productionOrderNo +
+                    '\',\'' +
+                    r.productNo +
+                    '\',\'' +
+                    r.quantity +
+                    '\',\'' +
+                    r.storeLocationNo +
+                    '\')"><i class="iconfont icon-right"></i>出库平衡</span>';
+            }
+            str += '<span class="table-action" onclick="ShowNotDisCustomer(\'' +
+                r.productionOrderNo +
+                '\')"><i class="iconfont icon-right"></i>降级的客户</span>';
+            return str;
+        }
+
+        function StoreLocationFormatte(v, r) {
+            var str = '';
+            if (v == null || v === '' || v === 'null') {
+                v = "----";
+                r.storeLocationNo = '';
+            }
+            if (abp.auth.isGranted('@updateStoreLocation')) {
+                str += '<span class="table-action" onclick="BtnUpdateStoreLocation(\'' +
+                    r.id +
+                    '\',\'' +
+                    v +
+                    '\')">' +
+                    v +
+                    '</span>';
+            } else {
+                str = v;
+            }
+            return str;
+        }
+
+        function BtnUpdateStoreLocation(id, storeLocationNo) {
+            if (storeLocationNo === '----') {
+                storeLocationNo = '';
+
+            }
+            OpenModal(window.appUrl + "CurrentFinshedStoreHouse/UpdateStoreLocation",
+                {
+                    data: { id: id, storeLocationNo: storeLocationNo },
+                    readonly: "storeLocationNo",
+                    modal: $("#updateLocationModal"),
+                    success: function() {
+                        $("#updateLocationModal").modal("hide");
+                        RefreshTable(config.table);
+                    }
+                });
+
+        }
+
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            var radioType = $('input[name="radioType"]:checked').val();
+            if (radioType) {
+                window._searchList.push({ KeyWords: radioType, KeyField: "isUseDowngrade", FieldType: "1", ExpType: "0" });
+            }
+            var isShowZoreCheckBox = $("#showZoreCheckBox").is(':checked')?"1":"0";
+            window._searchList.push({ KeyWords: isShowZoreCheckBox, KeyField: "showZoreCheckBox", FieldType: "0", ExpType: "0" });
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    if (keyField === 'timeCreated' && expType === "5") {
+                        var endDate = new Date(keyWords);
+                        keyWords = new Date(endDate.getTime() + 24 * 60 * 60 * 1000).Format("yyyy-MM-dd");
+                    }
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+    </script>
+    @*<script>
+            function DownLoadFile(filepath) {
+                var downLoadId = "downLoad";
+                var nameStart = filepath.lastIndexOf("\/");
+                var downName = filepath.substr(nameStart + 1, filepath.length);
+                $(document.body).append('<a id="' + downLoadId + '" download="' + downName + '" href="' + filepath + '"  ><span></span></a>');
+                $("#" + downLoadId + " span").click();
+                $("#" + downLoadId).remove();
+            }
+        </script>*@
+
+}

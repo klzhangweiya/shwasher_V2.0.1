@@ -1,0 +1,297 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models
+@using ShwasherSys.Models.Modal
+
+@*@model WisdomRehearsal.Roles.Dto.RoleDto*@
+@{
+
+    ViewBag.Title = "系统功能菜单";
+    ViewBag.ActiveMenu = PermissionNames.PagesSystemSysFunction; //The menu item will be active for this page.
+    CurrentUserViewModel currentUser = ViewBag.CurrentUser;
+}
+<link href="~/Content/Plugins/bootstrap-table/extensions/treegrid/jquery.treegrid.min.css" rel="stylesheet" />
+<div class="table-box mr-4">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, SelectList = new { } })
+    <table id="table"
+           data-url="/api/services/app/Functions/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true"
+           data-page-size="1000"
+           data-page-number="1"
+           data-page-list="[1000]"
+           data-buttons-class="primary btn-sm"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-row-attributes="RowAttributes"
+           data-click-to-select="false"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="" data-field="functionName">菜单名称</th>
+                <th data-align="center" data-field="functionType" data-formatter="TypeFormatter">菜单类型</th>
+                @*<th data-align="center" data-field="controller">控制器</th>
+                <th data-align="center" data-field="action">方法</th>*@
+                <th data-align="center" data-field="url">URL</th>
+                <th data-align="center" data-field="icon" data-formatter="IconFormatter">图标</th>
+                <th data-align="center" data-field="sort">排序序号</th>
+                <th data-align="center" data-formatter="ActionsFormatter">操作菜单</th>
+
+                @*<th data-align="center" data-field="LastModificationTime">@L("LastModificationTime")</th>
+                    <th data-align="center" data-field="LastModifierUserId">@L("LastModifierUserId")</th>*@
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal {
+    <!-- Modal -->
+    <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+        <div class="modal-dialog  modal-dialog-centered" role="document">
+            <div class="modal-content">
+                @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("功能菜单"))
+                @{
+                    var inputs = new List<InputViewModel>
+                    {
+                        new InputViewModel("id", hide: true),
+                        new InputViewModel("depth", hide: true),
+                        new InputViewModel("permissionName", hide: true),
+                        new InputViewModel("functionPath", hide: true),
+                        new InputViewModel("parentNo",InputTypes.List,"父菜单"),
+                        new InputViewModel("functionNo",displayName:"菜单编号"),
+                        new InputViewModel("functionName",displayName:"菜单名称"),
+                        new InputViewModel("sort",displayName:"排序"),
+                        new InputViewModel("icon",displayName:"菜单图标").SetNotRequired(),
+                    };
+
+                    if (currentUser.UserName.ToUpper() == "ADMIN"|| currentUser.UserName.ToUpper() == "SYSTEM")
+                    {
+                        inputs.AddRange(new List<InputViewModel>
+                        {
+                            new InputViewModel("functionType",InputTypes.List,"菜单类型").SetSelectOptions((List<SelectListItem>)ViewBag.FunctionType).SetNotRequired(),
+                            new InputViewModel("controller",displayName:"控制器").SetNotRequired(),
+                            new InputViewModel("action",displayName:"方法").SetNotRequired(),
+                            new InputViewModel("url",displayName:"URL").SetNotRequired(),
+                            new InputViewModel("class",displayName:"Class").SetNotRequired(),
+                            new InputViewModel("script",displayName:"Script").SetNotRequired(),
+                        });
+                    }
+                    //var specials = new List<SpecialInputModel>();
+                }
+                @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                @Html.Partial("Modals/_ModalFooter", "0")
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-table/extensions/treegrid/bootstrap-table-treegrid.js"></script>
+    <script src="~/Content/Plugins/bootstrap-table/extensions/treegrid/jquery.treegrid.min.js"></script>
+    <script type="text/javascript">
+		$("#Tool1").css("display", "none");
+		var $table = $("#table");
+		var actions = [];
+		$(function() {
+			LoadTable();
+            $("#Tool1").find(".btn[data-type]").each(function (i, e) {
+                var btnType = $(e).data("type").replace("_", "");
+                if (btnType !== "btnRefresh") {
+                    var btnUrl = $(e).data("url") || "";
+                    var btnName = $(e).text();
+                    var btnClass = $(e).attr("class");
+                    var btnIcon = $(e).find("i").attr("class");
+                    actions.push({ type: btnType, name: btnName, "class": btnClass, icon: btnIcon, url: btnUrl });
+                    $(e).remove();
+                } else {
+                    $(e).prop("disabled", false).attr("onclick", "Refresh('" + $(e).data("url")+"')");
+                }
+            });
+		    $("#Tool1").css("display", "block");
+		});
+		function btnCreate(id,$this){
+			console.log("Add", id);
+			var row;
+			if (typeof id === "string" && id !== "") {
+				row = $table.bootstrapTable("getRowByUniqueId", id);
+			}
+			if (row) {
+				abp.ajax({
+					contentType: 'application/x-www-form-urlencoded',
+                    url: "/api/services/app/Functions/GetFunctionSelectStr",
+					success: function (res) {
+						$("#parentNo").empty().html(res);
+					    var url = $($this).data("url") + "";
+					    OpenModal({
+					        modaltitle: window.opCreate,
+                            data: { parentNo: row.functionNo, depth: row.depth + 1, functionPath: row.functionPath, permissionName: row.permissionName },
+					        url: url,
+					        disabled: "parentNo"
+					    });
+					}
+				});
+			} else {
+				abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+			}
+		}
+		function btnUpdate(id, $this) {
+			console.log("Update", id);
+			var row;
+			if (typeof id === "string" && id !== "") {
+				row = $table.bootstrapTable("getRowByUniqueId", id);
+			}
+			if (row) {
+				abp.ajax({
+					contentType: 'application/x-www-form-urlencoded',
+                    url: "/api/services/app/Functions/GetFunctionSelectStr",
+					success: function (res) {
+						$("#parentNo").empty().html(res);
+						var url = $($this).data("url") + "";
+						OpenModal({ modaltitle: window.opUpdate, data: row, url: url, disabled: "parentNo,functionNo" });
+						//var da = formUtil.Serialize($("#form"));
+						//console.log(da);
+					}
+				});
+			} else {
+				abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+			}
+		}
+		function btnDelete(id,$this) {
+			console.log("Delete", id);
+			var row;
+			if (typeof id === "string" && id !== "") {
+				row = $table.bootstrapTable("getRowByUniqueId", id);
+			}
+			if (row) {
+				var url = $($this).data("url") + "";
+				abp.message.confirm(abp.localization.localize("DeleteConfirmMsg"), abp.localization.localize("DeleteConfirmTitle"),function() {
+					SaveAjax({ url: url, data: { Id: row.id}, isValidate: false });
+				});
+			} else {
+				abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+			}
+		}
+		function btnMoveUp(id,$this) {
+			var row;
+			if (typeof id === "string" && id !== "") {
+				row = $table.bootstrapTable("getRowByUniqueId", id);
+			}
+            console.log("MoveUp", id);
+			if (row) {
+				var url = $($this).data("url") + "";
+				var tr = $($this).closest("tr");
+				var funId = tr.data("uniqueid"), parentNo = tr.data("parent");
+				var prevs = tr.prevAll().filter("[data-parent='" + parentNo + "']");
+				if (prevs.length > 0) {
+					var prevId = prevs.first().data("uniqueid");
+					//console.log(prevId);
+					SaveAjax({ url: url, data: { Id: funId, PrevId: prevId}, isValidate: false });
+				} else {
+					abp.message.warn(abp.localization.localize("RecordAtTop"));
+				}
+			} else {
+				abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+			}
+		}
+		function btnMoveDown(id,$this) {
+			var row;
+			if (typeof id === "string" && id !== "") {
+				row = $table.bootstrapTable("getRowByUniqueId", id);
+			}
+            console.log("MoveDown", id);
+			if (row) {
+				var url = $($this).data("url") + "";
+				var tr = $($this).closest("tr");
+				var funId = $(tr).data("uniqueid"), parentNo = $(tr).data("parent");
+				var nexts = tr.nextAll().filter("[data-parent='" + parentNo + "']");
+				if (nexts.length > 0) {
+					var nextId = nexts.first().data("uniqueid");
+					//console.log(nextId);
+					SaveAjax({ url: url, data: { Id: funId, NextId: nextId}, isValidate: false });
+				} else {
+					abp.message.warn(abp.localization.localize("RecordAtButtom"));
+				}
+			} else {
+				abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+			}
+		}
+		function Refresh(url) {
+            console.log("Refresh");
+		    SaveAjax({ url: url, isValidate: false });
+		}
+
+		function LoadTable() {
+			$.extend($.fn.bootstrapTable.defaults, $.fn.bootstrapTable.locales[window.lang]);
+			$table.bootstrapTable({
+				idField: 'functionNo',
+				treeShowField: 'functionName',
+				parentIdField: 'parentNo',
+				onLoadSuccess: OnLoadSuccess,
+				onAll: OnAll
+				//onClickRow: OnClickRow,
+				//queryParams: QueryParams
+				// bootstrap-table-treetreegrid.js 插件配置
+			});
+		}
+		function OnLoadSuccess() {
+		    $table.treegrid({
+		        //initialState: 'collapsed',
+		        treeColumn: 1,
+		        expanderExpandedClass: 'iconfont icon-folder-open-fill',
+		        expanderCollapsedClass: 'iconfont icon-folder-fill',
+		        onChange: function() {
+		            //$table.bootstrapTable('resetWidth');
+		        }
+		    });
+		    $(".level-2").closest("tr").treegrid("collapse");
+		    $("td span.treegrid-expander:not(.iconfont)").addClass("iconfont icon-folder");
+		    abp.ui.clearBusy();
+		    $("td").off("dblclick").on("dblclick",function() { $($(this).closest("tr")).treegrid("toggle"); });
+		}
+
+		//格式化图标
+		function IconFormatter(v) {
+			if (v !== "") {
+				return '<span class="iconfont ' + v + '"></span>';
+			}
+
+			return v;
+		}
+		//操作按钮
+		function ActionsFormatter(v,r) {
+            var str = '<div class="btn-group btn-group-xs">';
+
+			for (var i = 0; i < actions.length; i++) {
+				str += '<span class="' + actions[i]["class"] + '" data-url="' + actions[i]["url"] + '" onclick="' + actions[i]["type"] + '(\'' + r.id + '\',this)"><i class="' + actions[i]["icon"] + '"></i>' + actions[i]["name"]+' </span>';
+			}
+			str += '</div>';
+			return str;
+		}
+		//自定义属性
+		function RowAttributes(r) {
+			return {
+				//"data-level": r._level,
+				"data-function": r.functionNo,
+				"data-parent": r.parentNo
+			};
+		}
+		// 格式化类型
+		function TypeFormatter(v,r) {
+			switch (v) {
+				case 0:
+                    return '<span class="label label-info">' + r.functionTypeName +'</span>';
+				case 1:
+                    return '<span class="label label-danger">' + r.functionTypeName +'</span>';
+				case 2:
+                    return '<span class="label label-success">' + r.functionTypeName +'</span>';
+				default:
+					return v;
+			}
+		}
+    </script>
+}

@@ -1,0 +1,379 @@
+﻿@using System.Web.UI.HtmlControls
+@using ShwasherSys
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesInvoiceInfoInvoiceMg; //The menu item will be active for this page.
+    ViewBag.Title = "客户发票维护";
+    List<SelectListItem> invoiceState = ViewBag.InvoiceState, invoiceType = new List<SelectListItem>()
+{
+        new SelectListItem(){Text = @"红冲发票--退款",Value = InvoiceTypeDefinition.RedReturn+""},
+        new SelectListItem(){Text = @"红冲发票--少收",Value = InvoiceTypeDefinition.RedLess+""},
+        new SelectListItem(){Text = @"红冲发票--多收",Value = InvoiceTypeDefinition.RedOver+""},
+    },invoiceType2= new List<SelectListItem>(){new SelectListItem(){Text = @"正常发票",Value = InvoiceTypeDefinition.Normal+""}};
+    invoiceType2.AddRange(invoiceType);
+    
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+new SearchItem("id", "发票号"),
+new SearchItem("creatDate", "开发票日期",FiledType.Dnull,ExpType.GreaterOrEqual),
+new SearchItem("creatDate", "到",FiledType.Dnull,ExpType.LessOrEqual),
+new SearchItem("customerId", "客户编号",expType:ExpType.Contains).SetSearchIcon("query_customer_modal")
+
+}, false);
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/OrderStickBill/GetViewAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true"
+           data-show-jumpto="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="stickNum">发票号</th>
+                <th data-align="center" data-field="customerId">客户编号</th>
+                <th data-align="center" data-field="customerName">客户名称</th>
+                <th data-align="center" data-field="creatDate">开票日期</th>
+                <th data-align="center" data-field="stickMan">开票人</th>
+                <th data-align="center" data-field="invoiceType" data-formatter="InvoiceTypeFormatter">发票类型</th>
+                <th data-align="center" data-field="totalPrice">金额(含税)</th>
+                <th data-align="center" data-field="afterTaxTotalPrice">金额(不含税)</th>
+                <th data-align="center" data-field="amount" data-formatter="AmountFormatter">确认金额</th>
+                <th data-align="center" data-field="invoiceState" data-formatter="InvoiceStateFormatter">是否收款</th>
+                <th data-align="center" data-field="currencyId">货币</th>
+                <th data-align="center" data-field="description">备注</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+@section modal
+{
+
+    <section>
+        <div class="modal fade" id="modal_red" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("红冲发票"))
+                    @{
+                        var inputs3 = new List<InputViewModel>
+                                                {
+                            new InputViewModel("customerId",hide:true),
+                            //new InputViewModel("id",hide:true),
+                            new InputViewModel("id",displayName:"新发票号"),
+                            new InputViewModel("originalStickNum",displayName:"原发票号").SetSearchIcon("query_invoice_modal","modal_red"),
+                            new InputViewModel("customerName",displayName:"客户名称"),
+                            new InputViewModel("stickMan",displayName:"开票人").SetNotRequired(),
+                            new InputViewModel("creatDate",displayName:"开票日期",@class:"iwb-date"),
+                            new InputViewModel("invoiceType",InputTypes.List,"发票类型",other:"onchange=InvoiceTypeChange()").SetSelectOptions(invoiceType),
+                            new InputViewModel("orderNo",displayName:"订单明细号").SetNotRequired(),
+                            new InputViewModel("returnOrderNo",displayName:"退货单号",@class:"type1"),
+                            new InputViewModel("amount",displayName:"实际金额",@class:"number",other:"min=0.001"),
+                            new InputViewModel("description",InputTypes.Textarea,displayName:"发票详情").SetNotRequired(),
+
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs3))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("发票号"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                {
+                            new InputViewModel("id",hide:true),
+                            new InputViewModel("stickNum",displayName:"新发票号"),
+                            //new InputViewModel("invoiceState",InputTypes.List,displayName:"是否收款").SetSelectOptions(invoiceState),
+                            //new InputViewModel("amount",displayName:"实际收款金额",@class:"number").SetNotRequired(),
+                            new InputViewModel("customerId",hide:true),
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="modal fade" id="modal2" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document" style="width: 600px">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("发票号"))
+                    @{
+                        var inputs2 = new List<InputViewModel>
+                                {
+                            new InputViewModel("id",hide:true),
+                            new InputViewModel("invoiceState",InputTypes.List,displayName:"是否收款").SetSelectOptions(invoiceState),
+                            new InputViewModel("amount",displayName:"实际收(退)金额",@class:"number",other:"min=0.001").SetNotRequired(),
+                            new InputViewModel("customerId",hide:true),
+                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs2))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        @Html.Partial("Modals/Query/_Invoice", "originalStickNum,customerId,customerName,amount")
+        @Html.Partial("Modals/Query/_Customer", "customerId|KeyWords-4,customerName")
+    </section>
+
+    @*@Html.Partial("Modals/Query/_Employee", "handleUser,handleUserName")*@
+}
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script>
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function() {
+            //$("#KeyWords-2").datetimepicker(datePickerOpt);
+            //$("#KeyWords-3").datetimepicker(datePickerOpt);
+            var nowDate = new Date();
+            var preDate = new Date(nowDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+            $("#KeyWords-2").val(preDate.Format("yyyy-MM-dd"));
+            $("#KeyWords-3").val(nowDate.Format("yyyy-MM-dd"));
+            LoadTable();
+            funs["btnDelete"] = function(url) {
+                BtnDelete(url);
+            }
+            /*$.extend(funs, { btnShow: function(url) {
+                BtnShow(url);
+            }
+            });*/
+            funs["btnCreateRed"] = function (url) {
+                BtnCreate(url,
+                    {
+                        disabled:"originalStickNum,customerName",
+                        data: {invoiceType:1},
+                        modal: $("#modal_red")
+                });
+            }
+            funs["btnUpdate"] = function (url) {
+                BtnUpdate(url);
+            }
+            funs["btnShow"] = function(url) {
+                BtnShow(url);
+            }
+
+            funs["btnExportInvoices"] = function(url) {
+                GetSearchList();
+                $.iwbAjax4({
+                    url: url,
+                    data:{
+                        MaxResultCount: 1,
+                        SkipCount: 1,
+                        Sorting: '', //排序列名
+                        sortOrder: '', //排位命令（desc，asc）
+                        SearchList: _searchList
+                    },
+                    success: function(res) {
+                        window.location.href = res;
+                    }
+                });
+            }
+
+            funs["btnUpdateState"] = function (url) {
+                var rows = $("#table").bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    var data = rows[0];
+                    if (data.invoiceType== @(InvoiceTypeDefinition.RedOver) || data.invoiceType=== @(InvoiceTypeDefinition.RedReturn)) {
+                        data.amount = data.amount < 0 ? 0 - data.amount : data.amount;
+                    }
+                    OpenModal(url, { modal: $("#modal2"),modaltitle:"修改发票状态金额",data:data });
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+
+            }
+        });
+        function BtnShow(url) {
+            var rows = config.table.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                let r = rows[0];
+                if (r.invoiceType !== 0) {
+                    abp.message.warn("非正常发票,不可查看详情！");
+                    return;
+                }
+                window.open("@Url.Action("InvoiceDetail")/" + rows[0].id, "_blank");
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+
+        }
+        function BtnDelete(url) {
+            var rows = config.table.bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                abp.message.confirm("确认撤销此发票？", "撤销发票",function() {
+                    SaveAjax({ url: url, data: { Id: rows[0].id}, isValidate: false });
+                });
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+        }
+
+        function InvoiceTypeChange() {
+            if ($("#invoiceType").val() === "1") {
+                $('.type1').addClass('required').closest('.form-group-sm').show();
+            } else {
+                $('.type1').removeClass('required').closest('.form-group-sm').hide();
+            }
+        }
+    </script>
+    <script>
+        // 对Date的扩展，将 Date 转化为指定格式的String
+        // 月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符，
+        // 年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字)
+        // 例子：
+        // (new Date()).Format("yyyy-MM-dd hh:mm:ss.S") ==> 2006-07-02 08:09:04.423
+        // (new Date()).Format("yyyy-M-d h:m:s.S")      ==> 2006-7-2 8:9:4.18
+        Date.prototype.Format = function (fmt) { //author: meizz
+            var o = {
+                "M+": this.getMonth() + 1,                 //月份
+                "d+": this.getDate(),                    //日
+                "h+": this.getHours(),                   //小时
+                "m+": this.getMinutes(),                 //分
+                "s+": this.getSeconds(),                 //秒
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+                "S": this.getMilliseconds()             //毫秒
+            };
+            if (/(y+)/.test(fmt))
+                fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt))
+                    fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+        //将数字转换成金额显示 n是小数点后位数
+        function toNumber(num, n) {
+            var re = String(num);
+            var dotfront = "";
+            var dotlast = "";
+            if (re.indexof('.') > -1) {
+                var sarr = re.spilt('.');
+                dotfront = sarr[0];
+                dotlast = sarr[1];
+                var dotlastlength = strlen(dotlast);
+                if (dotlastlength < n) {
+                    for (var j = 0; j < n - dotlastlength; j++) {
+                        dotlast += "0";
+                    }
+                }
+                if (dotlastlength > n) {
+                    dotlast = dotlast.substr(0, n);
+                }
+            } else {
+                dotfront = re;
+                for (var i = 0; i < n; i++) {
+                    dotlast += "0";
+                }
+            }
+            num = dotfront + '.' + dotlast;
+            return num;
+        }
+        function _formatAmount(strData, n) {
+            var CurrencyAndAmountRegExp = /^(\d{1,18})|(\d{1,18}\.)|(\d{1,17}\.\d{0,1})|(\d{1,16}\.\d{0,2})|(\.\d{1,2})$/;
+            var _result = CurrencyAndAmountRegExp.test(strData);
+            if (_result == false) {
+                return strData;
+            } // 一般来说最多就6位吧，当然如果有特殊需求可自行更改(｀・∀・´)
+            n = n > 0 && n <= 6 ? n : 2;
+            var formatData = parseFloat((strData + '').replace(/[^\d\.-]/g, '')).toFixed(n) + '';
+            var l = formatData.split('.')[0].split('').reverse();
+            var r = formatData.split('.')[1];
+            var t = '';
+            for (i = 0; i < l.length; i++) {
+                t += l[i] + ((i + 1) % 3 == 0 && (i + 1) != l.length ? ',' : '');
+            }
+            return t.split('').reverse().join('') + '.' + r;
+        }
+        function strlen(str) {
+            var len = 0;
+            for (var i = 0; i < str.length; i++) {
+                var c = str.charCodeAt(i);
+                //单字节加1
+                if ((c >= 0x0001 && c <= 0x007e) || (0xff60 <= c && c <= 0xff9f)) {
+                    len++;
+                }
+                else {
+                    len += 2;
+                }
+            }
+            return len;
+        }
+    </script>
+
+    <script id="formatter" type="text/javascript">
+
+        function InvoiceStateFormatter(v) {
+            var name = $('#hid-invoiceState option[value="' + v + '"]').text();
+            if (v === 1) {
+                return '<span class="label label-success">' + name + '</span>';
+            } else {
+                return '<span class="label label-danger">' + name + '</span>';
+            }
+        }
+
+        function InvoiceTypeFormatter(v) {
+            var name = $('#hid-invoiceType option[value="' + v + '"]').text();
+            switch (v) {
+                case 1:
+                    return '<span class="label label-danger">' + name + '</span>';
+                case 2:
+                    return '<span class="label label-success">' + name + '</span>';
+                case 3:
+                    return '<span class="label label-warning">' + name + '</span>';
+                default:
+                    return '<span class="label label-info">' + name + '</span>';
+            }
+        }
+        function AmountFormatter(v,r) {
+            if (v !== r.totalPrice) {
+                return '<span class="label label-danger">' + v + '</span>';
+            }
+            return v;
+        }
+    </script>
+}
+
+<section style="display: none">
+
+
+    @Html.DropDownList("hid-invoiceState", invoiceState)
+    @Html.DropDownList("hid-invoiceType", invoiceType2)
+
+</section>

@@ -1,0 +1,344 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@{
+    ViewBag.Title = "生产完成入库申请";
+    ViewBag.ActiveMenu = PermissionNames.PagesProductionInfoProductionEnterStoreApplyMg; //The menu item will be active for this page.
+    List<SelectListItem> applyStatus = ViewBag.ApplyStatus;
+    List<SelectListItem> storeHouses = ViewBag.StoreHouses;
+    List<SelectListItem> closeStatus = new List<SelectListItem>()
+    {
+        new SelectListItem(){Text = @"未关闭",Value = "false",Selected = true},
+        new SelectListItem(){Text = @"已关闭",Value = "true"}
+    };
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+        new SearchItem("productionOrderNo","排产单号"),
+        new SearchItem("partNo","零件号"),
+        new SearchItem("semiProductName","产品名称"),
+        new SearchItem("model","规格"),
+        new SearchItem("semiProductNo","半成品编码").SetSearchIcon("query_semiProduct_modal"),
+        new SearchItem("applyStatus","申请状态" )
+            .SetSearchItem(applyStatus),
+        new SearchItem("isClose","关闭状态" ,FiledType.Bnull,ExpType.Equal)
+            .SetSearchItem(closeStatus),
+    }, false);
+}
+<style>
+    .tool-radio {
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+        padding-left: 25px;
+        font-size: 1.5rem;
+        color: #dad9db;
+    }
+
+    [type="radio"]:not(:checked) + label::before, [type="radio"]:not(:checked) + label::after {
+        border: 2px solid #fff;
+    }
+</style>
+<section style="display: none">
+    @Html.DropDownList("hide-ApplyStatus", applyStatus)
+    @Html.DropDownList("hide-StoreHouses", storeHouses)
+</section>
+<div class="table-box mr-4  iwb-bootstrap-table">
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/ProductionOrders/GetSemiEnterStoreApply"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="productionOrderNo">排产单号</th>
+                <th data-align="center" data-field="semiProductNo">半成品编码</th>
+                <th data-align="center" data-field="quantity">申请入库数量(kg)</th>
+                <th data-align="center" data-field="actualQuantity" data-formatter="QuantityFormatter">入库数量(kg)</th>
+                <th data-align="center" data-field="storeHouseId" data-formatter="StoreHouseIdFormatter">仓库</th>
+                <th data-align="center" data-field="applyStatus" data-formatter="ApplyStatusFormatter">申请状态</th>
+                <th data-align="center" data-field="applyEnterDate">申请时间</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="semiProductName">产品名称</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="material">材质</th>
+                <th data-align="center" data-field="kgWeight">千件重</th>
+                <th data-align="center" data-formatter="ActionFormatter">操作</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("修改申请数量", ""))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                        {
+                                            new InputViewModel("id", hide:true),
+                                            new InputViewModel("quantity", displayName:"入库数量(kg)",@class:"number",other:"min=0.001"),
+                                            /*new InputViewModel("remark",InputTypes.Textarea,displayName:"备注").SetNotRequired(),*/
+
+                                        };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_SwModalFooter", new ModelFooterModel("modal", "ModifyEnterStoreQuantity()"))
+
+                </div>
+            </div>
+        </div>
+    </section>
+    @Html.Partial("Modals/Query/_SemiProduct", "KeyWords-5")
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(function () {
+            //show完毕前执行
+            $("#KeyWords-7").val("false").select2();
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].applyStatus === "2"||rows[0].applyStatus === "5") {
+                        abp.message.warn("已入库(或审核)的申请不可进行更改！");
+                        return;
+                    }
+                    if (rows[0].applyStatus !== "1") {
+                        abp.message.warn("请恢复申请后进行更改！");
+                        return;
+                    }
+                    $("#modal").modal("show");
+                    $("#id").val(rows[0].id);
+                    $("#quantity").val("");
+                }
+            };
+            
+            
+
+            $("#Tool1").append(
+                '<div  class="tool-radio"><input name="proType" type="radio" id="allProduction" checked value=""/><label for="allProduction">全部</label></div>' +
+                '<div  class="tool-radio"><input name="proType" type="radio" id="outPurchase" value="2"/><label for="outPurchase">外购</label></div>' +
+                '<div  class="tool-radio"><input name="proType" type="radio" id="machineShop" value="1"/><label for="machineShop">车间加工</label></div>' +
+                '<div  class="tool-radio"><input name="proType" type="radio" id="outProduct" value="6"/><label for="outProduct">外协</label></div>');
+
+            $(".tool-radio input[type='radio']").on('click',function(e) {
+                    //var outType = $(this).val();
+                    document.getElementById("SearchForm").reset();
+                    GetSearchList();
+                    RefreshTable();
+                });
+        });
+        
+        function GetSearchList() {
+            var count = $("#SearchForm").find(".KeyWords").length;
+            window._searchList = [];
+            var outType = $('input[name="proType"]:checked').val();
+            if (outType) {
+                window._searchList.push({
+                    KeyWords: outType,
+                    KeyField: "ApplySource",
+                    FieldType: "0",
+                    ExpType: "0"
+                });
+            }
+            for (var i = 1; i <= count; i++) {
+                var keyWords = $("#KeyWords-" + i).val();
+                if (keyWords) {
+                    var keyField = $("#KeyField-" + i).val();
+                    var fieldType = $("#FieldType-" + i).val();
+                    var expType = $("#ExpType-" + i).val();
+                    _searchList.push({
+                        KeyWords: keyWords,
+                        KeyField: keyField,
+                        FieldType: fieldType,
+                        ExpType: expType
+                    });
+                }
+            }
+        }
+    </script>
+    
+    <script>
+        function ModifyEnterStoreQuantity() {
+            SaveAjax({
+                url: window.appUrl + 'ProductionOrders/UpdateEnterStoreApply',
+                data: {
+                    Id: $("#id").val(),
+                    Quantity: $("#quantity").val()
+                },
+                isValidate: true,
+                dataType: "json",
+                success: function () {
+                    abp.message.success("修改申请成功！");
+                    $("#modal").modal("hide");
+                    RefreshTable();
+                }
+            });
+        }
+
+        function f_cancelApply(id) {
+            console.log("cancelApply", id);
+            abp.message.confirm("确认取消申请?",
+                "取消申请",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/CancelSemiEnterStoreApplyStatus',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+            });
+        }
+        function f_confirmEnterApply(id) {
+            console.log("cancelApply", id);
+            abp.message.confirm("确认产品入库数量正确吗?",
+                "确认入库数量",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/ConfirmSemiEnterStoreQuantity',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+            });
+        }
+
+        function f_closeApply(id) {
+            console.log("recoveryApply", id);
+            abp.message.confirm("入库申请关闭后不可恢复，确认关闭申请?",
+                "关闭申请",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/CloseEnterStoreApply',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+                });
+        }
+
+        function f_recoveryApply(id) {
+            console.log("recoveryApply", id);
+            abp.message.confirm("确认恢复申请?",
+                "恢复申请",
+                function () {
+                    abp.ajax({
+                        url: window.appUrl + 'ProductionOrders/RecoverySemiEnterStoreApplyStatus',
+                        data: { Id: id },
+                        async: true,
+                        type: "Post",
+                        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                        isValidate: false,
+                        dataType: "json",
+                        success: function () {
+                            abp.message.success(abp.localization.localize("OpSuccess"));
+                            RefreshTable();
+                        }
+                    });
+            });
+        }
+
+    </script>
+    <script>
+
+        function QuantityFormatter(v, r) {
+            if (r.actualQuantity === 0) {
+                return '<span class="label label-default">' + v + '</span>';
+            }
+            if (r.actualQuantity > r.quantity) {
+                return '<span class="label label-success">' + v + '</span>';
+            } else if (r.actualQuantity === r.quantity) {
+                return '<span class="label label-info">' + v + '</span>';
+            } else {
+                return '<span class="label label-danger">' + v + '</span>';
+            }
+
+        }
+        function StoreHouseIdFormatter(v) {
+            var name = $("#hide-StoreHouses option[value='" + v + "']").text();
+            return '<span class="label label-primary">' + name+'</span>';
+        }
+        function ApplyStatusFormatter(v,r) {
+            if (r.isClose) {
+                return '<span class="label label-primary">已结束</span>';
+            }
+            var name = $("#hide-ApplyStatus option[value='" + v + "']").text();
+            if (v === "1") {
+                return '<span class="label label-default">' + name +'</span>';
+            } else if (v === "2") {
+                return '<span class="label label-success">' + name +'</span>';
+            } else if (v === "3") {
+                return '<span class="label label-warning">' + name +'</span>';
+            } else if (v === "4") {
+                return '<span class="label label-danger">' + name +'</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+        function ActionFormatter(v, r) {
+
+            var str;
+            if (r.isClose) {
+                return '<span class="table-action">暂无操作</span>';
+            }
+            if (r.applyStatus === "1") {
+                str = '<span class="table-action" onclick="f_cancelApply(\'' + r.id + '\',3)"><i class="iconfont icon-right"></i>取消申请</span><span class="table-action" onclick="f_closeApply(\'' + r.id +
+                    '\')"><i class="iconfont icon-right"></i>关闭申请</span>';
+            } else if (r.applyStatus === "2") {
+                str = '<span class="table-action" onclick="f_confirmEnterApply(\'' + r.id + '\')"><i class="iconfont icon-right"></i>确认入库</span>';
+            } else if (r.applyStatus === "3" || r.applyStatus === "4") {
+                str = '<span class="table-action" onclick="f_recoveryApply(\'' +
+                    r.id +
+                    '\')"><i class="iconfont icon-right"></i>恢复申请</span><span class="table-action" onclick="f_closeApply(\'' + r.id +
+                    '\')"><i class="iconfont icon-right"></i>关闭申请</span>';
+            } else if (r.applyStatus === "5") {
+                str = '<span class="table-action" onclick="f_closeApply(\'' + r.id +
+                    '\')"><i class="iconfont icon-right"></i>关闭申请</span>';
+            } else {
+                str = '<span class="table-action">暂无操作</span>';
+            }
+            return str;
+        }
+    </script>
+
+}

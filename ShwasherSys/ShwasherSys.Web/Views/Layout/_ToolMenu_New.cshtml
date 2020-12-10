@@ -1,0 +1,58 @@
+﻿@using ShwasherSys.Views.Shared.New.SearchForm
+@model List<ShwasherSys.Models.Layout.PermissionButtonViewModel>
+<!-- TOOL-MENU   START-->
+<div class="btn-toolbar row tableTool" role="toolbar" aria-label="Toolbar with button groups">
+    @{
+        SearchFormViewModel searchFrom = ViewBag.SearchFrom;
+        var toolWidth1 = 8;
+        var toolWidth2 = 9;
+        if (searchFrom == null)
+        {
+            toolWidth1 = 12;
+            toolWidth2 = 12;
+        }
+    }
+    <div class="col-sm-@toolWidth1 col-lg-@toolWidth2 pull-left" style="padding: 0">
+        <div class="btn-group btn-group-sm" id="Tool1" role="group" aria-label="First group">
+            @{
+                if (Model != null)
+                {
+                    foreach (var perm in Model)
+                    {
+                        string btnClass = perm.Class, btnType = perm.Script, url = perm.Url;
+                        if (string.IsNullOrEmpty(btnClass))
+                        {
+                            btnClass = "btn btn-default";
+                        }
+                        btnClass += " menu-btn ";
+                        if (string.IsNullOrEmpty(btnType))
+                        {
+                            btnType = "btn" + perm.FunctionNo;
+                        }
+                        if (string.IsNullOrEmpty(url))
+                        {
+                            url = "";
+                        }
+                        <button type="button" class="@btnClass" data-type="@btnType" data-url="@url">
+                            <i class=" @perm.Icon"></i>
+                            @perm.DisplayName
+                        </button>
+                    }
+                }
+            }
+        </div>
+        <div class="row" id="tableToolExt">
+
+        </div>
+    </div>
+    @{
+        if (searchFrom != null)
+        {
+            <div class="col-sm-4 col-lg-3 pull-right" style="padding: 0">
+                @*@Html.Action("SearchForm_Sig", "Layout", new { SelectList = selectList })*@
+                @Html.Partial("New/SearchForm/_SearchForm", searchFrom)
+            </div>
+        }
+    }
+</div>
+<!-- TOOL-MENU   END-->

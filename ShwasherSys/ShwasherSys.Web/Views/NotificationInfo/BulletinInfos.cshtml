@@ -1,0 +1,191 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesNotificationInfoBulletinInfos; //The menu item will be active for this page.
+    ViewBag.Title = "通知管理";
+    List<SelectListItem> bulletinType = ViewBag.BulletinType;
+
+}
+@section css
+{
+    <link rel="stylesheet" href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker-wr.css" />
+    <link href="~/Content/Plugins/kindeditor/themes/default/default.css" rel="stylesheet" />
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <input type="hidden" id="IsLock" value="N" />
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu })
+    <table id="table"
+           data-url="/api/services/app/BulletinInfos/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="bulletinTypeName">通知类型</th>
+                <th data-align="center" data-field="promulgator">发布者</th>
+                <th data-align="center" data-field="promulgatTime">发布时间</th>
+                <th data-align="center" data-field="title">通知标题</th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("通知"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                                                    {
+                                                                                        new InputViewModel("id", hide: true),
+                                                                                        new InputViewModel("bulletinType",InputTypes.List, displayName: "通知类型").SetSelectOptions(bulletinType),
+                                                                                        new InputViewModel("title", displayName: "通知标题"),
+                                                                                        new InputViewModel("promulgator", displayName: "发布者"),
+                                                                                        new InputViewModel("promulgatTime", displayName: "发布时间"),
+                                                                                        new InputViewModel("expirationDate", displayName: "截止时间"),
+                                                                                        new InputViewModel("content",InputTypes.Textarea, "标准描述").SetNotRequired(),
+
+                                                                                    };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+    <script src="~/Content/Plugins/kindeditor/kindeditor-all.js"></script>
+    <script src="~/Content/Plugins/kindeditor/lang/zh-CN.js"></script>
+    <script type="text/javascript">
+        var KeditOptions = {
+            resizeType: 1,
+            width: "100%",
+            height: "300px",
+            uploadJson: '@Url.Action("KindEditorUploadFile", "System")',
+            allowImageUpload: true,
+            allowImageRemote: false,
+            formatUploadUrl: false,
+            afterChange: function() {
+                this.sync();
+            },
+            afterBlur: function() {
+                this.sync();
+            },
+            items: [
+                'formatblock', 'fontname', 'fontsize', 'forecolor', 'hilitecolor', 'bold',
+                'italic', 'underline', '|', 'justifyleft', 'justifycenter', 'justifyright',
+                'justifyfull', 'strikethrough', 'lineheight', 'removeformat', '|', 'source', 'preview', '/', 'undo',
+                'redo', 'template',
+                'plainpaste', 'wordpaste', '|', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent',
+                'subscript',
+                'superscript', 'clearhtml', 'quickformat', 'selectall',
+                'image',
+                'insertfile', 'table', 'hr', 'emoticons', 'pagebreak', 'fullscreen',
+                'link', 'unlink'
+            ]
+        };
+
+        /*var editor;
+        function Kedit($Content){
+            editor = KindEditor.create($Content, KeditOptions);
+        }*/
+        var datePickerOpt = {
+            language: 'zh-CN',
+            format: "yyyy-mm-dd",
+            todayBtn: true,
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            maxView: 4
+            //showSecond: true,
+            //showHours: true,
+            //minuteStep: 10
+        };
+        $(function () {
+            //show完毕前执行
+
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            //funs["btnUpdate"] = function () { BtnUpdate({ readonly: "standardName" }); };
+
+            $("#promulgatTime").datetimepicker(datePickerOpt).on('show',function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            $("#expirationDate").datetimepicker(datePickerOpt).on('show',function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }).on('hide',
+                function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            //show完毕前执行
+            /*$('#modal').on('shown.bs.modal',function() {
+                //加上下面这句！解决了~
+                $(document).off('focusin.modal');
+                // 打开Dialog后创建编辑器
+                Kedit("#content");
+            });
+            //hide完毕前执行
+            $('#modal').on('hidden.bs.modal',function() {
+                // 关闭Dialog前移除编辑器
+                KindEditor.remove('#content');
+            });*/
+            KindEditor.create("#content", KeditOptions);
+            funs["btnUpdate"] = function() {
+                var rows = config.table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+
+                    BtnUpdate({ readonly: "" });
+                    setTimeout(function() {
+                        KindEditor.html("#content",rows[0].content);
+                        },
+                        500);
+                }
+            };
+            funs["btnCreate"] = function() {
+                BtnCreate({ data: { bulletinType:1}});
+                //KindEditor.html("#discription", '');
+                setTimeout(function() {
+                        //editor.html("");
+                    KindEditor.html("#content","");
+                    },
+                    500);
+            }
+
+        });
+
+
+    </script>
+
+
+}

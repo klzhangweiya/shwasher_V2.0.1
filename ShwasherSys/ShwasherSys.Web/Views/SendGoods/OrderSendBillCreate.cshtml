@@ -1,0 +1,337 @@
+﻿@using System.Text
+@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesSendGoodsOrderSendBillCreate; //The menu item will be active for this page.
+    ViewBag.Title = "发货单创建";
+    List<SelectListItem> customerItems = ViewBag.CustomerList;
+    List<ExpressLogistics> expressList = ViewBag.ExpressList;
+    StringBuilder strOptionCustomer = new StringBuilder();
+    StringBuilder strOptionExpress= new StringBuilder();
+    strOptionCustomer.Append("<option value=\"\">请选择</option>");
+    strOptionExpress.Append("<option value=\"\">请选择</option>");
+    foreach (var c in customerItems)
+    {
+        strOptionCustomer.Append(string.Format("<option value=\"{0}\">{1}</option>",c.Value,c.Value));
+    }
+    foreach (var c in expressList)
+    {
+        strOptionExpress.Append(string.Format("<option value=\"{0}\">{1}</option>",c.Id,c.ExpressName));
+    }
+}
+@section css{
+    <link href="~/Content/Plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .iwb-label {
+            color: #fff;
+        }
+        /*.form-horizontal .control-label {
+            text-align: left
+        }*/
+        .btn-action {
+            margin-left: 20px;
+            width: 100px;
+            margin-top: 0px;
+        }
+        .btn-block + .btn-block {
+            margin-top: 0px; 
+        }
+        input:not(.KeyWords).valid {
+            background: #ffffff!important;
+        }
+    </style>
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+    @*@Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu  })*@
+    <div class="btn-toolbar row" id="tableTool" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="col-sm-12 col-lg-12 pull-left" style="padding: 0">
+           
+            <form class="form-horizontal" style="padding: 0 10px" id="form">
+                <div class="form-group-sm row">
+                    <label class="iwb-label col-md-1 control-label iwb-label-required" for="customerId">客户编号:</label>
+                    <div class="col-md-2">
+                        <select class="form-control" Required id="customerId" name="customerId" placeholder="请输入..." value="" style="width: 100%;" type="text" onchange="RefreshCustomerSend(this)">
+                            @Html.Raw(strOptionCustomer.ToString())
+                        </select>
+                    </div>
+                    <label class="iwb-label col-md-1 control-label iwb-label-required" for="customerSendId">地址:</label>
+                    <div class="col-md-2" style="padding: 0 5px">
+                        <select class="form-control" style="width: 100%" id="customerSendId" name="customerSendId" value="" style="" type="text" onchange="ChangeCustomerSend(this)"></select>
+                    </div>
+
+                    <label class="iwb-label col-md-1 control-label " for="linkName">联系人:</label>
+                    <div class="col-md-2">
+                        <input class="form-control" disabled="disabled" style="width: 100%" id="linkName" name="linkName" placeholder="请输入..." value="" type="text">
+                    </div>
+                    <label class="iwb-label col-md-1 control-label " for="telephone">电话:</label>
+                    <div class="col-md-2" style="padding: 0 5px">
+                        <input class="form-control" disabled="disabled" style="width: 100%" id="telephone" name="telephone" placeholder="请输入..." value="" type="text">
+                    </div>
+                </div>
+                <div class="form-group-sm row">
+                    <label class="iwb-label col-md-1 control-label" for="sendAdress">送货地址:</label>
+                    <div class="col-md-2">
+                        <input class="form-control" disabled="disabled" style="width: 100%" id="sendAdress" name="sendAdress" placeholder="请输入..." value="" type="text">
+                    </div>
+                    <label class="iwb-label col-md-1 control-label" for="expressId">快递物流:</label>
+                    <div class="col-md-2" style="padding: 0 5px">
+                        <select class="form-control" style="width: 100%" id="expressId" name="expressId" placeholder="请输入..." value="" type="text">
+                            @Html.Raw(strOptionExpress.ToString())
+                        </select>
+                    </div>
+                    <label class="iwb-label col-md-1 control-label" for="expressBillNo">物流单号:</label>
+                    <div class="col-md-2">
+                        <input class="form-control" style="width: 100%;background: #ffffff!important;" id="expressBillNo" name="expressBillNo" placeholder="请输入..." value="" type="text">
+                    </div>
+                    <div class="col-md-3" style="text-align: center;">
+                        <button type="button" class="btn btn-block btn-success btn-sm btn-action" onclick="CreateSendOrderBill()">生成发货单</button>
+                        <button type="button" class="btn btn-block btn-danger btn-sm btn-action" onclick="CancelSendOrder()">撤销发货</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <table id="table"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="false" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="false">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="orderNo">流水号</th>
+                <th data-align="center" data-field="stockNo">客户订单号 </th>
+                <th data-align="center" data-field="customerId">客户编号</th>
+                <th data-align="center" data-field="productNo">产品编号</th>
+                <th data-align="center" data-field="productDesc">产品描述</th>
+                <th data-align="center" data-field="partNo">零件号</th>
+                <th data-align="center" data-field="productName">产品名称</th>
+                <th data-align="center" data-field="model">规格</th>
+                <th data-align="center" data-field="surfaceColor">表色</th>
+                <th data-align="center" data-field="rigidity">硬度</th>
+                <th data-align="center" data-field="sendQuantity">数量</th>
+                <th data-align="center" data-field="orderUnitName">单位</th>
+                <th data-align="center" data-field="orderDate">订单日期</th>
+                <th data-align="center" data-field="sendDate">送货日期</th>
+                <th data-align="center" data-field="linkName">联系人</th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+@section scripts
+{
+    <script type="text/javascript">
+        $(function() {
+            RefreshCustomerSend();
+            $(".btn-action").prop('disabled', true);
+        });
+
+        function RefreshCustomerSend() {
+            var customerId = $("#customerId").val();
+            if (!customerId) {
+                $("#customerSendId").empty();
+                $("#linkName").val("");
+                $("#telephone").val("");
+                $("#sendAdress").val("");
+                $("#table").hide(300);
+                return;
+            }
+            $("#table").show(300);
+            abp.ajax({
+                url: window.appUrl + "Query/GetCustomerSendDtoByCustomerId",
+                async: true,
+                type: "Post",
+                data: { customerId: customerId },
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function(res) {
+                    if (res && res.length > 0) {
+                        //$("#customerSendId").off("change.ChangeCustomerSend");
+                        $("#customerSendId").empty();
+                        //$("#customerSendId").on("change.ChangeCustomerSend", ChangeCustomerSend);
+                        var options = "";
+                        console.log(res);
+                        res.forEach(function(value, index) {
+                            console.log(value, index);
+                            if (index === 0) {
+                                options += '<option value=\"' +
+                                    value.id +
+                                    '\" selected=\"selected\">' +
+                                    value.customerSendName +
+                                    '</option>';
+                            } else {
+                                options += '<option value=\"' + value.id + '\">' + value.customerSendName + '</option>';
+                            }
+
+                        });
+                        $("#customerSendId").html(options);
+                        $("#customerSendId").trigger("change");
+                    }
+                }
+            });
+        }
+
+        function ChangeCustomerSend() {
+            console.log('Id:' + $("#customerSendId").val());
+            var customerId = $("#customerId").val();
+            var customerSendId = $("#customerSendId").val();
+            if (!customerSendId) {
+                customerSendId = 0;
+            }
+            abp.ajax({
+                url: window.appUrl + "Query/GetCustomerSendInfo",
+                async: false,
+                type: "Post",
+                data: { Id: customerSendId },
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                isValidate: false,
+                dataType: "json",
+                success: function(res) {
+                    if (res) {
+                        $("#linkName").val(res.linkMan);
+                        $("#telephone").val(res.telephone);
+                        $("#sendAdress").val(res.sendAdress);
+                        QueryOrderSend(customerId, customerSendId);
+                    }
+
+                }
+            });
+        }
+
+        function QueryOrderSend(customerId, customerSendId) {
+            SaveAjax({
+                url: window.appUrl + "OrderSendBill/GetOrderSendByCustomerId",
+                data: {
+                    CustomerId: customerId,
+                    customerSendId: customerSendId
+                },
+                dataType: "json",
+                isValiate: false,
+                isAlert: false,
+                success: function(res) {
+                    $("#table").bootstrapTable("destroy");
+                    $("#table").bootstrapTable({
+                        data: res,
+                        onPostBody: OnPostBody,
+                        onAll: OnAllItem,
+                        onLoadSuccess: OnLoadSuccess
+                    });
+                    $(".bs-checkbox").find("input").addClass("filled-in").after("<label></label");
+                    $(".btn-action").prop('disabled', !$("#table").bootstrapTable('getSelections').length);
+                    $("#table thead th.bs-checkbox ").off("click.checkOnTable").on("click.checkOnTable",
+                        function() {
+                            $(this).find("input").click();
+                            /*var that = $(this).find("input");
+                            if (that.is(":checked")) {
+                                that.prop("checked", false);
+                                $("#table").bootstrapTable("uncheckAll");
+                                $("#table tbody tr").removeClass("selected");
+                            } else {
+                                that.prop("checked", true);
+                                $("#table").bootstrapTable("checkAll");
+                                $("#table tbody tr").addClass("selected");
+                            }*/
+                        });
+                }
+            });
+        }
+
+        function OnPostBodyTable() {
+            OnPostBody();
+            //$(".btn-action").prop('disabled', !$("#table").bootstrapTable('getSelections').length);
+        }
+
+        function OnAllItem() {
+            $(".btn-action").prop('disabled', !$("#table").bootstrapTable('getSelections').length);
+        }
+
+        function CancelSendOrder() {
+            var customerId = $("#customerId").val();
+            var customerSendId = $("#customerSendId").val();
+            var rows = $("#table").bootstrapTable("getSelections");
+            if (rows.length > 0) {
+                var sendIds = "";
+                for (var i = 0; i < rows.length; i++) {
+                    sendIds += "," + rows[i].id;
+                }
+                if (sendIds) {
+                    sendIds = sendIds.substr(1);
+                }
+                SaveAjax({
+                    url: window.appUrl + "OrderSendBill/CancelOrderSend",
+                    data: {
+                        Id: sendIds
+                    },
+                    dataType: "json",
+                    isValiate: false,
+                    isAlert: false,
+                    success: function(res) {
+                        if (res) {
+                            QueryOrderSend(customerId, customerSendId);
+                            abp.message.success("取消发货成功！");
+                        }
+                    }
+                });
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+        }
+
+        function CreateSendOrderBill() {
+            var customerId = $("#customerId").val();
+            var customerSendId = $("#customerSendId").val();
+            var sendAddress = $("#sendAdress").val();
+            var linkName = $("#linkName").val();
+            var telephone = $("#telephone").val();
+            var expressId = $("#expressId").val();
+            var expressBillNo = $("#expressBillNo").val();
+            var rows = $("#table").bootstrapTable("getSelections");
+            if (rows.length > 0) {
+                var sendIds = "";
+                for (var i = 0; i < rows.length; i++) {
+                    sendIds += "," + rows[i].id;
+                }
+                if (sendIds) {
+                    sendIds = sendIds.substr(1);
+                }
+                SaveAjax({
+                    url: window.appUrl + "OrderSendBill/Create",
+                    data: {
+                        OrderSendIds: sendIds,
+                        CustomerId: customerId,
+                        SendAddress: sendAddress,
+                        ContactTels: telephone,
+                        ContactMan: linkName,
+                        ExpressId: expressId,
+                        ExpressBillNo:expressBillNo
+                    },
+                    dataType: "json",
+                    isValiate: false,
+                    isAlert: false,
+                    success: function(res) {
+                        if (res) {
+                            QueryOrderSend(customerId, customerSendId);
+                            abp.message.success("创建成功！").done(function() {
+                                window.open("@Url.Action("OrderSendBillDetail")/" + res.id, "_blank");
+                            });
+                           
+                        }
+                    }
+                });
+            } else
+                abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+        }
+    </script>
+}

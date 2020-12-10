@@ -1,0 +1,172 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+@using ShwasherSys.Views.Shared.New.Modals
+@using ShwasherSys.Views.Shared.New.Table
+@using InputTypes = ShwasherSys.Views.Shared.New.Modals.InputTypes
+@using ModalBodyViewModel = ShwasherSys.Views.Shared.New.Modals.ModalBodyViewModel
+@using ModalHeaderViewModel = ShwasherSys.Models.Modal.ModalHeaderViewModel
+@using SpecialInputModel = ShwasherSys.Views.Shared.New.Modals.SpecialInputModel
+
+@{
+    ViewBag.Title = "原材料出库信息维护";
+    string activeMenu = PermissionNames.PagesRawMaterialStoreRmStoreOutMg; //The menu item will be active for this page.
+    ViewBag.ActiveMenu = activeMenu;
+    List<SelectListItem> applyStatus = ViewBag.ApplyStatus;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+{
+        new SearchItem("rmProductNo","原材料编码"),
+        new SearchItem("productName","名称"),
+        new SearchItem("model","规格"),
+        new SearchItem("applyOutDate","申请时间",FiledType.Dnull,ExpType.GreaterOrEqual),
+        new SearchItem("applyOutDate","至",FiledType.Dnull,ExpType.LessOrEqual),
+        new SearchItem("applyStatus","申请状态",FiledType.I,ExpType.Equal).SetSearchItem(applyStatus)
+    });
+
+    var table = new TableViewModel("/api/services/app/RmOutStore/GetAllView", activeMenu, searchForm)
+    .SetFields(new List<FieldItem>()
+    {
+        new FieldItem("rmProductNo", "原材料编码"),
+        new FieldItem("productName", "名称"),
+        new FieldItem("productionOrderNo", "流转单号"),
+        new FieldItem("productBatchNum", "批次号"),
+        new FieldItem("material", "材质"),
+        new FieldItem("model", "规格"),
+        new FieldItem("quantity","申请数量"),
+        new FieldItem("applyOutDate","申请出库时间","DateFormatter"),
+        new FieldItem("actualQuantity","出库数量"),
+        new FieldItem("auditDate","审核时间","DateFormatter"),
+        new FieldItem("applyStatus","状态","ApplyStatusFormatter"),
+                                            });
+}
+@section css{
+
+}
+
+@Html.Partial("New/Table/_Table", table)
+
+@section modal{
+    <!--Main Modal-->
+    @{
+        var modal = new ModalViewModel("出库确认","", new ModalBodyViewModel(new List<Input>()
+{
+
+            new Input("id",hide:true),
+    new Input("applyStatus",hide:true),
+          
+            new Input("productBatchNum","批次号"),
+    new Input("productionOrderNo","流转单号").SetNotRequired(),
+            new Input("rmProductNo", "原材料编号"),
+            new Input("quantity", "申请数量",@class:"number"),
+            new Input("model", "规格"),
+            new Input("material", "材质"),
+    new Input("actualQuantity", "出库数量",@class:"number"),
+        }));
+        //        var modal2 = new ModalViewModel("入库确认", new ModalBodyViewModel(new List<Input>()
+        //{
+        //            new Input("id",hide:true),
+        //            new Input("storeHouseId",hide:true),
+        //            new Input("applyStatus",hide:true),
+        //    new Input("productionOrderNo","批次号"),
+        //            new Input("rmProductNo", "原材料编号"),
+        //            new Input("applyQuantity", "申请数量",@class:"number"),
+        //            new Input("quantity", "入库数量",@class:"number"),
+        //        }), "modal2");
+
+    }
+    @Html.Partial("New/Modals/_Modal", modal)
+    @*@Html.Partial("New/Modals/_Modal", modal2)*@
+    @*@Html.Partial("Modals/Query/_RmProduct", "rmProductNo,model,material")*@
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        var $table = $('#table');
+        $(function () {
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnCreate"] = function (url) {
+                BtnCreate({ data: { storeHouseId: 5, applyStatus: 1 }, readonly: "rmProductNo,model,material" });
+            }
+            funs["btnUpdate"] = function (url) {
+                var rows = $table.bootstrapTable("getSelections");
+                console.log(rows[0].applyStatus);
+                if (rows.length === 1) {
+                    if (rows[0].applyStatus === 1) {
+                        var row = rows[0];
+                        var data = $.extend({}, row, { applyStatus: 2,actualQuantity:row.quantity });
+                        OpenModal(url,
+                            { data: data, readonly: "rmProductNo,quantity,productBatchNum,productionOrderNo,model,material", save: function() {
+                                var q = Number($("#actualQuantity").val());
+                                if (q <= 0) {
+                                    abp.message.warn("审核出库数量必须大于0！");
+                                    return;
+                                } 
+                                SaveAjax({
+                                    url: url,
+                                    modal: $("#modal"),
+                                    form: $('#modal #form')
+                                });
+                            } });
+                    } else {
+                        abp.message.warn("只有申请中的出库记录可审核！");
+                    }
+
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+
+            };
+            funs["btnDelete"] = function (url) {
+                var rows = $table.bootstrapTable("getSelections");
+                if (rows.length === 1) {
+                    if (rows[0].applyStatus === 1) {
+                        abp.message.confirm("取消出库",
+                            "确认取消出库？",
+                            function () {
+                                SaveAjax({
+                                    url: url,
+                                    data: { Id: rows[0].id, ApplyStatus: 3 },
+                                    isValidate: false,
+                                    table: $table
+                                });
+                            });
+                    } else {
+                        abp.message.warn("只有申请中的出库记录取消！");
+                    }
+
+                } else
+                    abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            };
+        });
+
+
+    </script>
+
+    <!--格式化-->
+    <script id="formatter-script" type="text/javascript">
+        function ApplyStatusFormatter(v, r) {
+            var name = $("#hid-applyStatus option[value='" + v + "']").text();
+            if (v === 1) {
+                return '<span class="label label-info">' + name + '</span>';
+            } else if (v === 2) {
+                return '<span class="label label-success">' + name + '</span>';
+            } else if (v === 3) {
+                return '<span class="label label-warning">' + name + '</span>';
+            }
+            return '<span class="label label-info">' + name + '</span>';
+        }
+    </script>
+}
+
+
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+    @Html.DropDownList("hid-applyStatus", applyStatus)
+    @*@Html.DropDownList("hid-du", duty)
+        @Html.DropDownList("hid-de", depart)
+        @Html.DropDownList("hid-gender", gender)*@
+</section>

@@ -1,0 +1,303 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.BasicInfo
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesBasicInfoCurrency; //The menu item will be active for this page.
+    ViewBag.Title = "货币汇率信息管理";
+    // List<SelectListItem> classification = ViewBag.Classification;
+    //var regionInfo = ViewBag.RegionInfo;
+    List<Currency> loCurrency = ViewBag.Currency;
+}
+@section styles
+{
+    <style>
+        .form-group-sm > div {
+            margin-bottom: 1rem;
+        }
+
+        .toRate {
+            border: 1px solid rebeccapurple;
+            border-radius: 4px;
+            padding: 3px 10px;
+            margin-top: 3px;
+        }
+
+            .toRate:after, .toRate:before {
+                display: table;
+                content: " ";
+            }
+
+            .toRate:after {
+                clear: both;
+            }
+
+        label.error {
+            bottom: 4px;
+            right: -45px;
+        }
+    </style>
+}
+<div class="table-box mr-4  iwb-bootstrap-table">
+
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu })
+    <table id="table"
+           data-url="/api/services/app/Currency/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="id">货币代码</th>
+                <th data-align="center" data-field="currencyName">货币名称</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @*@Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("办公场所"))
+                        @{
+                            var inputs = new List<InputViewModel>
+                                                                        {
+                                                                            new InputViewModel("id", displayName: "货币代码"),
+                                                                            new InputViewModel("currencyName", displayName: "货币名称").SetOuterAfter("<div class=\"form-group-sm\" style=\"float: right;right:15px;\"><button type=\"button\" class=\"btn btn-sm btn-info\" style=\"width:100%; background-color: #583d9c;border-color: #583d9c;\" onclick=\"AddRate()\">增加换算汇率</button></div>"),
+
+                                                                        };
+                            //var specials = new List<SpecialInputModel>();
+                        }
+                        @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                        @Html.Partial("Modals/_ModalFooter", "0")*@
+                    <div class="modal-header" style="cursor: move;">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span aria-hidden="true">×</span></button>
+                        <h4 class="modal-title">
+                            <span class="modal-title-span">添加</span>
+                            <span>货币信息</span>
+                        </h4>
+                    </div>
+
+                    <div class="modal-body container-fluid" style="padding-top: 15px;padding-bottom: 0;">
+                        <form class="pr-3 pl-3 form-horizontal " id="form">
+
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="id">货币代码</label>
+                                <div class="col-md-10">
+
+                                    <input class="form-control" id="id" name="id" type="text" required="" placeholder="请输入货币代码..." value="" style="">
+                                </div>
+                            </div>
+                            <div class="form-group-sm">
+                                <label class="iwb-label col-md-2 control-label iwb-label-required" for="currencyName">货币名称</label>
+                                <div class="col-md-10">
+
+                                    <input class="form-control" id="currencyName" name="currencyName" type="text" required="" placeholder="请输入货币名称..." value="" style="">
+                                </div>
+                            </div>
+                            <div class="form-group-sm" style="margin-right: 15px;text-align: right"><button type="button" class="btn btn-sm btn-info" style="width:20%; background-color: #583d9c;border-color: #583d9c;" onclick="AddRate()">增加换算汇率</button></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="text-align: center;">
+                        <button type="button" class="btn btn-default waves-effect" data-dismiss="modal" style="min-width:100px;background: #FFFFFF;border: 1px solid #DDDDDD;">取消</button>
+                        <button type="button" class="btn btn-success save-btn waves-effect" style="min-width:100px;background-color: #678ceb;border: 1px solid #678ceb;">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{
+    <script src="~/Content/Plugins/select2/js/select2tree.js"></script>
+    @*<script src="~/Content/Plugins/kindeditor/kindeditor-all.js"></script>
+        <script src="~/Content/Plugins/kindeditor/lang/zh-CN.js"></script>*@
+    <script type="text/javascript">
+        //var exId = "";
+        var allCurrency = [];
+        $(function() {
+            //show完毕前执行
+            @{
+                foreach (var currency in loCurrency)
+                {
+                    <text>
+                        allCurrency.push({ Id: "@currency.Id", CurrencyName: "@currency.CurrencyName" });
+                    </text>
+                }
+            }
+
+            LoadTable();
+            var funs = window.funs || { none: function() { console.log("No type"); } };
+            funs["btnUpdate"] = function(url) { BtnUpdate(url); };
+            funs["btnCreate"] = function(url) { BtnCreate(url); };
+
+        });
+
+        function BtnCreate(url) {
+            console.log("Create");
+            $(".toRate").remove();
+            exId = "";
+            OpenModal({
+                modaltitle: window.opCreate,
+                //data: getFormData(),
+                url: url,
+                //success: function(res) {
+                //    allCurrency.push({ Id: res.id, CurrencyName: res.currencyName });
+                //    $("#modal").modal("hide");
+                //    RefreshTable($("#table"));
+                //},
+                save: function() {
+                    SaveAjax({
+                        url: url,
+                        data: getFormData(),
+                        success: function(res) {
+                            allCurrency.push({ Id: res.id, CurrencyName: res.currencyName });
+                            $("#modal").modal("hide");
+                            RefreshTable($("#table"));
+                        }
+                    });
+                }
+            });
+        }
+
+        function BtnUpdate(url) {
+            var row = $("#table").bootstrapTable("getSelections")[0];
+
+            if (row) {
+                $(".toRate").remove();
+
+                SaveAjax({
+                    url: window.appUrl + 'Currency/GetDtoById?id=' + row.id,
+                    isValidate: false,
+                    isAlert:false,
+                    success: function (res) {
+                        console.log(res);
+                        OpenModal({
+                            modaltitle: window.opUpdate,
+                            data: row,
+                            url: url,
+                            readonly: "id",
+                            save: function() {
+                                SaveAjax({
+                                    url: url,
+                                    data: getFormData(),
+                                    success: function(res) {
+                                        $("#modal").modal("hide");
+                                        RefreshTable($("#table"));
+                                    }
+                                });
+                            }
+                        });
+                        var rs = res.currencyExchangeRates;
+                        rs.forEach(function(v, i) {
+                            AddRate();
+                            $('.toRate:eq(' + i +') [name="toCurrencyId"]').val(v.toCurrencyId).select2();
+                            $('.toRate:eq(' + i  +') [name="exchangeRate"]').val(v.exchangeRate);
+                        });
+                    }
+                });
+            }
+
+        }
+        //function BtnUpdate(url) {
+        //    console.log("Update");
+        //    var row = $("#table").bootstrapTable("getSelections")[0];
+        //    if (row) {
+        //        abp.ajax({
+        //            contentType: 'application/x-www-form-urlencoded',
+        //            url: "/api/services/app/Regions/GetRegionSelectStrs",
+        //            success: function(res) {
+        //                $("#regionID").empty().html(res);
+        //                //var url = $($this).data("url") + "";
+        //                OpenModal({
+        //                    modaltitle: window.opUpdate,
+        //                    data: row,
+        //                    url: url,
+        //                    readonly: "id",
+        //                    select2tree: "regionID"
+        //                });
+        //            }
+        //        });
+        //    } else {
+        //        abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+        //    }
+
+        //}
+        function AddRate() {
+
+            var str = ' <div class="toRate">';
+            str += '<label class="iwb-label col-md-2 control-label iwb-label-required" for="currencyName">货币名称</label>';
+            str += '  <div class="col-md-3">';
+            str +=
+                '     <select class="form-control"  name="toCurrencyId" type="text" placeholder="请输入货币名称..." value="" style="width: 100%; ">';
+            str += getOptions() + ' </select>';
+            str += '</div>';
+            str += '<label class="iwb-label col-md-2 control-label iwb-label-required" for="currencyName">汇率</label>';
+            str += '<div class="col-md-3">';
+            str +=
+                '<input class="form-control"  name="exchangeRate" type="number" min="0" placeholder="请输入汇率..." value="" style="">';
+            str += '</div>';
+            str += '  <div class="col-md-2">';
+            str +=
+                '   <button type="button" class="btn btn-sm btn-danger" style="width:90%; " onclick="DeleteRate(this)">删除</button>';
+            str += '    </div>';
+            str += '</div>';
+            $("#form").append(str);
+
+        }
+
+        function DeleteRate(that) {
+            $(that).closest('.toRate').remove();
+        }
+
+        function getOptions() {
+            var options = "";
+            allCurrency.forEach(function(v, i) {
+                options += '<option value="' + v.Id + '">' + v.CurrencyName + '</option>';
+            });
+            return options;
+        }
+
+        function getFormData() {
+            var d = {
+                Id: $("#form #id").val(),
+                CurrencyName: $("#form #currencyName").val(),
+                CurrencyExchangeRates: []
+            };
+            var rates = $('.toRate');
+            console.log(rates);
+            for (var i =0; i < rates.length; i++) {
+                //console.log($('.toRate:nth-of-type(' + i + ') [name="toCurrencyId"]'));
+                //console.log($('.toRate:nth-of-type(' + i + ')'));
+                d.CurrencyExchangeRates[i] = {
+                    ToCurrencyId: $('.toRate:eq('+i+') [name="toCurrencyId"]').val(),
+                    ExchangeRate: $('.toRate:eq(' + i +') [name="exchangeRate"]').val()
+                }
+            }
+            //rates.forEach(function(v, i) {
+            //    d.CurrencyExchangeRates[i] = {
+            //        ToCurrencyId: $(v + ' [name="toCurrencyId"]').val(),
+            //        ExchangeRate: $(v + ' [name="exchangeRate"]').val()
+            //    }
+            //});
+            //console.log(d);
+            return d;
+        }
+    </script>
+
+}

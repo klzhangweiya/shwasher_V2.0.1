@@ -1,0 +1,251 @@
+﻿@model ShwasherSys.BaseSysInfo.Roles.Dto.PermissionDto
+@{
+    Layout = null;
+}
+<style>
+    ol {
+        counter-reset: li;
+        list-style: none;
+        *list-style: decimal;
+        font: 15px 'trebuchet MS', 'lucida sans';
+        padding: 0;
+        text-shadow: 0 1px 0 #ffffff;
+        text-shadow: 0 1px 0 rgba(255,255,255,.5);
+        cursor: pointer;
+    }
+
+        ol ol {
+            margin: 0 0 0 1.5em;
+        }
+
+        ol input {
+            display: inline-block;
+        }
+
+        ol li {
+            margin-top: 10px;
+        }
+
+            ol li label {
+                margin-bottom: 0;
+                cursor: pointer;
+                margin-left: 15px;
+                font-size: 15px !important
+            }
+
+    .rectangle-list span {
+        position: relative;
+        display: block;
+        padding: .4em .4em .4em .8em;
+        *padding: .4em;
+        /*margin: .5em 0 .5em 2.5em;*/
+        background: #eee;
+        color: #3c3c3c;
+        border: 0.5px solid #ddd;
+        text-decoration: none;
+        -webkit-transition: all .3s ease-out;
+        -moz-transition: all .3s ease-out;
+        -ms-transition: all .3s ease-out;
+        -o-transition: all .3s ease-out;
+        transition: all .3s ease-out;
+    }
+
+        .rectangle-list span:hover {
+            background: #fff;
+            font-weight: 800;
+        }
+
+        .rectangle-list span:before {
+            /*content: counter(li);
+    counter-increment: li;*/
+            color: #eee;
+            position: absolute;
+            left: -2.5em;
+            top: 50%;
+            margin-top: -1em;
+            font-size: 18px;
+            /*background: #fa8072;*/
+            /*border: 0.5px solid #011343;*/
+            color: #011343;
+            height: 2em;
+            width: 2em;
+            line-height: 2em;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .rectangle-list span:after {
+            position: absolute;
+            content: '';
+            border: .5em solid transparent;
+            top: 50%;
+            margin-top: -.5em;
+            left: -1em;
+            -webkit-transition: all .3s ease-out;
+            -moz-transition: all .3s ease-out;
+            -ms-transition: all .3s ease-out;
+            -o-transition: all .3s ease-out;
+            transition: all .3s ease-out;
+        }
+
+        .rectangle-list span:hover:after {
+            left: -.5em;
+            border-left-color: #fa8072;
+        }
+</style>
+
+<ol id="auth-ol" class="rectangle-list">
+    @{
+        var ps1 = Model.Children;
+        if (ps1 != null && ps1.Any())
+        {
+            foreach (var p1 in ps1)
+            {
+                var check = p1.IsAuth ? "checked" : "";
+                var ps2 = p1.Children;
+                var menu = ps2.Count > 0 ? "menu" : "";
+                <li class="@menu" data-id="@p1.Name" data-parent-id="@p1.Parent.Name">
+                    <span class="fa fa-caret-square-o-down">
+                        <input class="filled-in" name='permission' value="@p1.Name" type="checkbox" data-id="@p1.Name" data-parent-id="@p1.Parent.Name" @check />
+                        <label class="text-danger">
+                            @p1.PermDisplayName
+                        </label>
+                    </span>
+                    @{
+                        if (ps2.Count > 0)
+                        {
+                            <ol class="rectangle-list open">
+                                @{
+                                    foreach (var p2 in ps2)
+                                    {
+                                        check = p2.IsAuth ? "checked" : "";
+                                        var ps3 = p2.Children;
+                                        menu = ps3.Count > 0 ? "menu" : "";
+                                        <li class="@menu" data-id="@p2.Name" data-parent-id="@p2.Parent.Name">
+                                            <span class="fa fa-caret-square-o-right">
+                                                <input class="filled-in" name='permission' value="@p2.Name" type="checkbox" data-id="@p2.Name" data-parent-id="@p2.Parent.Name" @check />
+                                                <label class="text-info">
+                                                    @p2.PermDisplayName
+                                                </label>
+                                            </span>
+                                            @{
+                                                if (ps3.Count > 0)
+                                                {
+                                                    <ol class="rectangle-list" style="display: none">
+                                                        @{
+                                                            foreach (var p3 in ps3)
+                                                            {
+                                                                check = p3.IsAuth ? "checked" : "";
+                                                                var ps4 = p3.Children;
+                                                                menu = ps4.Count > 0 ? "menu" : "";
+                                                                <li class="@menu" data-id="@p3.Name" data-parent-id="@p3.Parent.Name">
+                                                                    <span class="fa fa-caret-square-o-right">
+                                                                        <input class="filled-in" name='permission' value="@p3.Name" type="checkbox" data-id="@p3.Name" data-parent-id="@p3.Parent.Name" @check />
+                                                                        <label class="text-primary">
+                                                                            @p3.PermDisplayName
+                                                                        </label>
+                                                                    </span>
+                                                                    @{
+                                                                        if (ps4.Count > 0)
+                                                                        {
+                                                                            <ol class="rectangle-list" style="display: none">
+                                                                                @{
+                                                                                    foreach (var p4 in ps4)
+                                                                                    {
+                                                                                        check = p4.IsAuth ? "checked" : "";
+                                                                                        var ps5 = p4.Children;
+                                                                                        menu = ps5.Count > 0 ? "menu" : "";
+                                                                                        <li class="@menu" data-id="@p4.Name" data-parent-id="@p4.Parent.Name">
+                                                                                            <span class="fa fa-caret-square-o-right">
+                                                                                                <input class="filled-in" name='permission' value="@p4.Name" type="checkbox" data-id="@p4.Name" data-parent-id="@p4.Parent.Name" @check />
+                                                                                                <label>
+                                                                                                    @p4.PermDisplayName
+                                                                                                </label>
+                                                                                            </span>
+
+                                                                                        </li>
+                                                                                    }
+                                                                                }
+                                                                            </ol>
+                                                                        }
+                                                                    }
+                                                                </li>
+                                                            }
+                                                        }
+                                                    </ol>
+                                                }
+                                            }
+                                        </li>
+                                    }
+                                }
+                            </ol>
+                        }
+                    }
+
+                </li>
+
+            }
+        }
+    }
+</ol>
+<script>
+    $(function () {
+        //$("li input[type='checkbox']").iCheck({
+        //	checkboxClass: 'icheckbox_square-red',
+        //	radioClass: 'iradio_square',
+        //	increaseArea: '20%'
+        //});
+
+        $("ol#auth-ol li").off("click.auth").on("click.auth", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $this = $(this).children(".rectangle-list");
+            if ($this.length === 1) {
+                if ($this.hasClass("open")) {
+                    $(this).children("span.fa").removeClass("fa-caret-square-o-down").addClass("fa-caret-square-o-right");
+                    $this.css("display", "none").removeClass("open");
+                } else {
+                    $(this).children("span.fa").removeClass("fa-caret-square-o-right").addClass("fa-caret-square-o-down");
+                    $this.css("display", "block").addClass("open");
+                }
+            }
+        });
+        $("#auth-ol li:not([class='menu'])").off("click.auth").on("click.auth", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $this = $(this).find("input[type='checkbox']");
+            var checked = $this.prop("checked");
+            if (checked) {
+                $this.prop("checked", false);
+            } else {
+                $this.prop("checked", true);
+            }
+
+        });
+        $("#auth-ol li.menu").find("label").off("click.auth").on("click.auth", function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var $this = $(this).parent().find("input[type='checkbox']");
+            $(this).closest("li").find("input[name=permission]").prop("checked", !$this.prop("checked"));
+            //var checked = $this.prop("checked");
+            //if (checked) {
+            //	//$this.prop("checked", false);
+            //	$that.prop("checked", false);
+            //	//$that.each(function (index, item) {
+            //	//	$(item).prop("checked", false);
+            //	//});
+            //} else {
+            //	//$this.prop("checked", true);
+            //	$that.each(function(index, item) {
+            //		$(item).prop("checked", true);
+            //	});
+            //}
+        });
+        $("#checkAll").off("click.auth").on("click.auth", function () {
+            var $this = $($(this).find("input[name=checkAll]"));
+            $("input[name=permission]").prop("checked", !$this.prop("checked"));
+            $this.prop("checked", !$this.prop("checked"));
+
+        });
+    });
+</script>
