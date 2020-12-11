@@ -96,7 +96,7 @@ namespace ShwasherSys.Controllers
                 throw new UserFriendlyException("未传入对应编号！");
             }
             ViewBag.SendStickBillNo = id;
-            var viewOrderSendStickBills =await ViewOrderSendStickBillRepository.GetAll().Where(i => i.StatementBillNo == id).OrderBy(i => i.SendDate).ToListAsync();
+            var viewOrderSendStickBills =await ViewOrderSendStickBillRepository.GetAll().Where(i => i.StatementBillNo == id).OrderByDescending(i => i.SendDate).ThenBy(i=>i.ProductName).ToListAsync();
             ViewBag.OrderSends = viewOrderSendStickBills;
             //var bill = await OrderSendBillAppService.Get(new EntityDto<string>(viewOrderSendStickBills.First().OrderSendBillNo));
             if (viewOrderSendStickBills.Any())

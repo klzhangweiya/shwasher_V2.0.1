@@ -66,7 +66,7 @@ namespace ShwasherSys.Controllers
             ViewBag.SendBillNo = id;
             var bill = await OrderSendBillAppService.Get(new EntityDto<string>(id));
             ViewBag.SendBill = bill;
-            ViewBag.OrderSends = ViewOrderSendRepository.GetAllList(i => i.OrderSendBillNo == id);
+            ViewBag.OrderSends = ViewOrderSendRepository.GetAll().Where(i => i.OrderSendBillNo == id).OrderByDescending(i => i.SendDate).ToList();
             ViewBag.CustomerInfo = CustomerRepository.Get(bill.CustomerId);
             var templateInfo = await QueryAppService.QueryTemplate(bill.CustomerId, 2);
             ViewBag.TemplateInfo = templateInfo;

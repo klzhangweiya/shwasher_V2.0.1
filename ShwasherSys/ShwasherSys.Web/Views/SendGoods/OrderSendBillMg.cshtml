@@ -85,21 +85,21 @@ new SearchItem("isbill", "开票状态").SetSearchItem(stickBillStatusList)
     <script src="~/Content/Plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
     <script src="~/Content/Plugins/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
     <script>
-        var datePickerOpt = {
-            language: 'zh-CN',
-            format: "yyyy-mm-dd",
-            todayBtn: true,
-            autoclose: true,
-            startView: 2,
-            minView: 2,
-            maxView: 4
-            //showSecond: true,
-            //showHours: true,
-            //minuteStep: 10
-        };
+        //var datePickerOpt = {
+        //    language: 'zh-CN',
+        //    format: "yyyy-mm-dd",
+        //    todayBtn: true,
+        //    autoclose: true,
+        //    startView: 2,
+        //    minView: 2,
+        //    maxView: 4
+        //    //showSecond: true,
+        //    //showHours: true,
+        //    //minuteStep: 10
+        //};
         $(function() {
-            $("#KeyWords-2").datetimepicker(datePickerOpt);
-            $("#KeyWords-3").datetimepicker(datePickerOpt);
+            //$("#KeyWords-2").datetimepicker(datePickerOpt);
+            //$("#KeyWords-3").datetimepicker(datePickerOpt);
             var nowDate = new Date();
             var preDate = new Date(nowDate.getTime() - 30 * 24 * 60 * 60 * 1000);
             $("#KeyWords-2").val(preDate.Format("yyyy-MM-dd"));

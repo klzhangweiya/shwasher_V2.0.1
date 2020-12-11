@@ -293,7 +293,7 @@ namespace ShwasherSys.OrderSendInfo
         public async Task<string> ExportOrderSend(EntityDto<string> input)
         {
             var bill = await Repository.FirstOrDefaultAsync(input.Id);
-            var orderSends =await ViewOrderSendRepository.GetAllListAsync(i => i.OrderSendBillNo == input.Id);
+            var orderSends =(await ViewOrderSendRepository.GetAllListAsync(i => i.OrderSendBillNo == input.Id)).OrderByDescending(i => i.SendDate).ToList();
             var customerInfo =await CustomerRepository.FirstOrDefaultAsync(bill.CustomerId);
             var templateInfo = await QueryAppService.QueryTemplate(bill.CustomerId, 2);
             string[] classPath = templateInfo.ClassPath.Split("@@",StringSplitOptions.RemoveEmptyEntries);
@@ -317,7 +317,7 @@ namespace ShwasherSys.OrderSendInfo
             var bill = await Repository.FirstOrDefaultAsync(input.Id);
             //var orderSends = (await ViewOrderSendRepository.GetAllListAsync(i => i.OrderSendBillNo == input.Id)).OrderBy(i=>i.SurfaceColor).ThenBy(i=>i.Rigidity).ToList();
             var orderSends =
-                ViewOrderSendRepository.GetAllList(i => i.OrderSendBillNo == input.Id);
+                ViewOrderSendRepository.GetAllList(i => i.OrderSendBillNo == input.Id).OrderByDescending(i=>i.SendDate).ToList();
             var customerInfo = await CustomerRepository.FirstOrDefaultAsync(bill.CustomerId);
             string path = AppDomain.CurrentDomain.BaseDirectory + "Resources/OrderSendTemplate/送货单模板.xlsx";
             var savePath = "Download/Excel/OrderSendBill";

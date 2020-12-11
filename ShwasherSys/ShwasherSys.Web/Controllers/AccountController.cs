@@ -142,7 +142,7 @@ namespace ShwasherSys.Controllers
             {
                 var expiresUtc = DateTimeOffset.UtcNow.AddMinutes(int.Parse(
                     System.Configuration.ConfigurationManager.AppSettings[
-                        "AuthSession.ExpireTimeInMinutes"] ?? "30"));
+                        "AuthSession.ExpireTimeInMinutes"] ?? "90"));
                 identity.AddClaim(new Claim(IwbClaimTypes.ExpireTime, expiresUtc.ToString(CultureInfo.InvariantCulture)));
             }
             _authenticationManager.SignIn(new AuthenticationProperties { IsPersistent = true }, identity);
