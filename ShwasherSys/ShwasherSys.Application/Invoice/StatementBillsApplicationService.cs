@@ -308,7 +308,7 @@ namespace ShwasherSys.Invoice
         {
             var queryAllList = ViewOrderSendRepository.GetAll().Where(i =>
                 i.CustomerId == input.CustomerId && (i.OrderSendBillNo != null && i.OrderSendBillNo != "") &&
-                (i.StatementBillNo == ""|| i.StatementBillNo == null)).OrderByDescending(i=>i.OrderSendBillNo);
+                (i.StatementBillNo == ""|| i.StatementBillNo == null)).OrderByDescending(i=>i.SendDate).ThenBy(i=>i.ProductName);
             return await AsyncQueryableExecuter.ToListAsync(queryAllList);
         }
         public async Task<List<ViewStatementBill>> QueryStatisticStatementBillItems(QueryStatementBillReportDto input)
