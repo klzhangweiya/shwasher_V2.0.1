@@ -128,7 +128,7 @@ namespace ShwasherSys.OrderSendInfo
         {
             var queryAllList = ViewOrderSendRepository.GetAll().Where(i =>
                 i.CustomerId == input.CustomerId && (i.OrderSendBillNo == null || i.OrderSendBillNo == "") &&
-                i.CustomerSendId == input.CustomerSendId);
+                i.CustomerSendId == input.CustomerSendId).OrderByDescending(i=>i.SendDate);
             return await AsyncQueryableExecuter.ToListAsync(queryAllList);
         }
         [AbpAuthorize(PermissionNames.PagesSendGoodsOrderSendBillCreate),AuditLog("查询出待生成发货单的客户列表记录")]

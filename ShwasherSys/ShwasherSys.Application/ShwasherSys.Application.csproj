@@ -559,6 +559,9 @@
     <Compile Include="ProductInfo\Dto\FileUpload\FileUploadInfoDto.cs" />
     <Compile Include="ProductInfo\Dto\ProductCreateDto.cs" />
     <Compile Include="ProductInfo\Dto\ProductDto.cs" />
+    <Compile Include="ProductInfo\Dto\ProductPropertyCreateDto.cs" />
+    <Compile Include="ProductInfo\Dto\ProductPropertyDto.cs" />
+    <Compile Include="ProductInfo\Dto\ProductPropertyUpdateDto.cs" />
     <Compile Include="ProductInfo\Dto\ProductUpdateDto.cs" />
     <Compile Include="ProductInfo\Dto\RmProductCreateDto.cs" />
     <Compile Include="ProductInfo\Dto\RmProductDto.cs" />
@@ -569,10 +572,12 @@
     <Compile Include="ProductInfo\Dto\StandardCreateDto.cs" />
     <Compile Include="ProductInfo\Dto\StandardDto.cs" />
     <Compile Include="ProductInfo\Dto\StandardUpdateDto.cs" />
+    <Compile Include="ProductInfo\IProductPropertysApplicationService.cs" />
     <Compile Include="ProductInfo\IProductsApplicationService.cs" />
     <Compile Include="ProductInfo\IRmProductsApplicationService.cs" />
     <Compile Include="ProductInfo\ISemiProductsApplicationService.cs" />
     <Compile Include="ProductInfo\IStandardsApplicationService.cs" />
+    <Compile Include="ProductInfo\ProductPropertysApplicationService.cs" />
     <Compile Include="ProductInfo\ProductsApplicationService.cs" />
     <Compile Include="ProductInfo\RmProductsApplicationService.cs" />
     <Compile Include="ProductInfo\SemiProductsApplicationService.cs" />

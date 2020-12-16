@@ -324,6 +324,12 @@ namespace ShwasherSys.Authorization.Permissions
         public const string PagesProductInfoRmProductUpdate = "Pages.ProductInfo.RmProduct.Update";
         public const string PagesProductInfoRmProductDelete = "Pages.ProductInfo.RmProduct.Delete";
         public const string PagesProductInfoRmProductImportExcel = "Pages.ProductInfo.RmProduct.ImportExcel";
+        public const string PagesProductInfoProductProperty = "Pages.ProductInfo.ProductProperty";
+        public const string PagesProductInfoProductPropertyQuery = "Pages.ProductInfo.ProductProperty.Query";
+        public const string PagesProductInfoProductPropertyCreate = "Pages.ProductInfo.ProductProperty.Create";
+        public const string PagesProductInfoProductPropertyUpdate = "Pages.ProductInfo.ProductProperty.Update";
+        public const string PagesProductInfoProductPropertyDelete = "Pages.ProductInfo.ProductProperty.Delete";
+        public const string PagesProductInfoProductPropertyImportExcel = "Pages.ProductInfo.ProductProperty.ImportExcel";
         public const string PagesStatisticMg = "Pages.StatisticMg";
         public const string PagesStatisticMgOutsourcingReportMg = "Pages.StatisticMg.OutsourcingReportMg";
         public const string PagesStatisticMgOutsourcingReportMgQuery = "Pages.StatisticMg.OutsourcingReportMg.Query";

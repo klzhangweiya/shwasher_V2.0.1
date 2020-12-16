@@ -213,6 +213,11 @@ namespace ShwasherSys.Migrations.SeedData
             CreateState("成品入库状态","FinshedEnterStore", "CreateSourceType",  "3", "正常退货入库");
             CreateState("成品入库状态","FinshedEnterStore", "CreateSourceType",  "4", "返工返镀");
             CreateState("成品入库状态","FinshedEnterStore", "CreateSourceType", "5", "降级使用入库");
+
+            CreateState("产品属性类型", "ProductProperty", "ProductPropertyType", "1", "规格尺寸");
+            CreateState("产品属性类型", "ProductProperty", "ProductPropertyType", "2", "材质");
+            CreateState("产品属性类型", "ProductProperty", "ProductPropertyType", "3", "硬度");
+            CreateState("产品属性类型", "ProductProperty", "ProductPropertyType", "4", "表色");
         }
 
 

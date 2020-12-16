@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using ShwasherSys.ProductInfo;
+using ShwasherSys.BaseSysInfo.States;
 
 namespace ShwasherSys.Controllers
 {
@@ -14,10 +15,11 @@ namespace ShwasherSys.Controllers
         protected IProductsAppService ProductsAppService;
         protected IStandardsAppService StandardsAppService;
 
-        public ProductInfoController(IProductsAppService productsAppService, IStandardsAppService standardsAppService)
+        public ProductInfoController(IProductsAppService productsAppService, IStandardsAppService standardsAppService, IStatesAppService statesAppService)
         {
             ProductsAppService = productsAppService;
             StandardsAppService = standardsAppService;
+            StatesAppService = statesAppService;
         }
 
         // GET: ProductInfo
@@ -44,6 +46,11 @@ namespace ShwasherSys.Controllers
             return View();
         }
 
+        public ActionResult ProductProperty()
+        {
+            ViewBag.ProductPropertyType = StatesAppService.GetSelectLists("ProductProperty", "ProductPropertyType");
+            return View();
+        }
        
     }
 }

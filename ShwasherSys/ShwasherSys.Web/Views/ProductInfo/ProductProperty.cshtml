@@ -1,0 +1,115 @@
+﻿@using ShwasherSys.Authorization.Permissions
+@using ShwasherSys.Models.Layout
+@using ShwasherSys.Models.Modal
+
+@{
+    /**/
+    ViewBag.ActiveMenu = PermissionNames.PagesProductInfoProductProperty; //The menu item will be active for this page.
+    ViewBag.Title = "产品属性管理";
+    List<SelectListItem> productPropertyTypeList = ViewBag.ProductPropertyType;
+    // List<SelectListItem> classification = ViewBag.Classification;
+    var searchForm = new SearchFormViewModal(new List<SearchItem>()
+    {
+     
+        new SearchItem("propertyNo","编码"),
+        new SearchItem("propertyValue","属性值"),
+        new SearchItem("propertyType","属性类别").SetSearchItem(productPropertyTypeList),
+        new SearchItem("displayValue","显示值"),
+       
+    }, false);
+}
+
+<div class="table-box mr-4  iwb-bootstrap-table">
+    <input type="hidden" id="IsLock" value="N" />
+    @Html.Action("ToolMenu", "Layout", new { pageName = ViewBag.ActiveMenu, searchForm })
+    <table id="table"
+           data-url="/api/services/app/ProductProperty/GetAll"
+           data-striped="true" data-id-field="id" data-unique-id="id"
+           data-method="post"
+           data-side-pagination="server"
+           data-content-type="application/x-www-form-urlencoded; charset=UTF-8"
+           data-cache="false"
+           data-pagination="true" data-page-size="30" data-page-number="1" data-page-list="[30,50,100,200]" data-pagination-detail-h-align="right" data-pagination-h-align="left"
+           data-query-params="QueryParams"
+           data-response-handler="ResponseHandler"
+           data-click-to-select="true"
+           data-single-select="true">
+        <thead>
+            <tr class="row" id="header">
+                <th data-field="state" data-checkbox="true"></th>
+                <th data-align="center" data-field="propertyType" data-formatter="PropertyTypeFormatter">属性类别</th>
+                <th data-align="center" data-field="propertyNo">编码</th>
+                <th data-align="center" data-field="propertyValue">属性值</th>
+                <th data-align="center" data-field="displayValue">显示值</th>
+                <th data-align="center" data-field="contentInfo">内容描述</th>
+
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section modal{
+    <section>
+        <!--Main Modal-->
+        <div class="modal fade" id="modal" role="dialog" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("产品标准"))
+                    @{
+                        var inputs = new List<InputViewModel>
+                                                            {
+                                                                new InputViewModel("id", hide: true),
+                                                                new InputViewModel("propertyNo", hide: true),
+                                                                new InputViewModel("propertyType",InputTypes.List, displayName: "属性类别").SetSelectOptions(productPropertyTypeList),
+                                                                new InputViewModel("propertyValue", displayName: "属性值"),
+                                                                new InputViewModel("displayValue", displayName: "显示值").SetNotRequired(),
+                                                                new InputViewModel("contentInfo",InputTypes.Textarea, "内容描述").SetNotRequired(),
+
+                                                            };
+                        //var specials = new List<SpecialInputModel>();
+                    }
+                    @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
+                    @Html.Partial("Modals/_ModalFooter", "0")
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+@section scripts
+{                               
+    <script type="text/javascript">
+
+        $(function () {
+            //show完毕前执行
+
+
+            LoadTable();
+            var funs = window.funs || { none: function () { console.log("No type"); } };
+            funs["btnUpdate"] = function () { BtnUpdate({ readonly: "propertyType" }); };
+
+
+
+        });
+        
+        function PropertyTypeFormatter(v) {
+            var name = $('#hid-propertyType option[value="' + v + '"]').text();
+            if (v) {
+                return '<span class="label label-info">' + name + '</span>';
+            } else {
+                return '<span class="label label-warning">暂无</span>';
+
+            }
+        }
+    </script>
+    
+
+}
+<section style="display: none">
+    <select id="hid-type">
+        <option value=""></option>
+    </select>
+    @Html.DropDownList("hid-propertyType", productPropertyTypeList)
+</section>

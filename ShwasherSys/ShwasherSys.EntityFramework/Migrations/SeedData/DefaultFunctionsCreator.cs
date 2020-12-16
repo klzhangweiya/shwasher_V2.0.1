@@ -534,6 +534,13 @@ namespace ShwasherSys.Migrations.SeedData
             CreateFunctions("Update", "修改原材料", "RmProduct", 2, "", "", "icon-edit", 2, 3, "/api/services/app/RmProduct/Update", "btn btn-default", "btnUpdate");
             CreateFunctions("Delete", "删除原材料", "RmProduct", 2, "", "", "icon-delete", 3, 3, "/api/services/app/RmProduct/Delete", "btn btn-default", "btnDelete");
             CreateFunctions("ImportExcel", "Excel导入", "RmProduct", 2, "", "", "icon-add", 4, 3, "/api/services/app/RmProduct/ImportExcel", "btn btn-default", "_btnImport");
+
+            CreateFunctions("ProductProperty", "产品属性维护", "ProductInfo", 1, "ProductProperty", "ProductInfo", "icon-menu", 4, 2);
+            CreateFunctions("Query", "查看页面", "ProductProperty", 2, "", "", "", 0, 3, "", "btn btn-default", "None");
+            CreateFunctions("Create", "创建产品属性", "ProductProperty", 2, "", "", "icon-add", 1, 3, "/api/services/app/ProductProperty/Create", "btn btn-default", "_btnCreate");
+            CreateFunctions("Update", "修改产品属性", "ProductProperty", 2, "", "", "icon-edit", 2, 3, "/api/services/app/ProductProperty/Update", "btn btn-default", "btnUpdate");
+            CreateFunctions("Delete", "删除产品属性", "ProductProperty", 2, "", "", "icon-delete", 3, 3, "/api/services/app/ProductProperty/Delete", "btn btn-default", "btnDelete");
+            CreateFunctions("ImportExcel", "Excel导入", "ProductProperty", 2, "", "", "icon-add", 4, 3, "/api/services/app/ProductProperty/ImportExcel", "btn btn-default", "_btnImport");
         }
 
      

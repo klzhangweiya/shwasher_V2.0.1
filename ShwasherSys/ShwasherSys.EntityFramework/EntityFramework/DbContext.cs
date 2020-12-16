@@ -183,6 +183,10 @@ namespace ShwasherSys.EntityFramework
         public IDbSet<ViewStatementBill> ViewStatementBill { get; set; }
         #endregion
 
+        #region 产品属性改造
+        public IDbSet<ProductProperty> ProductProperty { get; set; }
+        #endregion
+
         //Example:
         //public virtual IDbSet<User> Users { get; set; }
 

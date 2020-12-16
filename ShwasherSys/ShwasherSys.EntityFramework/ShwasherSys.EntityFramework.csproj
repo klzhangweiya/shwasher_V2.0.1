@@ -482,6 +482,10 @@
     <Compile Include="Migrations\202009250251306_check0925.Designer.cs">
       <DependentUpon>202009250251306_check0925.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202012150410188_addProductProperty.cs" />
+    <Compile Include="Migrations\202012150410188_addProductProperty.Designer.cs">
+      <DependentUpon>202012150410188_addProductProperty.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Migrations\SeedData\DefaultAppGuidsCreator.cs" />
     <Compile Include="Migrations\SeedData\DefaultFunctionsCreator.cs" />
@@ -664,6 +668,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202009250251306_check0925.resx">
       <DependentUpon>202009250251306_check0925.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202012150410188_addProductProperty.resx">
+      <DependentUpon>202012150410188_addProductProperty.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
