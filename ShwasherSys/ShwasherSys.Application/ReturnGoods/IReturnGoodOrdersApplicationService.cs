@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using IwbZero.AppServiceBase;
+using ShwasherSys.Inspection;
+using ShwasherSys.Inspection.DisqualifiedProducts.Dto;
 using ShwasherSys.ReturnGoods.Dto;
 
 namespace ShwasherSys.ReturnGoods
@@ -22,6 +24,8 @@ namespace ShwasherSys.ReturnGoods
         Task<ReturnGoodOrder> RefundConfirm(RefundAmountDto input);
 
       string ExportReturn(EntityDto<int> input);
+
+      DisqualifiedProductDto GetDisqualifiedProductByReturnNo(EntityDto<int> input);
 
     }
 }

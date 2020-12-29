@@ -18,8 +18,8 @@ namespace ShwasherSys.Migrations.SeedData
             //new DefaultDataCreator(_context).Create();
 
             //new DefaultTruncateTableSql(_context).Create();
-            //new DefaultFunctionsCreator(_context).Create();
-            //new DefaultRoleAndUserCreator(_context).Create();
+            new DefaultFunctionsCreator(_context).Create();
+            new DefaultRoleAndUserCreator(_context).Create();
 
             //new DefaultSettingsCreator(_context).Create();
             //new DefaultStatesCreator(_context).Create();

@@ -14,6 +14,7 @@
         new SelectListItem(){Text = @"退货",Value = ReturnGoodType.Return+"",Selected = true},
         new SelectListItem(){Text = @"换货",Value = ReturnGoodType.Change+""},
     },returnState=ViewBag.ReturnState ;
+    List<SelectListItem> handleType = ViewBag.HandleType;
     var searchForm = new SearchFormViewModal(new List<SearchItem>()
 {
         new SearchItem("customerId","客户编号").SetSearchIcon("query_customer_modal"),
@@ -37,7 +38,9 @@
         new FieldItem("returnType", "退货/换货", formatter: "ReturnTypeFormatter"),
         new FieldItem("handleUserName", "退货处理人"),
         new FieldItem("productNo", "产品编号"),
+        new FieldItem("reason", "退货原因"),
         new FieldItem("returnState", "退货状态", formatter: "ReturnStateFormatter"),
+        new FieldItem("", "退货检验处理", formatter: "ReturnHandleFormatter"),
     };
     if (IsGranted(PermissionNames.PagesSendGoodsReturnGoodMgRefundConfirm))
     {
@@ -47,7 +50,7 @@
             new FieldItem("applyUser", "申请退款人"),
             new FieldItem("confirmUser", "确认退款人"),
         });
-       
+
     }
     else if (IsGranted(PermissionNames.PagesSendGoodsReturnGoodMgRefundApply))
     {
@@ -105,9 +108,14 @@
             new Input("amount", "申请金额", other: "min=0.001"),
             new Input("auditAmount", "退款金额", other: "min=0.001"),
         },"form-amount"),"modal-amount");
+        var modal3 = new ModalViewModel("退货检验处理", "", new ModalBodyViewModel(new List<Input>()
+        {
+           
+        }, "form-amount"), "modal-handleInfo");
     }
     @Html.Partial("New/Modals/_Modal", modal)
     @Html.Partial("New/Modals/_Modal", modal2)
+    @Html.Partial("New/Modals/_Modal", modal3)
 
     @Html.Partial("Modals/Query/_SendGood", "productNo")
     @Html.Partial("Modals/Query/_Product", "productNo|KeyWords-6,productName")
@@ -258,11 +266,11 @@
                         data: { Id: row.id },
                         isAlert: false,
                         isValidate: false,
-                        success: function (res) {
-                            window.location.href = '/'+res;
+                        success: function(res) {
+                            window.location.href = '/' + res;
                         }
                     });
-                }else {
+                } else {
                     abp.message.warn(abp.localization.localize("ChooseOneToOp"));
                 }
             }
@@ -412,6 +420,45 @@
                 return '<span class="label label-danger">' + name + '</span>';
             }
         }
+
+        function ReturnHandleFormatter(v, r) {
+            return `<a href="#" class="btn btn-info" onclick="showHandleInfo(this,'${r.id}')">查看</a>`;
+        }
+
+        function showHandleInfo(dom,id) {
+            let $that = $(dom);
+            let $td = $that.closest('td');
+            SaveAjax({
+                url: window.appUrl + "ReturnGoodOrder/GetDisqualifiedProductByReturnNo",
+                data: { Id: id },
+                isAlert: false,
+                isValidate: false,
+                dataType: "json",
+                success: function(res) {
+                    if (res) {
+                        $td.html(HandleTypeFormatter(res.handleType));
+                    }
+                }
+            });
+        }
+
+        function HandleTypeFormatter(v) {
+            var name = $('#hid-handleType option[value="' + v + '"]').text();
+            switch (v) {
+            case 1:
+                return '<span class="label label-info">' + name + '</span>';
+            case 2:
+                return '<span class="label label-warning">' + name + '</span>';
+            case 3:
+                return '<span class="label label-danger">' + name + '</span>';
+            case 4:
+                return '<span class="label label-primary">' + name + '</span>';
+            case 8:
+                return '<span class="label label-iwb">' + name + '</span>';
+            default:
+                return '<span class="label label-success">' + name + '</span>';
+            }
+        }
     </script>
 }
 
@@ -423,4 +470,5 @@
 
     @Html.DropDownList("hid-returnType", returnType)
     @Html.DropDownList("hid-returnState", returnState)
+    @Html.DropDownList("hid-handleType", handleType)
 </section>

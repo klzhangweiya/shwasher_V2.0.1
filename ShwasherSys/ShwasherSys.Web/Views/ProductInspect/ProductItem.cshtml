@@ -70,12 +70,12 @@
                     @Html.Partial("Modals/_ModalHeader", new ModalHeaderViewModel("半成品入库确认", ""))
                     @{
                         var inputs = new List<InputViewModel>
-                                {
-                                    new InputViewModel("id", hide:true),
-                                    new InputViewModel("createSourceType", hide:true),
-                                    new InputViewModel("actualQuantity", displayName:"确认入库数量(kg)",@class:"number",other:"min=0.001"),
-                                    new InputViewModel("kgWeight", displayName:"千件重)",@class:"number",other:"min=0.001"),
-                                };
+                        {
+                            new InputViewModel("id", hide:true),
+                            new InputViewModel("createSourceType", hide:true),
+                            new InputViewModel("actualQuantity", displayName:"确认入库数量(kg)",@class:"number",other:"min=0.001"),
+                            new InputViewModel("kgWeight", displayName:"千件重)",@class:"number",other:"min=0.001"),
+                        };
                         //var specials = new List<SpecialInputModel>();
                     }
                     @Html.Partial("Modals/_ModalBody", new ModalBodyViewModel(inputs))
@@ -85,7 +85,9 @@
             </div>
         </div>
     </section>
+   
     @Html.Partial("Modals/Query/_SemiProduct", "KeyWords-6")
+    @Html.Partial("Modals/Query/_UnqualifiedProduct", "")
 
 }
 
@@ -115,6 +117,10 @@
                     });
                 } else
                     abp.message.warn(abp.localization.localize("ChooseOneToOp"));
+            }
+
+            funs["btnShowUnqualified"] = function(url) {
+                ShowModal("query_UnqualifiedProduct_modal");
             }
 
         });

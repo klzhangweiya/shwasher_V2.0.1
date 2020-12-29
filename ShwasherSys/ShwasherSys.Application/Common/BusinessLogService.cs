@@ -39,7 +39,7 @@ namespace ShwasherSys.Common
             };
             WriteLog(logRepository, log);
         }
-
+       
         public static void WriteLog(this BusinessLogTypeEnum logType, IRepository<BusinessLog> logRepository, string logCommand, string logMsg, string logExt1 = "", string logExt2 = "", string logExt3 = "", string logExt4 = "" ,string eMsg = "")
         {
             //Action ac = () =>

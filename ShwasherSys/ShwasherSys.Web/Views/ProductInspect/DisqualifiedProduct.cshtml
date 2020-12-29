@@ -96,10 +96,26 @@
             new InputTextarea("SpecialPurchaseRemark", "特采备注",@class:"type type3"),
 
         }),"return_modal");
-        
+
+
+        var modal3 = new ModalViewModel("退货信息","",new ModalBodyViewModel(new List<Input>
+        {
+
+            new Input("returnOrderNo", "退货单号"),
+            new Input("productNo", "产品编码"),
+            new Input("productName", "产品名称"),
+            new Input("model", "规格"),
+            new Input("surfaceColor", "表色"),
+            new Input("material", "材质"),
+            new Input("rigidity", "硬度"),
+            new InputTextarea("reason", "退货原因"),
+
+        }),"returnInfo_modal");
+
     }
     @Html.Partial("New/Modals/_Modal", modal)
     @Html.Partial("New/Modals/_Modal", modal2)
+    @Html.Partial("New/Modals/_Modal", modal3)
     @Html.Partial("Modals/Query/_Customer", ".custom-id,.custom-name")
     @Html.Partial("Modals/Query/_StoreHouseLocation", "storeHouseId,storeLocationNo")
     @Html.Partial("Modals/Query/_Product", "productNo,productName")
@@ -131,7 +147,8 @@
                             .prop("disabled", false);
                     }
                     if (row.productType === @ProductTypeDefinition.Semi) {
-                        $('#return_modal #inspectType option[value="@(DisProductStateDefinition.OutPurchaseReturnGood)"]')
+                        $(
+                                '#return_modal #inspectType option[value="@(DisProductStateDefinition.OutPurchaseReturnGood)"]')
                             .prop("disabled", false);
                         $('#return_modal #inspectType option[value="@(DisProductStateDefinition.SpecialPurchase)"]')
                             .prop("disabled", false);
@@ -242,7 +259,7 @@
                                     StoreHouseType: storeHouseType,
                                     ProductNo: productNo,
                                     ProductOrderNos: productOrderNos,
-                                    Quantity:quantity
+                                    Quantity: quantity
                                 },
                                 success: function() {
                                     $('#modal').modal('hide');
@@ -440,17 +457,14 @@
             $('#return_modal .type').removeClass('required').closest('.form-group-sm').hide();
             if (type === "@(DisProductStateDefinition.NormalReturn)") {
                 $('#return_modal .type2').addClass('required').closest('.form-group-sm').show();
-            }
-            else if (productType === "@(ProductTypeDefinition.Finish)" &&
+            } else if (productType === "@(ProductTypeDefinition.Finish)" &&
                 (type === "@(DisProductStateDefinition.Downgrade)" || type === "@(DisProductStateDefinition.Scrapped)")
-            )
-            {
+            ) {
                 $('#return_modal .type1').addClass('required').closest('.form-group-sm').show();
-            }
-            else if (productType === "@(ProductTypeDefinition.Semi)" &&
+            } else if (productType === "@(ProductTypeDefinition.Semi)" &&
                 (type === "@(DisProductStateDefinition.SpecialPurchase)")
             ) {
-              
+
                 $('#return_modal .type3').addClass('required').closest('.form-group-sm').show();
             }
         }
@@ -532,16 +546,37 @@
                 }
             });
         }
+
+        function showReturnInfo(id) {
+            SaveAjax(
+                {
+                    url: abp.appUrl + 'DisqualifiedProduct/GetReturnOrderInfo?no=' + id,
+                    isValidate: false,
+                    isAlert:false,
+                    success: function (res) {
+                        if (res) {
+                            OpenModal({
+                                modal: $('#returnInfo_modal'),
+                                data: res,
+                            });
+                            $('#returnInfo_modal').find('.modal-footer .save-btn').fadeOut();
+                        }
+                        
+                    }
+                }
+            );
+        }
     </script>
     <!--格式化-->
     <script id="formatter-script" type="text/javascript">
-        function ProductTypeFormatter(v) {
+        function ProductTypeFormatter(v, r) {
             var name = $('#hid-productType option[value="' + v + '"]').text();
+            let returnInfo = `<a href="#" class="btn btn-info" onclick="showReturnInfo('${r.id}')">退货信息</a>`;
             switch (v) {
             case 2:
-                return '<span class="label label-success">' + name + '</span>';
+                    return '<span class="label label-success">' + name + '</span>' ;
             case 1:
-                return '<span class="label label-danger">' + name + '</span>';
+                    return '<span class="label label-danger">' + name + '</span>&nbsp;' + returnInfo;
             default:
                 return '<span class="label label-success">' + name + '</span>';
             }

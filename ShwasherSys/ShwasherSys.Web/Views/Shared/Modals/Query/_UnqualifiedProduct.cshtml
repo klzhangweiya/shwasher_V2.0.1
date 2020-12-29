@@ -1,0 +1,23 @@
+﻿@using ShwasherSys
+@using ShwasherSys.Models.Modal
+@model string
+@{
+    string originFiled = "",
+        //targetFiled = string.IsNullOrEmpty(Model) ? originFiled : Model;
+        targetFiled = Model ?? "";
+    List<QueryItem> queryItems = new List<QueryItem>()
+{
+    
+new QueryItem("productionOrderNo","排产单编号",true,isSort:true),
+new QueryItem("semiProductName","名称",true,isSort:true),
+new QueryItem("model","规格",true,isSort:true),
+new QueryItem("material","材质",true,isSort:true),
+new QueryItem("rigidity","硬度",true,isSort:true),
+new QueryItem("surfaceColor","表色",true,isSort:true),
+new QueryItem("actualQuantity","入库数量(kg)",false,isSort:true),
+new QueryItem("applyEnterDate","申请时间",false,isSort:true),
+};
+    QueryModalModel qmModel = new QueryModalModel("不合格检验信息", "/api/services/app/Query/GetSemiEnterStoreCheckUnqualified", queryItems, originFiled, targetFiled, modalId: "query_UnqualifiedProduct_modal");
+}
+@Html.Partial("Modals/Query/_QueryModal", qmModel)
+

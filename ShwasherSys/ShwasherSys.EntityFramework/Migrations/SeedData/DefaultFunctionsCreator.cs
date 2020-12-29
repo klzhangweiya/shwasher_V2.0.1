@@ -225,6 +225,7 @@ namespace ShwasherSys.Migrations.SeedData
             CreateFunctions("Query", "查看页面", "ProductItemInspectMg", 2, "", "", "", 0, 3, "", "btn btn-default", "None");
             CreateFunctions("Check", "检验合格", "ProductItemInspectMg", 2, "", "", "icon-add", 1, 3, "/api/services/app/ProductInspect/Check", "btn btn-default", "btnCheck");
             CreateFunctions("UnCheck", "检验不合格", "ProductItemInspectMg", 2, "", "", "icon-delete", 2, 3, "/api/services/app/ProductInspect/UnCheck", "btn btn-default", "btnUnCheck");
+            CreateFunctions("ShowUnqualified", "不合格查看", "ProductItemInspectMg", 2, "", "", "icon-search", 2, 3, "/api/services/app/ProductInspect/UnCheck", "btn btn-default", "btnUnCheck");
 
             CreateFunctions("DisqualifiedProductMg", "不合格产品处理", "ProductInspect", 1, "DisqualifiedProduct", "ProductInspect", "icon-menu", 2, 2);
             CreateFunctions("Query", "查看页面", "DisqualifiedProductMg", 2, "", "", "", 0, 3, "", "btn btn-default", "None");

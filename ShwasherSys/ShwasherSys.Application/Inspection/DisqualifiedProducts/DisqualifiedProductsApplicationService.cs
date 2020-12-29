@@ -11,6 +11,7 @@ using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Abp.Runtime.Caching;
 using Abp.Timing;
+using Castle.Core.Internal;
 using IwbZero.AppServiceBase;
 using IwbZero.Auditing;
 using IwbZero.Helper;
@@ -874,6 +875,35 @@ namespace ShwasherSys.Inspection.DisqualifiedProducts
             return new PagedResultDto<RelatedProductDto>(totalCount,dtos);
         }
 
+
+        public async Task<ReturnOrderDetailInfoDto> GetReturnOrderInfo(int no)
+        {
+            var dEntity = Repository.Get(no);
+            if (!dEntity.ReturnOrderNo.IsNullOrEmpty())
+            {
+                var entity = await RgRepository.FirstOrDefaultAsync(a => a.ReturnOrderNo == dEntity.ReturnOrderNo);
+                if (entity != null)
+                {
+                    var product = ProductRepository.FirstOrDefault(i => i.Id == entity.ProductNo);
+                    ReturnOrderDetailInfoDto returnEntity = new ReturnOrderDetailInfoDto()
+                    {
+                        ProductNo = product.Id,
+                        ProductName = product.ProductName,
+                        ReturnOrderNo = entity.ReturnOrderNo,
+                        Material = product.Material,
+                        Model = product.Model,
+                        Reason = entity.Reason,
+                        Rigidity = product.Rigidity,
+                        SurfaceColor = product.SurfaceColor
+                    };
+                    return returnEntity;
+                }
+            }
+           
+
+            return null;
+            
+        }
       
     }
 }

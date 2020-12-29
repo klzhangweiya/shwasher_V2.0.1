@@ -137,6 +137,7 @@ namespace ShwasherSys.Authorization.Permissions
         public const string PagesProductInspectProductItemInspectMgQuery = "Pages.ProductInspect.ProductItemInspectMg.Query";
         public const string PagesProductInspectProductItemInspectMgCheck = "Pages.ProductInspect.ProductItemInspectMg.Check";
         public const string PagesProductInspectProductItemInspectMgUnCheck = "Pages.ProductInspect.ProductItemInspectMg.UnCheck";
+        public const string PagesProductInspectProductItemInspectMgShowUnqualified = "Pages.ProductInspect.ProductItemInspectMg.ShowUnqualified";
         public const string PagesProductInspectDisqualifiedProductMg = "Pages.ProductInspect.DisqualifiedProductMg";
         public const string PagesProductInspectDisqualifiedProductMgQuery = "Pages.ProductInspect.DisqualifiedProductMg.Query";
         public const string PagesProductInspectDisqualifiedProductMgCheckDowngrade = "Pages.ProductInspect.DisqualifiedProductMg.CheckDowngrade";

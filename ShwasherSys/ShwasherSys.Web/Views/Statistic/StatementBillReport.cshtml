@@ -119,8 +119,8 @@
                     <th class="td">开票人</th>
                     <th class="td">开票时间</th>
                     <th class="td">发票编号</th>
-                    <th class="td">金额</th>
-                    <th class="td">税后金额</th>
+                    <th class="td">含税金额</th>
+                    <th class="td">不含税金额</th>
                     <th class="td">货币</th>
                 </tr>
             </thead>
@@ -128,11 +128,11 @@
             <tfoot>
             <tr>
                 <td class="td" colspan="7"></td>
-                <td class="td detail" >
-                    总金额：<strong class="allPrice"></strong> 
+                <td class="td detail">
+                    含税总金额：<strong class="allPrice"></strong>
                 </td>
                 <td class="td detail" colspan="2">
-                    税后总金额： <strong class="afterAllPrice"></strong> 
+                    不含税总金额： <strong class="afterAllPrice"></strong>
                 </td>
               
               
@@ -174,8 +174,9 @@
 
         function ItemFormatter(data) {
             var str = "";
-            var allPrice = 0;
-            var afterAllPrice = 0;
+            var allPrice = 0, cnyAllPrice = 0, usdAllPrice = 0;
+            var afterAllPrice = 0,cnyAfterAllPrice = 0,usdAfterAllPrice = 0;
+           
             if (data && data.length > 0) {
                 for (var i = 0; i < data.length; i++) {
                     var item = data[i];
@@ -191,12 +192,23 @@
                     //str += '<td class="td">{0}</td>'.format(new Date(item.productDate).format('yyyy-MM-dd'));
                     str += '<td class="td">{0}</td>'.format(item.orderStickBillNo || "");
                     str += '<td class="td">{0}</td>'.format(item.totalPrice || "");
+
                     if (item.totalPrice) {
                         allPrice += item.totalPrice;
+                        if (item.currencyId === "CNY") {
+                            cnyAllPrice += item.totalPrice;
+                        } else if (item.currencyId === "USD") {
+                            usdAllPrice += item.totalPrice;
+                        }
                     }
                     str += '<td class="td">{0}</td>'.format(item.afterTaxTotalPrice || "");
                     if (item.afterTaxTotalPrice) {
                         afterAllPrice += item.afterTaxTotalPrice;
+                        if (item.currencyId === "CNY") {
+                            cnyAfterAllPrice += item.afterTaxTotalPrice;
+                        } else if (item.currencyId === "USD") {
+                            usdAfterAllPrice += item.afterTaxTotalPrice;
+                        }
                     }
                     str += '<td class="td">{0}</td>'.format(item.currencyId || "");
                    
@@ -205,11 +217,11 @@
                 
             } else {
                 str += '<tr>';
-                str += '<td class="td" colspan="20" style="color:red;padding:10px;">未查询到生产明细</td>';
+                str += '<td class="td" colspan="20" style="color:red;padding:10px;">未查询到明细</td>';
                 str += '</tr>';
             }
-            $table.find('.allPrice').html(Number(allPrice).toFixed(3) || "");
-            $table.find('.afterAllPrice').html(Number(afterAllPrice).toFixed(3) || "");
+            $table.find('.allPrice').html((Number(cnyAllPrice).toFixed(3) || "") + 'CNY | ' + (Number(usdAllPrice).toFixed(3) || "")+'USD');
+            $table.find('.afterAllPrice').html((Number(cnyAfterAllPrice).toFixed(3) || "") + 'CNY | ' + (Number(usdAfterAllPrice).toFixed(3) || "") + 'USD');
             return str;
         }
 

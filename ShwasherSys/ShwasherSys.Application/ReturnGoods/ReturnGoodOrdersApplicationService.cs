@@ -24,6 +24,7 @@ using ShwasherSys.Order;
 using ShwasherSys.ProductInfo;
 using ShwasherSys.ReturnGoods.Dto;
 using Abp.Extensions;
+using ShwasherSys.Inspection.DisqualifiedProducts.Dto;
 
 namespace ShwasherSys.ReturnGoods
 {
@@ -431,6 +432,14 @@ namespace ShwasherSys.ReturnGoods
             return $"{savePath}/{fileName}";
         }
 
+        [DisableAuditing]
+        public DisqualifiedProductDto GetDisqualifiedProductByReturnNo(EntityDto<int> input)
+        {
+            var entity =  Repository.Get(input.Id);
+            var disqualifiedProduct = DisqualifiedProductRepository.FirstOrDefault(i =>
+                i.ReturnOrderNo == entity.ReturnOrderNo);
+           return  ObjectMapper.Map<DisqualifiedProductDto>(disqualifiedProduct);
+        }
 
         #region GetEntity/Dto
 

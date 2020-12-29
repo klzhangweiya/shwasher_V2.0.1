@@ -22,8 +22,11 @@ namespace ShwasherSys.Inspection.DisqualifiedProducts
 		Task<DisqualifiedProduct> GetEntity(EntityDto<int> input);
 		Task<DisqualifiedProduct> GetEntityById(int id);
 		Task<DisqualifiedProduct> GetEntityByNo(string no);
-	
+
         #endregion
+
+
+        Task<ReturnOrderDetailInfoDto> GetReturnOrderInfo(int no);
 
     }
 }

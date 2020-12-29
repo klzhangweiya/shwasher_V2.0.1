@@ -94,6 +94,7 @@ namespace ShwasherSys.Controllers
         public ActionResult ReturnGood()
         {
             ViewBag.ReturnState = StatesAppService.GetSelectLists("ReturnGood", "StateType");
+            ViewBag.HandleType = StatesAppService.GetSelectLists("DisProduct", "HandleType");
             return View();
         }
     }

@@ -1033,7 +1033,7 @@ namespace ShwasherSys.Order
                     }
 
                     string lcSql =
-                        $"select count(*) as OrderCount,sum(t.Price*t.Quantity) as TotalPrice,{queryType} as QueryValue from (select Convert(varchar(10),OrderDate,120) as CreateOrderDate,* from N_ViewOrderItems) as t {dataWhereSql} group by {queryType} order by {queryType}";
+                        $"select count(*) as OrderCount,sum(t.Price*t.Quantity) as TotalPrice,{queryType} as QueryValue from (select Convert(varchar(10),OrderDate,120) as CreateOrderDate,* from N_ViewOrderItems where IsLock!='Y') as t {dataWhereSql} group by {queryType} order by {queryType}";
                     SqlDataAdapter loDataAdapter = new SqlDataAdapter(lcSql, loSqlConn);
                     DataSet loDataSet = new DataSet(); // 创建DataSet
                     loDataAdapter.Fill(loDataSet, "OrderInfo");

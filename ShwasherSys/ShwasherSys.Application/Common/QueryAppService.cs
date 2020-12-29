@@ -128,6 +128,7 @@ namespace ShwasherSys.Common
         Task<PagedResultDto<ViewStickBill>> QueryInvoice(IwbPagedRequestDto input);
         Task<PagedResultDto<RmProduct>>  GetRmProduct(IwbPagedRequestDto input);
         Task<PagedResultDto<ViewCurrentRmStoreHouse>> GetRmCurrentStore(IwbPagedRequestDto input);
+        Task<PagedResultDto<ViewSemiEnterStore>> GetSemiEnterStoreCheckUnqualified(IwbPagedRequestDto input);
     }
     [AbpAuthorize,DisableAuditing]
     public class QueryAppService : ApplicationService, IQueryAppService
@@ -946,6 +947,25 @@ namespace ShwasherSys.Common
             var dtoList = new PagedResultDto<ViewCurrentRmStoreHouse>(totalCount, entities);
             return dtoList;
         }
+
+        public async Task<PagedResultDto<ViewSemiEnterStore>> GetSemiEnterStoreCheckUnqualified(IwbPagedRequestDto input)
+        {
+           var checkState = EnterStoreApplyStatusEnum.UnChecked.ToInt() + "";
+            var query = ViewSemiEnterStoreRepository.GetAll().Where(a => a.ApplyStatus == checkState);
+
+            query = ApplyFilter<ViewSemiEnterStore>(query, input);
+            var totalCount = query.Count();
+
+            query = query.OrderByDescending(i => i.TimeCreated);
+            query = query.Skip(input.SkipCount).Take(input.MaxResultCount);
+
+            var entities = await AsyncQueryableExecuter.ToListAsync(query);
+
+            var dots = new PagedResultDto<ViewSemiEnterStore>(
+                totalCount, entities
+            );
+            return dots;
+        }
         protected IQueryable<T> ApplyFilter<T>(IQueryable<T> query, IwbPagedRequestDto input)
         {
             var pagedInput = input as IIwbPagedRequest;
@@ -1038,5 +1058,7 @@ namespace ShwasherSys.Common
             //No sorting
             return query;
         }
+
+
     }
 }
